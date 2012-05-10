@@ -139,19 +139,21 @@ PATH=$MYPATH:"\$GATED_TOOLS_PATH/scripts"
 export PATH
 
 function autobot {
-	if [ -z "\${2}" ]; then
-		echo "Give some racks"
-		return
-	fi
 	if [ -z "\${1}" ]; then
 		echo "Give some tests"
+		echo "Usage: autobot <testfile> <racks> [<rtosver>] [<autobot-arg>...]"
+		return
+	fi
+	if [ -z "\${2}" ]; then
+		echo "Give some racks"
+		echo "Usage: autobot <testfile> <racks> [<rtosver>] [<autobot-arg>...]"
 		return
 	fi
 
 	TESTFILE="\${1}"
 	if [ -n "\${3}" ]; then
-		RACK=\${3}
-		RTOS=\${2}
+		RACK=\${2}
+		RTOS=\${3}
 		shift 3
 	else
 		RACK=\${2}
