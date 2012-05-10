@@ -9,6 +9,13 @@ GateD Testing Workspaces
 		export PATH="${PATH}:${GTWS}
 	- Profit
 
+- Configuration
+	Configuration is via environment variables.  This section describes each one and it's effect.
+
+	- GTWS_NOPROMPT
+	- If set, then the prompt is not changet in the workspace.  Otherwise,
+	  it is prefixed with "(<gatedver>-<wsname>)"
+
 - Origin dirs
 	ORIGIN (in most scripts) points to the prestine git checkouts to pull
 	from and push to.  For me, the GateD/Gatt checkouts are git svn clones,

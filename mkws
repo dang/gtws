@@ -123,6 +123,12 @@ fi
 mkdir -p "${GATED_TOOLS_HOMEDIR}"
 ${GATED_TOOLS_PATH}/scripts/mkworkdirs
 
+if [ -n "${GTWS_NOPROMPT}" ]; then
+	PROMPT=""
+else
+	PROMPT="(${GATED}-${WSNAME})"
+fi
+
 echo "Creating .tools.env"
 cat > "${WSPATH}"/.tools.env << EOF
 source ${GTWS}/gtws.sh
@@ -165,6 +171,6 @@ function autobot {
 }
 
 title "${GATED}-${WSNAME}"
-PS1="(${GATED}-${WSNAME})\${PS1}"
+PS1="${PROMPT}\${PS1}"
 EOF
 
