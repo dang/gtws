@@ -147,6 +147,7 @@ ${GATED_TOOLS_PATH}/scripts/mkworkdirs
 
 echo "Creating .tools.env"
 cat > "${WSPATH}"/.tools.env << EOF
+source ${GTWS}/gtws.sh
 export CURWS="${WSNAME}"
 export WSVER="${GATED}"
 export GATED_TOOLS_PATH="${GATED_TOOLS_PATH}"
@@ -182,6 +183,7 @@ function autobot {
 	./autobot.pl -rtos_dir ${WSPATH}/\${RTOS}/ -kernel gated-userspace -rack \${RACK} -tests \${TESTFILE} \$@
 }
 
+title "${GATED}-${WSNAME}"
 PS1="(${GATED}-${WSNAME})\${PS1}"
 EOF
 
