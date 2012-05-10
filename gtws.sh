@@ -51,3 +51,17 @@ function set_default_rtos {
 		*) RTOS="itrunk" ;;
 	esac
 }
+
+# set_default_comp "i10.0"
+#
+# Given a multi version, set GTCOMP to the path to the default compiler.  Note,
+# the command is not included, just the path.
+function set_default_comp {
+	case "${1}" in
+		i5.0)     GTCOMP="/share/multi/multi506/linux86" ;;
+		i5.0-vrf) GTCOMP="/share/multi/multi524/linux86" ;;
+		i10.0)    GTCOMP="/share/multi/multi524/linux86" ;;
+		i11.0)    GTCOMP="/share/ghs/comp/2012.1" ;;
+		*)        GTCOMP="/share/ghs/comp/current" ;;
+	esac
+}
