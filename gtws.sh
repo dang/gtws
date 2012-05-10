@@ -39,3 +39,15 @@ function title {
 	 echo -en "\033]2;$1\007"
 }
 
+# set_default_rtos "3.3"
+#
+# Given a gated version, set RTOS to the default rtos version
+function set_default_rtos {
+	case "${1}" in
+		trunk) RTOS="itrunk" ;;
+		3.3) RTOS="i11.0" ;;
+		3.2) RTOS="i10.0" ;;
+		3.1) RTOS="i5.0" ;;
+		*) RTOS="itrunk" ;;
+	esac
+}

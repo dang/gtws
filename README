@@ -15,8 +15,10 @@ GateD Testing Workspaces
 	Configuration is via environment variables.  This section describes each one and it's effect.
 
 	- GTWS_NOPROMPT
-	- If set, then the prompt is not changet in the workspace.  Otherwise,
-	  it is prefixed with "(<gatedver>-<wsname>)"
+		- If set, then the prompt is not changet in the workspace.  Otherwise, it is prefixed
+		  with "(<gatedver>-<wsname>)"
+	- GTWS_ORIGIN
+		- If set, is the full path to your origin directories.  Defaults to ${HOME}/origin
 
 - Origin dirs
 	ORIGIN (in most scripts) points to the prestine git checkouts to pull

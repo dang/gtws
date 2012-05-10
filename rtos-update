@@ -3,7 +3,6 @@
 # Update rtos in a workspace
 #
 
-ORIGIN="${HOME}/origin"
 WSPATH="${PWD}"
 
 # Set usage output

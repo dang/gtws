@@ -3,7 +3,7 @@
 # Clone an rtos into a workspace
 #
 
-ORIGIN="${HOME}/origin"
+WSBASE="${GTWS_ORIGIN:-${HOME}/origin}"
 WSPATH="${PWD}"
 
 # Set usage output
@@ -42,7 +42,7 @@ if [ -n "${1}" ]; then
 fi
 
 if [ -n "${ALL}" ]; then
-	cd "${ORIGIN}"
+	cd "${WSBASE}"
 	RTOS=$(/bin/ls -d i*)
 fi
 
@@ -54,8 +54,8 @@ cd "${WSPATH}"
 
 for i in ${RTOS}; do
 	echo "cloning $i"
-	git clone "${ORIGIN}/${i}" || die "failed to clone ${i}"
-	cp "${ORIGIN}/${i}/.git/info/exclude" "${i}/.git/info/" || die "failed to copy exclude"
+	git clone "${WSBASE}/${i}" || die "failed to clone ${i}"
+	cp "${WSBASE}/${i}/.git/info/exclude" "${i}/.git/info/" || die "failed to copy exclude"
 	echo "Setting up $i"
 	cd "${WSPATH}/${i}/modules/ghs" || die "failed to cd to ${i}/modules/ghs"
 	ln -s "${WSPATH}/routing" "gated" || die "failed to symlink gated"

@@ -5,16 +5,6 @@
 
 GATED=$(basename "${PWD}")
 
-case "${GATED}" in
-	trunk) RTOS="itrunk" ;;
-	3.3) RTOS="i11.0" ;;
-	3.2) RTOS="i10.0" ;;
-	3.1) RTOS="i5.0" ;;
-	*) RTOS="itrunk" ;;
-esac
-ORIGIN="${HOME}/origin"
-WSDIRS="routing docs gatt"
-
 # Set usage output
 USAGE="[-h |--help] [-a | --all-rtos] [-r <rtos> | --rtos=<rtos>] [-v <version> | --version=<version>] <name>"
 LONGUSAGE="\t-h, --help\n\t\tPrint this help message
@@ -25,6 +15,10 @@ LONGUSAGE="\t-h, --help\n\t\tPrint this help message
 
 # Standard functions
 source ${GTWS}/gtws.sh
+
+set_default_rtos "${GATED}"
+WSBASE="${GTWS_ORIGIN:-${HOME}/origin}"
+WSDIRS="routing docs gatt"
 
 # Script name
 ME=$(basename $0)
@@ -57,12 +51,12 @@ WSPATH=$(readlink -f "${1}")
 WSNAME=$(basename "${WSPATH}")
 
 # Workspace check
-WS="${ORIGIN}/${GATED}"
+WS="${WSBASE}/${GATED}"
 if [ ! -d "${WS}" ]; then
 	die "No workspace for ${WS}"
 fi
-if [ ! -d "${ORIGIN}/${RTOS}" ]; then
-	die "No ${RTOS} in ${ORIGIN}"
+if [ ! -d "${WSBASE}/${RTOS}" ]; then
+	die "No ${RTOS} in ${WSBASE}"
 fi
 
 # Workspace contents check
@@ -103,15 +97,16 @@ fi
 
 # Set up GateD
 cd "${WSPATH}/routing" || die "failed to cd to routing"
-maketags
+export SYSTEM_HDRS="../${RTOS}/INTEGRITY-include /share/ghs/comp/current"
+maketags -c
 
 # Set up GATT
 cd "${WSPATH}/gatt" || die "failed to cd to gatt"
-maketags -p
+maketags -p -c
 
 # Add dmltools to docs
 cd "${WSPATH}/docs" || die "failed to cd to docs"
-git clone "${ORIGIN}/dmltools" || die "failed to clone dmltools"
+git clone "${WSBASE}/dmltools" || die "failed to clone dmltools"
 
 # Set up workdirs
 echo "Making workdirs"

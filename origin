@@ -1,10 +1,10 @@
 #!/bin/bash
 #
-# Script that does something
+# Update origin checkouts
 #
 
 GATED="trunk 3.3 3.2 3.1"
-WSBASE="${HOME}/origin"
+WSBASE="${GTWS_ORIGIN:-${HOME}/origin}"
 WSDIRS="routing docs gatt"
 RTOS="itrunk i10.0 i11.0 i5.0 i5.0-vrf dmltools"
 

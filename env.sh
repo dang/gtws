@@ -5,11 +5,11 @@ function tools {
 		return 0
 	fi
 	if [ -z "${2}" ]; then
-		WSVER="trunk"
-		WSNAME="${1}"
+		local WSVER="trunk"
+		local WSNAME="${1}"
 	else
-		WSVER="${1}"
-		WSNAME="${2}"
+		local WSVER="${1}"
+		local WSNAME="${2}"
 	fi
 	if [ ! -f ${HOME}/src/${WSVER}/${WSNAME}/.tools.env ]; then
 		echo "No env for ${WSVER}/${WSNAME}"
@@ -64,7 +64,8 @@ function cdws() {
 }
 
 function cdorigin() {
-	cd "${HOME}/origin/${WSVER}/$@"
+	local WSBASE="${GTWS_ORIGIN:-${HOME}/origin}"
+	cd "${WSBASE}/${WSVER}/$@"
 }
 
 function debugws() {
@@ -72,8 +73,8 @@ function debugws() {
 		echo "debugws <gversion> <wsname> [<iversion>]"
 		return 1
 	elif [ -z "${3}" ]; then
-		TGVER="${1}"
-		TWS="${2}"
+		local TGVER="${1}"
+		local TWS="${2}"
 		case "${TGVER}" in
 			"3.1")
 				TIVER="i5.0"
@@ -89,9 +90,9 @@ function debugws() {
 				;;
 		esac
 	else
-		TGVER="${1}"
-		TWS="${2}"
-		TIVER="${3}"
+		local TGVER="${1}"
+		local TWS="${2}"
+		local TIVER="${3}"
 	fi
 	case "${TIVER}" in
 		"itrunk")

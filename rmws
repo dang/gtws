@@ -5,7 +5,7 @@
 
 GATED=$(basename "${PWD}")
 
-WSBASE="${HOME}/origin"
+WSBASE="${GTWS_ORIGIN:-${HOME}/origin}"
 WSDIRS="routing docs gatt"
 
 # Set usage output
