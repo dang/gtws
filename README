@@ -7,6 +7,8 @@ GateD Testing Workspaces
 		export GTWS="/path/to/gtws"
 	- Add the repo directory to your path
 		export PATH="${PATH}:${GTWS}
+	- Source the env.sh file
+		source ${GTWS}/.env.sh
 	- Profit
 
 - Configuration

@@ -63,10 +63,31 @@ function cdws() {
 	cd "${HOME}/src/${WSVER}/${CURWS}/$@"
 }
 
+function cdorigin() {
+	cd "${HOME}/origin/${WSVER}/$@"
+}
+
 function debugws() {
-	if [ -z "${3}" ]; then
-		echo "debugws <gversion> <wsname> <iversion>"
+	if [ -z "${2}" ]; then
+		echo "debugws <gversion> <wsname> [<iversion>]"
 		return 1
+	elif [ -z "${3}" ]; then
+		TGVER="${1}"
+		TWS="${2}"
+		case "${TGVER}" in
+			"3.1")
+				TIVER="i5.0"
+				;;
+			"3.2")
+				TIVER="i10.0"
+				;;
+			"3.3")
+				TIVER="i11.0"
+				;;
+			"trunk")
+				TIVER="itrunk"
+				;;
+		esac
 	else
 		TGVER="${1}"
 		TWS="${2}"
