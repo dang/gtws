@@ -1,0 +1,86 @@
+GateD Testing Workspaces
+
+- Setup
+	- Checkout gtws
+		git clone ssh://git@buildbot.aa.ghs.com/home/git/gtws.git
+	- Export the master path variable
+		export GTWS="/path/to/gtws"
+	- Add the repo directory to your path
+		export PATH="${PATH}:${GTWS}
+	- Profit
+
+- Origin dirs
+	ORIGIN (in most scripts) points to the prestine git checkouts to pull
+	from and push to.  For me, the GateD/Gatt checkouts are git svn clones,
+	the RTOS checkouts are clones from buildbot's repos.
+
+	- Layout
+		- /dmltools
+			- git svn clone of http://rtosvc.ghs.com/trunk/rtos/INTEGRITY-docs/dmltools
+			- Necessary because git doesn't do externals
+		- i<version>
+			- RTOS versions
+			- itrunk, i11.0, i5.0, i5.0-vrf
+			- Must start with 'i' for scripts to work
+		- GateD versions
+			- 3.1, 3.2, 3.3, trunk
+			- Each contains:
+				- /docs
+					- git svn clone gated-docs/<version>
+				- /gatt
+					- git svn clone gated-tools/<version>
+				- /routing
+					- git svn clone gated/<version>
+			- Each clone needs set in .git/config:
+				[receive]
+				        denyCurrentBranch = warn
+
+- Workflow
+	- Need new workspace for ROUTE-2222 on gtrunk itrunk
+		- cd ~/src/trunk
+		- mkws r2222
+			- gvsersion comes from PWD
+			- iversion defaults to
+				- itrunk for gtrunk
+				- i11.0 for 3.3
+				- i10.0 for 3.2
+				- i5.0 for 3.1
+			- Makes in $PWD:
+				- /docs
+				- /gatt
+				- /itrunk
+				- /routing
+			- All checkouts have .git/info/exclude copied
+			- routing and gatt have tags made
+			- All RTOS checkoutes have routing symlinked and ./setup run
+		- tools r2222
+			- Sets up environment
+			- changes prompt
+		- cdws routing
+			- Goes do gated
+		- Make changes; commit
+		- gatt autobot
+			- Goes to gatt/autobot
+		- autobot ospf 26,27,28,60
+			- Runs ospf tests on racks
+		- Push
+			- cdws routing
+			- git push
+			- cd ~/origin/trunk/routing
+			- git reset --hard
+			- git svn dcommit
+		- Update origin
+			- origin
+				- Updates all gated/gatt/docs versions
+			- origin -r
+				- Updates all rtos as well
+			- origin trunk
+				- Updates just gated/gatt/docs trunk
+		- Update gated checkout from origin
+			- cdws routing
+			- git pull --rebase
+			- Must be done after "git svn dcommit" from origin if
+			  workspace is to be used again
+		- Done with workspace
+			- rmws g2222
+			- Removes working dirs as well

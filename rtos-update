@@ -1,0 +1,80 @@
+#!/bin/bash
+#
+# Update rtos in a workspace
+#
+
+ORIGIN="${HOME}/origin"
+WSPATH="${PWD}"
+
+# Set usage output
+USAGE="[-h |--help] [-a | --all-rtos] [<rtos> ...]"
+LONGUSAGE="\t-h, --help\n\t\tPrint this help message
+\t-a, --all-rtos\n\t\t Get all rtos versions
+\t<rtos>\n\t\tRTOS version"
+
+# Standard functions
+die() {
+	echo "$@"
+	exit 1
+}
+
+usage() {
+	local myusage;
+	if [ -n "${USAGE}" ]; then
+		myusage=${USAGE}
+	else
+		myusage="No usage given"
+	fi
+	if [ -n "$1" ]; then
+		echo "$@"
+	fi
+	echo ""
+	echo "Usage:"
+	echo "`basename $0` ${myusage}"
+	if [ -n "${LONGUSAGE}" ]; then
+		echo -e "${LONGUSAGE}"
+	fi
+	exit 1
+}
+
+# Script name
+ME=$(basename $0)
+
+# Parse arguments
+ARGS=`getopt -o ha --long help,all: -n "${ME}" -- "$@"`
+
+if [ $? != 0 ] ; then
+	usage 
+fi
+eval set -- "$ARGS"
+
+while true ; do
+	case "$1" in
+		-h|--help) usage; shift ;;
+		-a|--all-rtos) ALL="yes"; shift ;;
+		--) shift ; break ;;
+		* ) usage "Invalid argument $1";;
+	esac
+done
+
+# Remaining arguments are in $1, $2, etc. as normal
+if [ -n "${1}" ]; then
+	RTOS=${@}
+fi
+
+if [ -n "${ALL}" ]; then
+	RTOS=$(/bin/ls -d i*)
+fi
+
+if [ -z "${RTOS}" ]; then
+	usage "Must give an rtos version"
+fi
+
+for i in ${RTOS}; do
+	echo "updating $i"
+	cd "${i}"
+	git pull --rebase || die "Pull failed for ${i}"
+	cd "${WSPATH}"
+	echo ""
+done
+

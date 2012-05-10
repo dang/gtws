@@ -1,0 +1,98 @@
+#!/bin/bash
+#
+# Script that does something
+#
+
+GATED="trunk 3.3 3.2 3.1"
+WSBASE="${HOME}/origin"
+WSDIRS="routing docs gatt"
+RTOS="itrunk i10.0 i11.0 i5.0 i5.0-vrf dmltools"
+
+# Set usage output
+USAGE="[-h |--help] [-r | --rtos ] [<name>]"
+LONGUSAGE="\t-h, --help\n\t\tPrint this help message
+\t-r, --rtos\n\t\tUpdate RTOS as well as GateD
+\t[<name>]\n\t\tGateD version (default ${GATED}"
+
+# Standard functions
+die() {
+	echo "$@"
+	exit 1
+}
+
+usage() {
+	local myusage;
+	if [ -n "${USAGE}" ]; then
+		myusage=${USAGE}
+	else
+		myusage="No usage given"
+	fi
+	if [ -n "$1" ]; then
+		echo "$@"
+	fi
+	echo ""
+	echo "Usage:"
+	echo "`basename $0` ${myusage}"
+	if [ -n "${LONGUSAGE}" ]; then
+		echo -e "${LONGUSAGE}"
+	fi
+	exit 1
+}
+
+# Script name
+ME=$(basename $0)
+
+# Parse arguments
+ARGS=`getopt -o hr --long help,rtos -n "${ME}" -- "$@"`
+
+if [ $? != 0 ] ; then
+	usage 
+fi
+eval set -- "$ARGS"
+
+while true ; do
+	case "$1" in
+		-h|--help) usage; shift ;;
+		-r|--rtos) UPRTOS="yes"; shift ;;
+		--) shift ; break ;;
+		* ) usage "Invalid argument $1";;
+	esac
+done
+
+# Remaining arguments are in $1, $2, etc. as normal
+if [ -n "${1}" ]; then
+	GATED="${1}"
+fi
+
+for GV in ${GATED}; do
+	echo ""
+	echo ""
+	echo "Updating $GV"
+	# Workspace check
+	WS="${WSBASE}/${GV}"
+	if [ ! -d "${WS}" ]; then
+		die "No workspace for ${WS}"
+	fi
+
+	# Workspace contents check
+	for i in ${WSDIRS}; do
+		if [ ! -d "${WS}/${i}" ]; then
+			die "No ${i} in workspace ${WS}"
+		fi
+	done
+
+	for i in ${WSDIRS}; do
+		echo "${i}"
+		cd "${WS}/${i}" || die "failed to cd to ${i}"
+		git sync || die "failed to sync ${i}"
+	done
+done
+
+if [ -n "${UPRTOS}" ]; then
+	for i in ${RTOS}; do
+		echo "${i}"
+		cd "${WSBASE}/${i}" || die "failed to cd to ${i}"
+		git sync || die "failed to sync ${i}"
+	done
+fi
+

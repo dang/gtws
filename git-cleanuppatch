@@ -1,0 +1,42 @@
+#!/bin/sh
+#
+# Copyright (c) 2012 Daniel Gryniewicz
+#
+# Clean up crutf left over from patching a git repo
+
+# Set usage output
+USAGE="[-h |--help]"
+LONGUSAGE="\t-h, --help\n\t\tPrint this help message"
+
+# Standard functions
+source ${GTWS}/gtws.sh
+
+# Script name
+ME=$(basename $0)
+
+# Parse arguments
+ARGS=`getopt -o h --long help -n "${ME}" -- "$@"`
+
+if [ $? != 0 ] ; then
+	usage 
+fi
+eval set -- "$ARGS"
+
+while true ; do
+	case "$1" in
+		-h|--help) usage; shift ;;
+		--) shift ; break ;;
+		* ) usage "Invalid argument $1";;
+	esac
+done
+
+# Remaining arguments are in $1, $2, etc. as normal
+
+SUBDIRECTORY_OK=Yes
+OPTIONS_SPEC=
+LONG_USAGE="${LONGUSAGE}"
+# Source the git environment
+source "$(git --exec-path)/git-sh-setup"
+
+git status | grep "^\#	" | grep ".orig\>" | sed 's/#\t//' | xargs rm -r 2>/dev/null
+git status | grep "^\#	" | grep ".rej\>" | sed 's/#\t//' | xargs rm -r 2>/dev/null

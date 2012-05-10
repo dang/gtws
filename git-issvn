@@ -1,0 +1,49 @@
+#!/bin/bash
+#
+# Script that determines reliably if a repo is git svn
+#
+
+# Set usage output
+USAGE="[-h |--help]"
+LONGUSAGE="\t-h, --help\n\t\tPrint this help message"
+
+# Standard functions
+source ${GTWS}/gtws.sh
+
+# Script name
+ME=$(basename $0)
+
+# Parse arguments
+ARGS=`getopt -o hf --long help,force -n "${ME}" -- "$@"`
+
+if [ $? != 0 ] ; then
+	usage 
+fi
+eval set -- "$ARGS"
+
+while true ; do
+	case "$1" in
+		-h|--help) usage; shift ;;
+		--) shift ; break ;;
+		* ) usage "Invalid argument $1";;
+	esac
+done
+
+# Remaining arguments are in $1, $2, etc. as normal
+
+GITDIR="$(git rev-parse --git-dir 2>/dev/null)"
+if [ -d ${GITDIR}/svn/refs ]; then
+	echo "$GITDIR is svn"
+	exit 0
+fi
+if [ -d ${GITDIR}/svn/trunk ]; then
+	echo "$GITDIR is svn"
+	exit 0
+fi
+if [ -d ${GITDIR}/svn/tags ]; then
+	echo "$GITDIR is svn"
+	exit 0
+fi
+
+echo "$GITDIR is NOT svn"
+exit 1

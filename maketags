@@ -1,0 +1,79 @@
+#!/bin/bash
+#
+# Recursively make tags file for all c, cpp, C, c++, h files
+#
+
+USAGE="[-hk] [<directories>]"
+LONGUSAGE="\t-h\tPrint this help message
+\t-k\tKernel database (no system includes)
+\t-c\tClean build (no .maketagsrc)
+\t-p\tOnly tag perl
+\t<directories>\tDirectories to scan (defaults to '.')"
+
+source ${GTWS}/gtws.sh
+
+while getopts ":hkcp" option; do
+	case ${option} in
+		c ) CLEAN="-c";;
+		k ) KERNEL="-k";;
+		p ) PERL="-p";;
+		h ) usage;;
+		\? ) usage "Invalid argument ${OPTARG}";;
+		* ) usage "Invalid argument ${option}";;
+	esac
+done
+
+# Store how we got here, so vim can re-run the same arguments
+echo "$0 $@" > ".#maketags.dfg"
+
+# Get stuff from the .maketagsrc file
+if [ -z "${CLEAN}" ]; then
+	if [ -f "${HOME}/.maketagsrc" ]; then
+		source ${HOME}/.maketagsrc
+	fi
+fi
+
+if [ "${OPTIND}" != "0" ]; then
+	shift $((OPTIND-1))
+fi
+
+if [ -z "$1" ]; then
+	DIRS="."
+else
+	DIRS="$@"
+fi
+
+if [ -n "${KERNEL}" ]; then
+	echo "Making kernel tags for $DIRS"
+else
+	echo "Making tags for $DIRS"
+fi
+
+TMPFILE=`mktemp -t maketags.XXXXXXXXXX` || die "Couldn't make tempfile"
+
+if [ -n "${PERL}" ]; then
+	find ${DIRS} -type f -and \( -name "*.pl" -or -name "*.pm" -or -name "*.perl" \) >> ${TMPFILE}
+else
+	if [ -n "${SYSTEM_HDRS}" ]; then
+		find ${SYSTEM_HDRS} -type f -and \( -name "*.h++" -or -name "*.hxx" -or -name "*.hh" -or -name "*.hpp" -or -name "*.H" -or -name "*.h" \) >> ${TMPFILE}
+	fi
+	find ${DIRS} ${EXTRA_DIRS} -type f -and \( -name "*.c" -or -name "*.cpp" -or -name "*.cxx" -or -name "*.h++" -or -name "*.hxx" -or -name "*.hh" -or -name "*.hpp" -or -name "*.H" -or -name "*.C" -or -name "*.c++" -or -name "*.cc" -or -name "*.h" \) >> ${TMPFILE}
+fi
+
+if [ -n "${SKIPRE}" ]; then
+	egrep -v "${SKIPRE}" ${TMPFILE} > cscope.files
+else
+	cp ${TMPFILE} cscope.files
+fi
+rm ${TMPFILE}
+cscope -q -L ${KERNEL} -i cscope.files
+if [ -n "${SKIPRE}" ]; then
+	# We're skipping files; only use files in the list
+	exuberant-ctags -L- < cscope.files
+elif [ -n "${PERL}" ]; then
+	# Only want perl files
+	exuberant-ctags -L- < cscope.files
+else
+	# Tag everything, so that we get languages other than C/C++
+	exuberant-ctags -R
+fi

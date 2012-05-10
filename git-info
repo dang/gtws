@@ -1,0 +1,51 @@
+#!/bin/sh
+#
+# Copyright (c) 2009 Daniel Gryniewicz
+#
+# Do the equivalent of svn info
+
+# Set usage output
+USAGE="[-h |--help]"
+LONGUSAGE="Get info about a git repository
+\t-h, --help\n\t\tPrint this help message"
+
+# Standard functions
+source ${GTWS}/gtws.sh
+
+# Script name
+ME=$(basename $0)
+
+# Parse arguments
+ARGS=`getopt -o h --long help -n "${ME}" -- "$@"`
+
+if [ $? != 0 ] ; then
+	usage 
+fi
+eval set -- "$ARGS"
+
+while true ; do
+	case "$1" in
+		-h|--help) usage; shift ;;
+		--) shift ; break ;;
+		* ) usage "Invalid argument $1";;
+	esac
+done
+
+# Remaining arguments are in $1, $2, etc. as normal
+
+SUBDIRECTORY_OK=Yes
+OPTIONS_SPEC=
+LONG_USAGE="${LONGUSAGE}"
+# Source the git environment
+source "$(git --exec-path)/git-sh-setup"
+
+BRANCH=$(git-branch  | grep '\*' | awk '{print $2}')
+echo "BRANCH: ${BRANCH}"
+if git-issvn > /dev/null 2>&1; then
+	SVN=$(git svn info 2>/dev/null | grep URL)
+	echo "SVN ${SVN}"
+else
+	REMOTE=$(git-config --get remote.origin.url)
+	echo "URL: ${REMOTE}"
+fi
+

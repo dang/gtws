@@ -1,0 +1,187 @@
+#!/bin/bash
+#
+# Create a new GateD development workspace
+#
+
+GATED=$(basename "${PWD}")
+
+case "${GATED}" in
+	trunk) RTOS="itrunk" ;;
+	3.3) RTOS="i11.0" ;;
+	3.2) RTOS="i10.0" ;;
+	3.1) RTOS="i5.0" ;;
+	*) RTOS="itrunk" ;;
+esac
+ORIGIN="${HOME}/origin"
+WSDIRS="routing docs gatt"
+
+# Set usage output
+USAGE="[-h |--help] [-a | --all-rtos] [-r <rtos> | --rtos=<rtos>] [-v <version> | --version=<version>] <name>"
+LONGUSAGE="\t-h, --help\n\t\tPrint this help message
+\t-v <version>, --version=<version>\n\t\tGateD version (default: ${GATED})
+\t-a, --all-rtos\n\t\t Get all rtos versions
+\t-r <rtos>, --rtos=<rtos>\n\t\tRTOS version (default: ${RTOS})
+\t<name>\n\t\tWorkspace name"
+
+# Standard functions
+die() {
+	echo "$@"
+	exit 1
+}
+
+usage() {
+	local myusage;
+	if [ -n "${USAGE}" ]; then
+		myusage=${USAGE}
+	else
+		myusage="No usage given"
+	fi
+	if [ -n "$1" ]; then
+		echo "$@"
+	fi
+	echo ""
+	echo "Usage:"
+	echo "`basename $0` ${myusage}"
+	if [ -n "${LONGUSAGE}" ]; then
+		echo -e "${LONGUSAGE}"
+	fi
+	exit 1
+}
+
+# Script name
+ME=$(basename $0)
+
+# Parse arguments
+ARGS=`getopt -o har:v: --long help,all-rtos,rtos:,version: -n "${ME}" -- "$@"`
+
+if [ $? != 0 ] ; then
+	usage 
+fi
+eval set -- "$ARGS"
+
+while true ; do
+	case "$1" in
+		-h|--help) usage; shift ;;
+		-v|--version) GATED=$2 ; shift 2 ;;
+		-r|--rtos) RTOS=$2 ; shift 2 ;;
+		-a|--all-rtos) ALL="yes"; shift ;;
+		--) shift ; break ;;
+		* ) usage "Invalid argument $1";;
+	esac
+done
+
+# Remaining arguments are in $1, $2, etc. as normal
+if [ -z "${1}" ]; then
+	usage "Must give a workspace name"
+fi
+
+WSPATH=$(readlink -f "${1}")
+WSNAME=$(basename "${WSPATH}")
+
+# Workspace check
+WS="${ORIGIN}/${GATED}"
+if [ ! -d "${WS}" ]; then
+	die "No workspace for ${WS}"
+fi
+if [ ! -d "${ORIGIN}/${RTOS}" ]; then
+	die "No ${RTOS} in ${ORIGIN}"
+fi
+
+# Workspace contents check
+for i in ${WSDIRS}; do
+	if [ ! -d "${WS}/${i}" ]; then
+		die "No ${i} in workspace ${WS}"
+	fi
+done
+
+# Target directory check
+if [ -d "${WSPATH}" ]; then
+	die "Workspace ${WSPATH} already exists"
+fi
+
+if [ -n "${ALL}" ]; then
+	RTOS="all"
+fi
+
+# Make workspace
+echo "Making workspace for ${GATED}:${RTOS} in ${WSPATH}"
+
+mkdir -p "${WSPATH}" || die "Failed to mkdir ${WSPATH}"
+cd "${WSPATH}"
+
+for i in ${WSDIRS}; do
+	git clone "${WS}/${i}" || die "failed to clone ${i}"
+	cp "${WS}/${i}/.git/info/exclude" "${i}/.git/info/" || die "failed to copy exclude"
+	if [ -f "${WS}/${i}/.project.vim" ]; then
+		cp "${WS}/${i}/.project.vim" "${i}/" || die "failed to copy .project.vim"
+	fi
+done
+
+if [ -n "${ALL}" ]; then
+	rtos-clone -a
+else
+	rtos-clone "${RTOS}" || die "failed to clone ${RTOS}"
+fi
+
+# Set up GateD
+cd "${WSPATH}/routing" || die "failed to cd to routing"
+maketags
+
+# Set up GATT
+cd "${WSPATH}/gatt" || die "failed to cd to gatt"
+maketags -p
+
+# Add dmltools to docs
+cd "${WSPATH}/docs" || die "failed to cd to docs"
+git clone "${ORIGIN}/dmltools" || die "failed to clone dmltools"
+
+# Set up workdirs
+echo "Making workdirs"
+export GATED_TOOLS_PATH="${WSPATH}/gatt"
+export GATED_TOOLS_HOMEDIR="/casa/${USER}/test/working/${GATED}/${WSNAME}"
+if [ -d "${GATED_TOOLS_HOMEDIR}" ]; then
+	rm -rf "${GATED_TOOLS_HOMEDIR}"
+fi
+mkdir -p "${GATED_TOOLS_HOMEDIR}"
+${GATED_TOOLS_PATH}/scripts/mkworkdirs
+
+echo "Creating .tools.env"
+cat > "${WSPATH}"/.tools.env << EOF
+export CURWS="${WSNAME}"
+export WSVER="${GATED}"
+export GATED_TOOLS_PATH="${GATED_TOOLS_PATH}"
+export GATED_TEST_DIR="\$GATED_TOOLS_PATH/tests";
+export GATED_TOOLS_HOMEDIR="${GATED_TOOLS_HOMEDIR}"
+export TESTG_INTEGRITY=1
+export TESTG_INTEGRITY_NOKILL=1
+export TESTG_PAUSE_ON_FAIL=1
+PATH=$MYPATH:"\$GATED_TOOLS_PATH/scripts"
+export PATH
+
+function autobot {
+	if [ -z "\${2}" ]; then
+		echo "Give some racks"
+		return
+	fi
+	if [ -z "\${1}" ]; then
+		echo "Give some tests"
+		return
+	fi
+
+	TESTFILE="\${1}"
+	if [ -n "\${3}" ]; then
+		RACK=\${3}
+		RTOS=\${2}
+		shift 3
+	else
+		RACK=\${2}
+		RTOS="$RTOS"
+		shift 2
+	fi
+	
+	./autobot.pl -rtos_dir ${WSPATH}/\${RTOS}/ -kernel gated-userspace -rack \${RACK} -tests \${TESTFILE} \$@
+}
+
+PS1="(${GATED}-${WSNAME})\${PS1}"
+EOF
+
