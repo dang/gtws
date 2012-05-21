@@ -5,17 +5,17 @@ function tools {
 		return 0
 	fi
 	if [ -z "${2}" ]; then
-		local WSVER="trunk"
-		local WSNAME="${1}"
+		local VER="trunk"
+		local NAME="${1}"
 	else
-		local WSVER="${1}"
-		local WSNAME="${2}"
+		local VER="${1}"
+		local NAME="${2}"
 	fi
-	if [ ! -f ${HOME}/src/${WSVER}/${WSNAME}/.tools.env ]; then
-		echo "No env for ${WSVER}/${WSNAME}"
+	if [ ! -f ${HOME}/src/${VER}/${NAME}/.tools.env ]; then
+		echo "No env for ${VER}/${NAME}"
 		return 1
 	else
-		. ${HOME}/src/${WSVER}/${WSNAME}/.tools.env
+		. ${HOME}/src/${VER}/${NAME}/.tools.env
 	fi
 }
 
