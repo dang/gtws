@@ -10,7 +10,8 @@ USAGE="[-h |--help] [-a | --all-rtos] [-r <rtos> | --rtos=<rtos>] [-v <version> 
 LONGUSAGE="\t-h, --help\n\t\tPrint this help message
 \t-v <version>, --version=<version>\n\t\tGateD version (default: ${GATED})
 \t-a, --all-rtos\n\t\t Get all rtos versions
-\t-r <rtos>, --rtos=<rtos>\n\t\tRTOS version (default: ${RTOS})
+\t-s, --supported-rtos\n\t\t Get all supported rtos versions
+\t-r <rtos>, --rtos=<rtos>\n\t\tRTOS version (default: depends on GateD version)
 \t<name>\n\t\tWorkspace name"
 
 # Standard functions
@@ -24,7 +25,7 @@ WSDIRS="routing docs gatt"
 ME=$(basename $0)
 
 # Parse arguments
-ARGS=`getopt -o har:v: --long help,all-rtos,rtos:,version: -n "${ME}" -- "$@"`
+ARGS=`getopt -o hasr:v: --long help,all-rtos,supported-rtos,rtos:,version: -n "${ME}" -- "$@"`
 
 if [ $? != 0 ] ; then
 	usage 
@@ -37,6 +38,7 @@ while true ; do
 		-v|--version) GATED=$2 ; shift 2 ;;
 		-r|--rtos) RTOS=$2 ; shift 2 ;;
 		-a|--all-rtos) ALL="yes"; shift ;;
+		-s|--supported-rtos) SUPP="yes"; shift ;;
 		--) shift ; break ;;
 		* ) usage "Invalid argument $1";;
 	esac
@@ -72,11 +74,13 @@ if [ -d "${WSPATH}" ]; then
 fi
 
 if [ -n "${ALL}" ]; then
-	RTOS="all"
+	TARGET="all"
+elif [ -n "${SUPP}" ]; then
+	TARGET=${RTOS_SUPP}
 fi
 
 # Make workspace
-echo "Making workspace for ${GATED}:${RTOS} in ${WSPATH}"
+echo "Making workspace for ${GATED}:${TARGET} in ${WSPATH}"
 
 mkdir -p "${WSPATH}" || die "Failed to mkdir ${WSPATH}"
 cd "${WSPATH}"
@@ -91,8 +95,12 @@ done
 
 if [ -n "${ALL}" ]; then
 	rtos-clone -a
+elif [ -n "${SUPP}" ]; then
+	for r in ${RTOS_SUPP}; do
+		rtos-clone "${r}" || die "failed to clone ${r}"
+	done
 else
-	rtos-clone "${RTOS}" || die "failed to clone ${RTOS}"
+	rtos-clone "${RTOS}" || die "failed to clone ${r}"
 fi
 
 # Set up GateD

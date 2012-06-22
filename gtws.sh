@@ -44,11 +44,11 @@ function title {
 # Given a gated version, set RTOS to the default rtos version
 function set_default_rtos {
 	case "${1}" in
-		trunk) RTOS="itrunk" ;;
-		3.3) RTOS="i11.0" ;;
-		3.2) RTOS="i10.0" ;;
-		3.1) RTOS="i5.0" ;;
-		*) RTOS="itrunk" ;;
+		trunk) RTOS="itrunk"; RTOS_SUPP="itrunk i11.0" ;;
+		3.3) RTOS="i11.0"; RTOS_SUPP="i11.0 i10.0" ;;
+		3.2) RTOS="i10.0"; RTOS_SUPP="i10.0 i5.0" ;;
+		3.1) RTOS="i5.0"; RTOS_SUPP="i5.0" ;;
+		*) RTOS="itrunk"; RTOS_SUPP="itrunk" ;;
 	esac
 }
 
