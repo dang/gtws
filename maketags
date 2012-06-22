@@ -7,7 +7,7 @@ USAGE="[-hk] [<directories>]"
 LONGUSAGE="\t-h\tPrint this help message
 \t-k\tKernel database (no system includes)
 \t-c\tClean build (no .maketagsrc)
-\t-p\tOnly tag perl
+\t-p\tOnly tag perl and python
 \t<directories>\tDirectories to scan (defaults to '.')"
 
 source ${GTWS}/gtws.sh
@@ -52,7 +52,7 @@ fi
 TMPFILE=`mktemp -t maketags.XXXXXXXXXX` || die "Couldn't make tempfile"
 
 if [ -n "${PERL}" ]; then
-	find ${DIRS} -type f -and \( -name "*.pl" -or -name "*.pm" -or -name "*.perl" \) >> ${TMPFILE}
+	find ${DIRS} -type f -and \( -name "*.pl" -or -name "*.pm" -or -name "*.perl"  -or -name "*.py" \) >> ${TMPFILE}
 else
 	if [ -n "${SYSTEM_HDRS}" ]; then
 		find ${SYSTEM_HDRS} -type f -and \( -name "*.h++" -or -name "*.hxx" -or -name "*.hh" -or -name "*.hpp" -or -name "*.H" -or -name "*.h" \) >> ${TMPFILE}
