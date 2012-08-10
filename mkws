@@ -146,6 +146,7 @@ export TESTG_PAUSE_ON_FAIL=${TESTG_PAUSE_ON_FAIL:-1}
 export TESTG_GHNET=${TESTG_GHNET:-1}
 PATH=$MYPATH:"\$GATED_TOOLS_PATH/scripts"
 export PATH
+export CDPATH=":$WSPATH"
 
 function autobot {
 	if [ -z "\${1}" ]; then
