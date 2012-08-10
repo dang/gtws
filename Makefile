@@ -1,4 +1,4 @@
-# Makefile for building gated.  
+# Makefile for building gated.
 
 GBUILD=@GTWSGBUILD@
 
@@ -8,28 +8,28 @@ GVERSION:=$(strip $(shell basename $(shell dirname ${PWD})))
 all: developer
 
 developer:
-	@$(GBUILD) -parallel=12 -DNO_VALS -DCHECK_GATED -top pcx86/default.gpj gated-developer-dd
+	@$(GBUILD) -parallel=12 -DNO_VALS -DGATED_DEBUG -DCHECK_GATED -top pcx86/default.gpj gated-developer-dd
 
 qdeveloper:
-	@$(GBUILD) -parallel=12 -DNO_VALS -top pcx86/default.gpj gated-developer-dd
+	@$(GBUILD) -parallel=12 -DNO_VALS -DGATED_DEBUG -top pcx86/default.gpj gated-developer-dd
 
 userspace:
-	@$(GBUILD) -parallel=12 -DNO_VALS -DCHECK_GATED -top pcx86/default.gpj gated-userspace
+	@$(GBUILD) -parallel=12 -DNO_VALS -DGATED_DEBUG -DCHECK_GATED -top pcx86/default.gpj gated-userspace
 
 quserspace:
-	@$(GBUILD) -parallel=12 -DNO_VALS -top pcx86/default.gpj gated-userspace
+	@$(GBUILD) -parallel=12 -DNO_VALS -DGATED_DEBUG -top pcx86/default.gpj gated-userspace
 
 ikernel:
-	@$(GBUILD) -parallel=12 -DNO_VALS -DCHECK_GATED -top pcx86/default.gpj kernel
+	@$(GBUILD) -parallel=12 -DNO_VALS -DGATED_DEBUG -DCHECK_GATED -top pcx86/default.gpj kernel
 
 kernelspace:
-	@$(GBUILD) -parallel=12 -DNO_VALS -DCHECK_GATED -top pcx86/default.gpj gated-kernelspace
+	@$(GBUILD) -parallel=12 -DNO_VALS -DGATED_DEBUG -DCHECK_GATED -top pcx86/default.gpj gated-kernelspace
 
 integrity:
-	@$(GBUILD) -parallel=12 -DNO_VALS -DCHECK_GATED -top pcx86/default.gpj
+	@$(GBUILD) -parallel=12 -DNO_VALS -DGATED_DEBUG -DCHECK_GATED -top pcx86/default.gpj
 
 qintegrity:
-	@$(GBUILD) -parallel=12 -DNO_VALS -top pcx86/default.gpj
+	@$(GBUILD) -parallel=12 -DNO_VALS -DGATED_DEBUG -top pcx86/default.gpj
 
 linux:
 	@$(GBUILD) -parallel=12 -DCHECK_GATED -top modules/ghs/gated/gated-linux.gpj
@@ -47,7 +47,7 @@ docclean:
 	@rm */*.html */*.dmltag */*.hhc */*.hhk */*.ltx */*.oht */*.tit */*.pdf */*.tex */*.png
 
 clean:
-	@$(GBUILD) -parallel=12 -DNO_VALS -top pcx86/default.gpj libgated.gpj libcligated.gpj libhal.gpj libamiclient.gpj liballoc.gpj libcontainers.gpj libgcore.gpj libtrace.gpj libgaddr.gpj -clean
+	@$(GBUILD) -parallel=12 -DNO_VALS -DGATED_DEBUG -top pcx86/default.gpj libgated.gpj libcligated.gpj libhal.gpj libamiclient.gpj liballoc.gpj libcontainers.gpj libgcore.gpj libtrace.gpj libgaddr.gpj -clean
 
 boot: ikernel quserspace kernelspace
 	scp bin/pcx86/kernel bin/pcx86/gated-userspace bin/pcx86/gated-kernelspace tftp:/tftpboot/dang/$(GVERSION)/$(IVERSION)/
