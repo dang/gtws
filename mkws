@@ -171,7 +171,7 @@ function autobot {
 		shift 2
 	fi
 	
-	./autobot.pl -rtos_dir ${WSPATH}/\${RTOS}/ -kernel gated-userspace -rack \${RACK} -tests \${TESTFILE} \$@
+	./autobot.pl -rtos_dir ${WSPATH}/\${RTOS}/ -kernel gated-userspace -rack \${RACK} -tests \${TESTFILE} \$@ | tee autobot.log
 }
 
 title "${GATED}-${WSNAME}"
