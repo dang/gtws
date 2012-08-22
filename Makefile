@@ -47,7 +47,8 @@ docclean:
 	@rm */*.html */*.dmltag */*.hhc */*.hhk */*.ltx */*.oht */*.tit */*.pdf */*.tex */*.png
 
 clean:
-	@$(GBUILD) -parallel=12 -DNO_VALS -DGATED_DEBUG -top pcx86/default.gpj libgated.gpj libcligated.gpj libhal.gpj libamiclient.gpj liballoc.gpj libcontainers.gpj libgcore.gpj libtrace.gpj libgaddr.gpj -clean
+	@$(GBUILD) -top pcx86/default.gpj -clean
+	@rm -rf bin libs
 
 boot: ikernel quserspace kernelspace
 	scp bin/pcx86/kernel bin/pcx86/gated-userspace bin/pcx86/gated-kernelspace tftp:/tftpboot/dang/$(GVERSION)/$(IVERSION)/
