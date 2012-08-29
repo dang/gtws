@@ -9,12 +9,12 @@
 # GTWS_GATED_VERSION - Name of GateD version
 # GTWS_DEFAULT_RTOS - Name of default RTOS
 # GTWS_SUPP_RTOS - Space-separated list of supported RTOS versions
-# GTWS_COMPILER_PATH - Path to compiler to use
 #
 # Optional settings:
 # GTWS_ORIGIN - Path to origin directory. Defaults to ${HOME}/origin
 # GTWS_BASE_WORKDIR - Base for working dir.  Will use gatt/working otherwise
 # GTWS_SETPROMPT - Set the shell prompt to the workspace name
+# GTWS_COMPILER_PATH - Path to compiler to use.  Defaults to sane default based on integrity version
 
 WSPATH=$(readlink -f ${BASH_ARGV[0]%/*})
 WSNAME=$(basename "${WSPATH}")

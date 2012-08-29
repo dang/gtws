@@ -20,11 +20,6 @@ fi
 source ".gtwsrc"
 WSPATH="${PWD}"
 
-# Sanity
-if [ -z "${GTWS_COMPILER_PATH}" ]; then
-	die "Workspace does not set GTWS_COMPILER_PATH"
-fi
-
 # Script name
 ME=$(basename $0)
 

@@ -18,8 +18,6 @@ GateD Testing Workspaces
 
 	- GTWS_GATED_VERSION
 		- This should contain a valid GateD version name.
-	- GTWS_COMPILER_PATH
-		- This must contain a path to a GHS compiler
 	- GTWS_DEFAULT_RTOS
 		- Default RTOS version for new workspaces
 	- GTWS_SUPP_RTOS
@@ -36,6 +34,9 @@ GateD Testing Workspaces
 		- This sets the base of the working directories for GATT.  Each
 		  workspace will have it's own directory in here based on it's
 		  name.
+	- GTWS_COMPILER_PATH
+		- The path to a GHS compiler.  If not given, it defaults to a
+		  sane value based on the integrity version
 
 - Origin dirs
 	GTWS_ORIGIN (in most scripts) points to the prestine git checkouts to

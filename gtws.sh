@@ -54,15 +54,19 @@ function set_default_rtos {
 
 # set_default_comp "i10.0"
 #
-# Given a multi version, set GTCOMP to the path to the default compiler.  Note,
-# the command is not included, just the path.
+# Given an INTEGRITY version, set GTWS_COMPILER_PATH to the path to the default
+# compiler.  Note, the command is not included, just the path.  If
+# GTWS_COMPLIER_PATH is already set, it is *not* overridden
 function set_default_comp {
+	if [ -n "${GTWS_COMPILER_PATH}" ]; then
+		return 0
+	fi
 	case "${1}" in
-		i5.0)     GTCOMP="/share/multi/multi506/linux86" ;;
-		i5.0-vrf) GTCOMP="/share/multi/multi524/linux86" ;;
-		i10.0)    GTCOMP="/share/multi/multi524/linux86" ;;
-		i11.0)    GTCOMP="/share/ghs/comp/2012.1" ;;
-		*)        GTCOMP="/share/ghs/comp/current" ;;
+		i5.0)     GTWS_COMPILER_PATH="/share/multi/multi506/linux86" ;;
+		i5.0-vrf) GTWS_COMPILER_PATH="/share/multi/multi524/linux86" ;;
+		i10.0)    GTWS_COMPILER_PATH="/share/multi/multi524/linux86" ;;
+		i11.0)    GTWS_COMPILER_PATH="/share/ghs/comp/2012.1" ;;
+		*)        GTWS_COMPILER_PATH="/share/ghs/comp/current" ;;
 	esac
 }
 
