@@ -1,0 +1,78 @@
+#!/bin/bash
+#
+# Config file for gtws.  Should be sourced into your shell.
+#
+# Cascades up the path, loading any config it finds.  Each more specific config
+# file overrides less specific ones.
+
+# Things expected to come from a higher .gtwsrc:
+# GTWS_GATED_VERSION - Name of GateD version
+# GTWS_DEFAULT_RTOS - Name of default RTOS
+# GTWS_SUPP_RTOS - Space-separated list of supported RTOS versions
+# GTWS_COMPILER_PATH - Path to compiler to use
+#
+# Optional settings:
+# GTWS_ORIGIN - Path to origin directory. Defaults to ${HOME}/origin
+# GTWS_BASE_WORKDIR - Base for working dir.  Will use gatt/working otherwise
+# GTWS_SETPROMPT - Set the shell prompt to the workspace name
+
+WSPATH=$(readlink -f ${BASH_ARGV[0]%/*})
+WSNAME=$(basename "${WSPATH}")
+
+
+# load_rc /path/to/workspace
+#
+# Recursively load all RC files, starting at /
+function load_rc {
+	local BASE=$(dirname $(readlink -f "${1}"))
+	while [ "${BASE}" !=  "/" ]; do
+		if [ -f "${BASE}"/.gtwsrc ]; then
+			load_rc "${BASE}"
+			echo "Loading ${BASE}/.gtwsrc"
+			source "${BASE}"/.gtwsrc
+			return 0
+		fi
+		BASE=$(readlink -f $(dirname "${BASE}"))
+	done
+
+	# Stop at /
+	return 1
+}
+
+# title "foobar"
+#
+# Set the xterm/gnome-terminal title
+function title {
+	 echo -en "\033]2;$1\007"
+}
+
+# Load config files
+load_rc ${WSPATH}
+
+# Local settings go here
+export GATED_TOOLS_PATH="${WSPATH}/gatt"
+export GATED_TEST_DIR="${GATED_TOOLS_PATH}/tests"
+
+if [ -z "${GATED_TOOLS_HOMEDIR}" ]; then
+	if [ -n "${GTWS_BASE_WORKDIR}" ]; then
+		export GATED_TOOLS_HOMEDIR="${GTWS_BASE_WORKDIR}/${GTWS_GATED_VERSION}/${WSNAME}"
+	else
+		export GATED_TOOLS_HOMEDIR="${GATED_TOOLS_PATH}/working"
+	fi
+fi
+
+if [ -z "${GTWS_SAVEPATH}" ]; then
+	export GTWS_SAVEPATH="${PATH}"
+fi
+export PATH=$GTWS_SAVEPATH:"\$GATED_TOOLS_PATH/scripts"
+export CDPATH=":$WSPATH"
+
+title "${GTWS_GATED_VERSION}-${WSNAME}"
+
+if [ -z "${GTWS_SAVEPS1}" ]; then
+	export GTWS_SAVEPS1="${PS1}"
+fi
+if [ -n "${GTWS_SETPROMPT}" ]; then
+	PROMPT="(${GTWS_GATED_VERSION}-${WSNAME})"
+fi
+PS1="${PROMPT}${GTWS_SAVEPS1}"

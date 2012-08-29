@@ -10,10 +10,20 @@ LONGUSAGE="\t-h, --help\n\t\tPrint this help message
 \t<rtos>\n\t\tRTOS version"
 
 # Standard functions
-source ${GTWS}/gtws.sh
+GTWSLOC=$(readlink -f $(dirname "$0"))
+source ${GTWSLOC}/gtws.sh
 
-WSBASE="${GTWS_ORIGIN:-${HOME}/origin}"
+# Workspace settings
+if [ ! -f ".gtwsrc" ]; then
+	die "${PWD} is not a workspace"
+fi
+source ".gtwsrc"
 WSPATH="${PWD}"
+
+# Sanity
+if [ -z "${GTWS_COMPILER_PATH}" ]; then
+	die "Workspace does not set GTWS_COMPILER_PATH"
+fi
 
 # Script name
 ME=$(basename $0)
@@ -42,7 +52,7 @@ if [ -n "${1}" ]; then
 fi
 
 if [ -n "${ALL}" ]; then
-	cd "${WSBASE}"
+	cd "${GTWS_ORIGIN:=${HOME}/origin}"
 	RTOS=$(/bin/ls -d i*)
 fi
 
@@ -54,12 +64,12 @@ cd "${WSPATH}"
 
 for i in ${RTOS}; do
 	echo "cloning $i"
-	git clone "${WSBASE}/${i}" || die "failed to clone ${i}"
-	cp "${WSBASE}/${i}/.git/info/exclude" "${i}/.git/info/" || die "failed to copy exclude"
+	git clone "${GTWS_ORIGIN}/${i}" || die "failed to clone ${i}"
+	cp "${GTWS_ORIGIN}/${i}/.git/info/exclude" "${i}/.git/info/" || die "failed to copy exclude"
 	echo "Creating makefile"
 	set_default_comp "${i}"
-	cp "${GTWS}/Makefile" "${WSPATH}/${i}" || die "Couldn't copy Makefile"
-	sed -i "s#@GTWSGBUILD@#${GTCOMP}/gbuild#" "${WSPATH}/${i}/Makefile" || die "sed failed"
+	cp "${GTWSLOC}/Makefile" "${WSPATH}/${i}" || die "Couldn't copy Makefile"
+	sed -i "s#@GTWSGBUILD@#${GTWS_COMPILER_PATH}/gbuild#" "${WSPATH}/${i}/Makefile" || die "sed failed"
 	echo "Setting up $i"
 	cd "${WSPATH}/${i}/modules/ghs" || die "failed to cd to ${i}/modules/ghs"
 	ln -s "${WSPATH}/routing" "gated" || die "failed to symlink gated"

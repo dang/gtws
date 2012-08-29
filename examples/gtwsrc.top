@@ -1,22 +1,43 @@
+# ex: set filetype=sh:
+# I want to be able to use .gtwsrc as a bashrc, so source my .bashrc
+source "${HOME}/.bashrc"
+# GTWS config goes here
+export GTWS_ORIGIN="${HOME}/origin"
+export GTWS_BASE_WORKDIR="/casa/${USER}/test/working/"
+export GTWS_SETPROMPT=1
 
-function tools {
+
+# GATT config goes here
+export TESTG_INTEGRITY=1
+export TESTG_INTEGRITY_NOKILL=1
+export TESTG_PAUSE_ON_FAIL=1
+export TESTG_GHNET=1
+
+# Local stuff
+function autobot {
 	if [ -z "${1}" ]; then
-		echo "tools [<version>] <workspace>"
-		return 0
+		echo "Give some tests"
+		echo "Usage: autobot <testfile> <racks> [<rtosver>] [<autobot-arg>...]"
+		return
 	fi
 	if [ -z "${2}" ]; then
-		local VER="trunk"
-		local NAME="${1}"
-	else
-		local VER="${1}"
-		local NAME="${2}"
+		echo "Give some racks"
+		echo "Usage: autobot <testfile> <racks> [<rtosver>] [<autobot-arg>...]"
+		return
 	fi
-	if [ ! -f ${HOME}/src/${VER}/${NAME}/.tools.env ]; then
-		echo "No env for ${VER}/${NAME}"
-		return 1
+
+	TESTFILE="${1}"
+	if [ -n "3}" ]; then
+		RACK=${2}
+		RTOS=${3}
+		shift 3
 	else
-		. ${HOME}/src/${VER}/${NAME}/.tools.env
+		RACK=${2}
+		RTOS="${GTWS_DEFAULT_RTOS}"
+		shift 2
 	fi
+	
+	./autobot.pl -rtos_dir ${WSPATH}/${RTOS}/ -kernel gated-userspace -rack ${RACK} -tests ${TESTFILE} \$@ | tee autobot.log
 }
 
 function gatt() {
@@ -59,13 +80,14 @@ function gatt() {
 	esac
 }
 
-function cdws() {
-	cd "${HOME}/src/${WSVER}/${CURWS}/$@"
-}
-
 function cdorigin() {
 	local WSBASE="${GTWS_ORIGIN:-${HOME}/origin}"
-	cd "${WSBASE}/${WSVER}/$@"
+	cd "${WSBASE}/${GTWS_GATED_VERSION}/$@"
+}
+
+function wspush() {
+	local WSBASE=$(basename $PWD)
+	git push && cdorigin ${WSBASE} && git reset --hard && git svn dcommit && cd - && git sync
 }
 
 function debugws() {

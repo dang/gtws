@@ -10,7 +10,8 @@ LONGUSAGE="\t-h\tPrint this help message
 \t-p\tOnly tag perl and python
 \t<directories>\tDirectories to scan (defaults to '.')"
 
-source ${GTWS}/gtws.sh
+GTWSLOC=$(readlink -f $(dirname "$0"))
+source ${GTWSLOC}/gtws.sh
 
 while getopts ":hkcp" option; do
 	case ${option} in

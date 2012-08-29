@@ -12,7 +12,8 @@ LONGUSAGE="\t-h, --help\n\t\tPrint this help message
 \t<rtos>\n\t\tRTOS version"
 
 # Standard functions
-source ${GTWS}/gtws.sh
+GTWSLOC=$(readlink -f $(dirname "$0"))
+source ${GTWSLOC}/gtws.sh
 
 # Script name
 ME=$(basename $0)

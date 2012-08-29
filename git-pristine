@@ -10,7 +10,8 @@ LONGUSAGE="Clean up a git checkout to match it's repo
 \t-h, --help\n\t\tPrint this help message"
 
 # Standard functions
-source ${GTWS}/gtws.sh
+GTWSLOC=$(readlink -f $(dirname "$0"))
+source ${GTWSLOC}/gtws.sh
 
 # Script name
 ME=$(basename $0)

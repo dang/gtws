@@ -65,3 +65,22 @@ function set_default_comp {
 		*)        GTCOMP="/share/ghs/comp/current" ;;
 	esac
 }
+
+# load_rc /path/to/workspace
+#
+# Recursively load all RC files, starting at /
+function load_rc {
+	local BASE=$(readlink -f "${1}")
+	while [ "${BASE}" !=  "/" ]; do
+		if [ -f "${BASE}"/.gtwsrc ]; then
+			load_rc "$(dirname ${BASE})"
+			echo "Loading ${BASE}/.gtwsrc"
+			source "${BASE}"/.gtwsrc
+			return 0
+		fi
+		BASE=$(readlink -f $(dirname "${BASE}"))
+	done
+
+	# Stop at /
+	return 1
+}

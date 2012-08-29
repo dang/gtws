@@ -1,13 +1,14 @@
 #!/bin/bash
 #
-# Delete GateD development workspace
+# Start or attach to a tmux session in a workspace
 #
 
-GATED=$(basename "${PWD}")
+GATED="trunk"
 
 # Set usage output
-USAGE="[-h |--help] <name>"
+USAGE="[-h |--help] [-v <version> | --version=<version>] <name>"
 LONGUSAGE="\t-h, --help\n\t\tPrint this help message
+\t-v <version>, --version=<version>\n\t\tGateD version (default: ${GATED})
 \t<name>\n\t\tWorkspace name"
 
 # Standard functions
@@ -18,7 +19,7 @@ source ${GTWSLOC}/gtws.sh
 ME=$(basename $0)
 
 # Parse arguments
-ARGS=`getopt -o h --long help -n "${ME}" -- "$@"`
+ARGS=`getopt -o hv: --long help,version: -n "${ME}" -- "$@"`
 
 if [ $? != 0 ] ; then
 	usage 
@@ -28,6 +29,7 @@ eval set -- "$ARGS"
 while true ; do
 	case "$1" in
 		-h|--help) usage; shift ;;
+		-v|--version) GATED=$2 ; shift 2 ;;
 		--) shift ; break ;;
 		* ) usage "Invalid argument $1";;
 	esac
@@ -38,15 +40,10 @@ if [ -z "${1}" ]; then
 	usage "Must give a workspace name"
 fi
 
-WSPATH=$(readlink -f "${1}")
-WSNAME=$(basename "${WSPATH}")
+NAME="${1}"
 
-# Target directory check
-if [ ! -d "${WSPATH}" ]; then
-	die "Workspace ${WSPATH} doesn't exist"
+if [ ! -f ${HOME}/src/${GATED}/${NAME}/.gtwsrc ]; then
+	usage "No env for ${GATED}/${NAME}"
 fi
 
-# Nuke workspace
-rm -rf "${WSPATH}"
-# Nuke workdir
-rm -rf "/casa/${USER}/test/working/${GATED}/${WSNAME}"
+exec bash --rcfile ${HOME}/src/${GATED}/${NAME}/.gtwsrc

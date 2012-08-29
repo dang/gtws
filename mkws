@@ -3,22 +3,27 @@
 # Create a new GateD development workspace
 #
 
-GATED=$(basename "${PWD}")
+if [ -f "${PWD}/.gtwsrc" ]; then
+	source "${PWD}/.gtwsrc"
+fi
+if [ -z "${GTWS_GATED_VERSION}" ]; then
+	GTWS_GATED_VERSION=$(basename "${PWD}")
+fi
 
 # Set usage output
 USAGE="[-h |--help] [-a | --all-rtos] [-r <rtos> | --rtos=<rtos>] [-v <version> | --version=<version>] <name>"
 LONGUSAGE="\t-h, --help\n\t\tPrint this help message
-\t-v <version>, --version=<version>\n\t\tGateD version (default: ${GATED})
+\t-v <version>, --version=<version>\n\t\tGateD version (default: ${GTWS_GATED_VERSION})
 \t-a, --all-rtos\n\t\t Get all rtos versions
 \t-s, --supported-rtos\n\t\t Get all supported rtos versions
 \t-r <rtos>, --rtos=<rtos>\n\t\tRTOS version (default: depends on GateD version)
 \t<name>\n\t\tWorkspace name"
 
 # Standard functions
-source ${GTWS}/gtws.sh
+GTWSLOC=$(readlink -f $(dirname "$0"))
+source ${GTWSLOC}/gtws.sh
 
-set_default_rtos "${GATED}"
-WSBASE="${GTWS_ORIGIN:-${HOME}/origin}"
+set_default_rtos "${GTWS_GATED_VERSION}"
 WSDIRS="routing docs gatt"
 
 # Script name
@@ -35,7 +40,7 @@ eval set -- "$ARGS"
 while true ; do
 	case "$1" in
 		-h|--help) usage; shift ;;
-		-v|--version) GATED=$2 ; shift 2 ;;
+		-v|--version) GTWS_GATED_VERSION=$2 ; shift 2 ;;
 		-r|--rtos) RTOS=$2 ; shift 2 ;;
 		-a|--all-rtos) ALL="yes"; shift ;;
 		-s|--supported-rtos) SUPP="yes"; shift ;;
@@ -52,38 +57,47 @@ fi
 WSPATH=$(readlink -f "${1}")
 WSNAME=$(basename "${WSPATH}")
 
-# Workspace check
-WS="${WSBASE}/${GATED}"
-if [ ! -d "${WS}" ]; then
-	die "No workspace for ${WS}"
-fi
-if [ ! -d "${WSBASE}/${RTOS}" ]; then
-	die "No ${RTOS} in ${WSBASE}"
-fi
-
-# Workspace contents check
-for i in ${WSDIRS}; do
-	if [ ! -d "${WS}/${i}" ]; then
-		die "No ${i} in workspace ${WS}"
-	fi
-done
-
 # Target directory check
 if [ -d "${WSPATH}" ]; then
 	die "Workspace ${WSPATH} already exists"
 fi
 
+# Set up the environment
+mkdir -p "${WSPATH}" || die "Failed to mkdir ${WSPATH}"
+cd "${WSPATH}"
+cp "${GTWSLOC}"/gtwsrc "${WSPATH}"/.gtwsrc
+source "${WSPATH}"/.gtwsrc
+
+# Workspace check
+WS="${GTWS_ORIGIN:=${HOME}/origin}/${GTWS_GATED_VERSION}"
+if [ ! -d "${WS}" ]; then
+	rm -rf "${WSPATH}"
+	die "No origin workspace for ${GTWS_GATED_VERSION}"
+fi
+if [ ! -d "${GTWS_ORIGIN}/${RTOS:=${GTWS_DEFAULT_RTOS}}" ]; then
+	rm -rf "${WSPATH}"
+	die "No ${RTOS} in ${GTWS_ORIGIN}"
+fi
+
+# Workspace contents check
+for i in ${WSDIRS}; do
+	if [ ! -d "${WS}/${i}" ]; then
+		rm -rf "${WSPATH}"
+		die "No ${i} in origin workspace ${WS}"
+	fi
+done
+
 if [ -n "${ALL}" ]; then
 	TARGET="all"
 elif [ -n "${SUPP}" ]; then
 	TARGET=${RTOS_SUPP}
+else
+	TARGET=${RTOS}
 fi
 
 # Make workspace
-echo "Making workspace for ${GATED}:${TARGET} in ${WSPATH}"
-
-mkdir -p "${WSPATH}" || die "Failed to mkdir ${WSPATH}"
-cd "${WSPATH}"
+echo "Making workspace for ${GTWS_GATED_VERSION}:${TARGET} in ${WSPATH}"
+# Made directory above
 
 for i in ${WSDIRS}; do
 	git clone "${WS}/${i}" || die "failed to clone ${i}"
@@ -106,75 +120,24 @@ fi
 # Set up GateD
 cd "${WSPATH}/routing" || die "failed to cd to routing"
 export SYSTEM_HDRS="../${RTOS}/INTEGRITY-include /share/ghs/comp/current"
-maketags -c
+maketags -c "${PWD}"
 
 # Set up GATT
 cd "${WSPATH}/gatt" || die "failed to cd to gatt"
-maketags -p -c
+maketags -p -c "${PWD}"
 
 # Add dmltools to docs
 cd "${WSPATH}/docs" || die "failed to cd to docs"
-git clone "${WSBASE}/dmltools" || die "failed to clone dmltools"
+git clone "${GTWS_ORIGIN}/dmltools" || die "failed to clone dmltools"
 
 # Set up workdirs
 echo "Making workdirs"
 export GATED_TOOLS_PATH="${WSPATH}/gatt"
-export GATED_TOOLS_HOMEDIR="/casa/${USER}/test/working/${GATED}/${WSNAME}"
+export GATED_TOOLS_HOMEDIR="/casa/${USER}/test/working/${GTWS_GATED_VERSION}/${WSNAME}"
 if [ -d "${GATED_TOOLS_HOMEDIR}" ]; then
 	rm -rf "${GATED_TOOLS_HOMEDIR}"
 fi
 mkdir -p "${GATED_TOOLS_HOMEDIR}"
 ${GATED_TOOLS_PATH}/scripts/mkworkdirs
 
-if [ -n "${GTWS_NOPROMPT}" ]; then
-	PROMPT=""
-else
-	PROMPT="(${GATED}-${WSNAME})"
-fi
-
-echo "Creating .tools.env"
-cat > "${WSPATH}"/.tools.env << EOF
-source ${GTWS}/gtws.sh
-export CURWS="${WSNAME}"
-export WSVER="${GATED}"
-export GATED_TOOLS_PATH="${GATED_TOOLS_PATH}"
-export GATED_TEST_DIR="\$GATED_TOOLS_PATH/tests";
-export GATED_TOOLS_HOMEDIR="${GATED_TOOLS_HOMEDIR}"
-export TESTG_INTEGRITY=${TESTG_INTEGRITY:-1}
-export TESTG_INTEGRITY_NOKILL=${TESTG_INTEGRITY_NOKILL:-1}
-export TESTG_PAUSE_ON_FAIL=${TESTG_PAUSE_ON_FAIL:-1}
-export TESTG_GHNET=${TESTG_GHNET:-1}
-PATH=$MYPATH:"\$GATED_TOOLS_PATH/scripts"
-export PATH
-export CDPATH=":$WSPATH"
-
-function autobot {
-	if [ -z "\${1}" ]; then
-		echo "Give some tests"
-		echo "Usage: autobot <testfile> <racks> [<rtosver>] [<autobot-arg>...]"
-		return
-	fi
-	if [ -z "\${2}" ]; then
-		echo "Give some racks"
-		echo "Usage: autobot <testfile> <racks> [<rtosver>] [<autobot-arg>...]"
-		return
-	fi
-
-	TESTFILE="\${1}"
-	if [ -n "\${3}" ]; then
-		RACK=\${2}
-		RTOS=\${3}
-		shift 3
-	else
-		RACK=\${2}
-		RTOS="$RTOS"
-		shift 2
-	fi
-	
-	./autobot.pl -rtos_dir ${WSPATH}/\${RTOS}/ -kernel gated-userspace -rack \${RACK} -tests \${TESTFILE} \$@ | tee autobot.log
-}
-
-title "${GATED}-${WSNAME}"
-PS1="${PROMPT}\${PS1}"
-EOF
-
+echo "Done"

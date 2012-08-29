@@ -16,7 +16,8 @@ LONGUSAGE="\t-h, --help\n\t\tPrint this help message
 \t-f, --force\n\t\tSync even if the local branch is not up-to-date"
 
 # Standard functions
-source ${GTWS}/gtws.sh
+GTWSLOC=$(readlink -f $(dirname "$0"))
+source ${GTWSLOC}/gtws.sh
 
 # Script name
 ME=$(basename $0)

@@ -1,29 +1,46 @@
 GateD Testing Workspaces
 
-- Setup
+- Setup Overview
 	- Checkout gtws
 		git clone ssh://git@buildbot.aa.ghs.com/home/git/gtws.git
-	- Export the master path variable
-		export GTWS="/path/to/gtws"
+	- Set up your ${HOME}/.gtwsrc
+		- Should include GTWS_ORIGIN, GTWS_BASE_WORKDIR, optionally GTWS_SETPROMPT
 	- Add the repo directory to your path
-		export PATH="${PATH}:${GTWS}
-	- Source the env.sh file
-		source ${GTWS}/.env.sh
+		export PATH="${PATH}:/path/to/gtws
 	- Profit
 
 - Configuration
-	Configuration is via environment variables.  This section describes each one and it's effect.
+	Configuration is via cascading .gtwsrc files.  The real path down from
+	the root is walked, and each .gtwsrc file found is sourced in turn.
+	More specific files oveeride less specific ones.
 
-	- GTWS_NOPROMPT
-		- If set, then the prompt is not changet in the workspace.  Otherwise, it is prefixed
-		  with "(<gatedver>-<wsname>)"
+	Here are some settings that must be set somewhere in the tree:
+
+	- GTWS_GATED_VERSION
+		- This should contain a valid GateD version name.
+	- GTWS_COMPILER_PATH
+		- This must contain a path to a GHS compiler
+	- GTWS_DEFAULT_RTOS
+		- Default RTOS version for new workspaces
+	- GTWS_SUPP_RTOS
+		- Supported RTOS versions for new workspace
+
+	Here are optional settings.
+
 	- GTWS_ORIGIN
-		- If set, is the full path to your origin directories.  Defaults to ${HOME}/origin
+		- This sets the location of the origin git trees.  Defaults to $HOME/origin
+	- GTWS_SETPROMPT
+		- This is optional.  If set, the shell prompt will be changed
+		  to have the workspace name in it.
+	- GTWS_BASE_WORKDIR
+		- This sets the base of the working directories for GATT.  Each
+		  workspace will have it's own directory in here based on it's
+		  name.
 
 - Origin dirs
-	ORIGIN (in most scripts) points to the prestine git checkouts to pull
-	from and push to.  For me, the GateD/Gatt checkouts are git svn clones,
-	the RTOS checkouts are clones from buildbot's repos.
+	GTWS_ORIGIN (in most scripts) points to the prestine git checkouts to
+	pull from and push to.  For me, the GateD/Gatt checkouts are git svn
+	clones, the RTOS checkouts are clones from buildbot's repos.
 
 	- Layout
 		- /dmltools
@@ -64,22 +81,25 @@ GateD Testing Workspaces
 			- All checkouts have .git/info/exclude copied
 			- routing and gatt have tags made
 			- All RTOS checkoutes have routing symlinked and ./setup run
-		- tools r2222
+		- gtstart r2222
 			- Sets up environment
 			- changes prompt
-		- cdws routing
-			- Goes do gated
+		- cd routing
+			- Goes to gated
 		- Make changes; commit
-		- gatt autobot
+		- cd gatt/autobot
 			- Goes to gatt/autobot
 		- autobot ospf 26,27,28,60
 			- Runs ospf tests on racks
 		- Push
-			- cdws routing
-			- git push
-			- cd ~/origin/trunk/routing
-			- git reset --hard
-			- git svn dcommit
+			- cd routing
+			- wspush
+				- This does:
+				- git push
+				- cd ${GTWS_ORIGIN}/${GTWS_GATED_VERSION}/routing
+				- git reset --hard
+				- git svn dcommit
+				- cd -
 		- Update origin
 			- origin
 				- Updates all gated/gatt/docs versions

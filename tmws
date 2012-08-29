@@ -1,0 +1,82 @@
+#!/bin/bash
+#
+# Start or attach to a tmux session in a workspace
+#
+
+GATED="trunk"
+
+# Set usage output
+USAGE="[-h |--help] [-v <version> | --version=<version>] <name>"
+LONGUSAGE="\t-h, --help\n\t\tPrint this help message
+\t-v <version>, --version=<version>\n\t\tGateD version (default: ${GATED})
+\t<name>\n\t\tWorkspace name"
+
+# Standard functions
+GTWSLOC=$(readlink -f $(dirname "$0"))
+source ${GTWSLOC}/gtws.sh
+
+# Script name
+ME=$(basename $0)
+
+# Parse arguments
+ARGS=`getopt -o hv: --long help,version: -n "${ME}" -- "$@"`
+
+if [ $? != 0 ] ; then
+	usage 
+fi
+eval set -- "$ARGS"
+
+while true ; do
+	case "$1" in
+		-h|--help) usage; shift ;;
+		-v|--version) GATED=$2 ; shift 2 ;;
+		--) shift ; break ;;
+		* ) usage "Invalid argument $1";;
+	esac
+done
+
+# Remaining arguments are in $1, $2, etc. as normal
+if [ -z "${1}" ]; then
+	usage "Must give a workspace name"
+fi
+
+NAME="${1}"
+
+if [ -n "$TMUX" ]; then
+	usage "Do not run from within tmux"
+fi
+
+if [ ! -f ${HOME}/src/${GATED}/${NAME}/.gtwsrc ]; then
+	usage "No .gtwsrc for ${GATED}/${NAME}"
+	exit 1
+fi
+
+cd "${HOME}/src/${GATED}/${NAME}"
+
+NUM_SES=$(tmux ls | grep "^${NAME}" | wc -l)
+if [ "${NUM_SES}" == "0" ]; then
+	echo "Launching tmux base session ${NAME} ..."
+	tmux new-session -s ${NAME} -n "Edit" "gtstart -v ${GATED} ${NAME}" \; \
+		new-window -n "Build" "gtstart -v ${GATED} ${NAME}" \; \
+		split-window -v  "gtstart -v ${GATED} ${NAME}" \; \
+		split-window -v  "gtstart -v ${GATED} ${NAME}" \; \
+		select-layout even-horizontal \; \
+		select-pane -t 0
+else
+	# Kill defunct sessions first
+        OLD_SESSIONS=$(tmux ls 2>/dev/null | egrep "^[0-9]{14}.*[0-9]+\)$" | cut -f 1 -d:)
+	for SESSION in ${OLD_SESSIONS}; do
+		tmux kill-session -t ${SESSION}
+	done
+
+	echo "Attaching to workspace ${NAME} ..."
+	# Session is is date and time to prevent conflict
+	SESSION=`date +%Y%m%d%H%M%S`
+	# Create a new session (without attaching it) and link to base session 
+	# to share windows
+	tmux new-session -d -t ${NAME} -s ${SESSION}
+	# Attach to the new session
+	tmux attach-session -t ${SESSION}
+	# When we detach from it, kill the session
+	tmux kill-session -t ${SESSION}
+fi
