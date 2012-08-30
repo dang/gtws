@@ -82,7 +82,7 @@ GateD Testing Workspaces
 			- All checkouts have .git/info/exclude copied
 			- routing and gatt have tags made
 			- All RTOS checkoutes have routing symlinked and ./setup run
-		- gtstart r2222
+		- startws r2222
 			- Sets up environment
 			- changes prompt
 		- cd routing

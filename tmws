@@ -56,10 +56,10 @@ cd "${HOME}/src/${GATED}/${NAME}"
 NUM_SES=$(tmux ls | grep "^${NAME}" | wc -l)
 if [ "${NUM_SES}" == "0" ]; then
 	echo "Launching tmux base session ${NAME} ..."
-	tmux new-session -s ${NAME} -n "Edit" "gtstart -v ${GATED} ${NAME}" \; \
-		new-window -n "Build" "gtstart -v ${GATED} ${NAME}" \; \
-		split-window -v  "gtstart -v ${GATED} ${NAME}" \; \
-		split-window -v  "gtstart -v ${GATED} ${NAME}" \; \
+	tmux new-session -s ${NAME} -n "Edit" "startws -v ${GATED} ${NAME}" \; \
+		new-window -n "Build" "startws -v ${GATED} ${NAME}" \; \
+		split-window -v  "startws -v ${GATED} ${NAME}" \; \
+		split-window -v  "startws -v ${GATED} ${NAME}" \; \
 		select-layout even-horizontal \; \
 		select-pane -t 0
 else
