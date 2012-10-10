@@ -5,6 +5,7 @@ source "${HOME}/.bashrc"
 export GTWS_ORIGIN="${HOME}/origin"
 export GTWS_BASE_WORKDIR="/casa/${USER}/test/working/"
 export GTWS_SETPROMPT=1
+export GTWS_EXTRA_FILES=".project.vim .syntastic_c_config"
 
 
 # GATT config goes here

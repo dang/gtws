@@ -102,8 +102,12 @@ echo "Making workspace for ${GTWS_GATED_VERSION}:${TARGET} in ${WSPATH}"
 for i in ${WSDIRS}; do
 	git clone "${WS}/${i}" || die "failed to clone ${i}"
 	cp "${WS}/${i}/.git/info/exclude" "${i}/.git/info/" || die "failed to copy exclude"
-	if [ -f "${WS}/${i}/.project.vim" ]; then
-		cp "${WS}/${i}/.project.vim" "${i}/" || die "failed to copy .project.vim"
+	if [ -n "${GTWS_EXTRA_FILES}" ]; then
+		for f in ${GTWS_EXTRA_FILES}; do
+			if [ -f "${WS}/${i}/${f}" ]; then
+				cp "${WS}/${i}/${f}" "${i}/" || die "failed to copy ${f}"
+			fi
+		done
 	fi
 done
 
