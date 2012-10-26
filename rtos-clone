@@ -19,6 +19,7 @@ if [ ! -f ".gtwsrc" ]; then
 fi
 source ".gtwsrc"
 WSPATH="${PWD}"
+GTWS_ORIGIN="${GTWS_ORIGIN:-${HOME}/origin}"
 
 # Script name
 ME=$(basename $0)
@@ -47,7 +48,7 @@ if [ -n "${1}" ]; then
 fi
 
 if [ -n "${ALL}" ]; then
-	cd "${GTWS_ORIGIN:=${HOME}/origin}"
+	cd "${GTWS_ORIGIN}"
 	RTOS=$(/bin/ls -d i*)
 fi
 
@@ -61,6 +62,11 @@ for i in ${RTOS}; do
 	echo "cloning $i"
 	git clone "${GTWS_ORIGIN}/${i}" || die "failed to clone ${i}"
 	cp "${GTWS_ORIGIN}/${i}/.git/info/exclude" "${i}/.git/info/" || die "failed to copy exclude"
+	for f in ${GTWS_EXTRA_FILES}; do
+		if [ -f "${GTWS_ORIGIN}/${i}/${f}" ]; then
+			cp "${GTWS_ORIGIN}/${i}/${f}" "${i}/" || die "failed to copy ${f}"
+		fi
+	done
 	echo "Creating makefile"
 	set_default_comp "${i}"
 	cp "${GTWSLOC}/Makefile" "${WSPATH}/${i}" || die "Couldn't copy Makefile"

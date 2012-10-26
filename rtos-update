@@ -15,6 +15,13 @@ LONGUSAGE="\t-h, --help\n\t\tPrint this help message
 GTWSLOC=$(readlink -f $(dirname "$0"))
 source ${GTWSLOC}/gtws.sh
 
+# Workspace settings
+if [ ! -f ".gtwsrc" ]; then
+	die "${PWD} is not a workspace"
+fi
+source ".gtwsrc"
+GTWS_ORIGIN="${GTWS_ORIGIN:-${HOME}/origin}"
+
 # Script name
 ME=$(basename $0)
 
@@ -50,6 +57,12 @@ fi
 
 for i in ${RTOS}; do
 	echo "updating $i"
+	cp "${GTWS_ORIGIN}/${i}/.git/info/exclude" "${i}/.git/info/" || die "failed to copy exclude"
+	for f in ${GTWS_EXTRA_FILES}; do
+		if [ -f "${GTWS_ORIGIN}/${i}/${f}" ]; then
+			cp "${GTWS_ORIGIN}/${i}/${f}" "${i}/" || die "failed to copy ${f}"
+		fi
+	done
 	cd "${i}"
 	git pull --rebase || die "Pull failed for ${i}"
 	cd "${WSPATH}"
