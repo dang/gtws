@@ -41,10 +41,10 @@ test:
 	@(cd modules/ghs/gated; $(MAKE) $@) || exit 5
 
 docs:
-	@dmltools/builddocset gated_products
+	@(cd ../docs; dmltools/builddocset gated_products)
 
 docclean:
-	@rm */*.html */*.dmltag */*.hhc */*.hhk */*.ltx */*.oht */*.tit */*.pdf */*.tex */*.png
+	@(cd ../docs; rm */*.html */*.dmltag */*.hhc */*.hhk */*.ltx */*.oht */*.tit */*.pdf */*.tex */*.png)
 
 clean:
 	@$(GBUILD) -top pcx86/default.gpj -clean
