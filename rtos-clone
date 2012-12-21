@@ -4,9 +4,10 @@
 #
 
 # Set usage output
-USAGE="[-h |--help] [-a | --all-rtos] <rtos> [<rtos> ...]"
+USAGE="[-h |--help] [-a | --all-rtos] [-p | --patch] <rtos> [<rtos> ...]"
 LONGUSAGE="\t-h, --help\n\t\tPrint this help message
 \t-a, --all-rtos\n\t\t Get all rtos versions
+\t-p, --patch\n\t\t Patch with GATT patch
 \t<rtos>\n\t\tRTOS version"
 
 # Standard functions
@@ -25,7 +26,7 @@ GTWS_ORIGIN="${GTWS_ORIGIN:-${HOME}/origin}"
 ME=$(basename $0)
 
 # Parse arguments
-ARGS=`getopt -o ha --long help,all: -n "${ME}" -- "$@"`
+ARGS=`getopt -o hap --long help,all,patch: -n "${ME}" -- "$@"`
 
 if [ $? != 0 ] ; then
 	usage 
@@ -36,6 +37,7 @@ while true ; do
 	case "$1" in
 		-h|--help) usage; shift ;;
 		-a|--all-rtos) ALL="yes"; shift ;;
+		-p|--patch) PATCH="yes"; shift ;;
 		--) shift ; break ;;
 		* ) usage "Invalid argument $1";;
 	esac
@@ -73,10 +75,21 @@ for i in ${RTOS}; do
 	# Detect directory
 	if [ -d "${WSPATH}/${i}/rtos/pcx86" ]; then
 		RDIR="${WSPATH}/${i}/rtos"
+		# Can't patch this type
+		unset PATCH
 	elif [ -d "${WSPATH}/${i}/pcx86" ]; then
 		RDIR="${WSPATH}/${i}"
 	else
 		die "Cannot find target dir in ${WSPATH}/${i}"
+	fi
+	if [ -n "${PATCH}" ]; then
+		if [ -d "${WSPATH}/gatt/patches/${i}" ]; then
+			echo "Applying GATT patch"
+			cd "${RDIR}" || die "failed to cd to ${RDIR}"
+			git am "${WSPATH}/gatt/patches/${i}/"*.patch || die "git am failed"
+		else
+			echo "No patches for ${i}; skipping"
+		fi
 	fi
 	echo "Creating makefile"
 	set_default_comp "${i}"
