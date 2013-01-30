@@ -110,13 +110,13 @@ for i in ${WSDIRS}; do
 done
 
 if [ -n "${ALL}" ]; then
-	rtos-clone -a
+	rtos-clone -a -p
 elif [ -n "${SUPP}" ]; then
 	for r in ${RTOS_SUPP}; do
-		rtos-clone "${r}" || die "failed to clone ${r}"
+		rtos-clone -p "${r}" || die "failed to clone ${r}"
 	done
 else
-	rtos-clone "${RTOS}" || die "failed to clone ${r}"
+	rtos-clone -p "${RTOS}" || die "failed to clone ${r}"
 fi
 
 # Set up GateD
