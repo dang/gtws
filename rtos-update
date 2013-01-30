@@ -65,6 +65,7 @@ for i in ${RTOS}; do
 	done
 	cd "${i}"
 	git pull --rebase || die "Pull failed for ${i}"
+	./setup > /dev/null 2>&1
 	cd "${WSPATH}"
 	echo ""
 done
