@@ -21,7 +21,7 @@ is_interactive() {
 #
 # Print a message and exit with failure
 die() {
-	echo "$@"
+	echo "Failed: $@"
 	if ! is_interactive; then
 		exit 1
 	fi
