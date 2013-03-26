@@ -6,7 +6,7 @@
 USAGE="[-hk] [<directories>]"
 LONGUSAGE="\t-h\tPrint this help message
 \t-k\tKernel database (no system includes)
-\t-c\tClean build (no .maketagsrc)
+\t-c\tClean build (no .gtwsrc)
 \t-p\tOnly tag perl and python
 \t<directories>\tDirectories to scan (defaults to '.')"
 
@@ -29,7 +29,12 @@ echo "$0 $@" > ".#maketags.dfg"
 
 # Get stuff from the .maketagsrc file
 if [ -z "${CLEAN}" ]; then
-	if [ -f "${HOME}/.maketagsrc" ]; then
+	if [ -f ".gtwsrc" ]; then
+		source ".gtwsrc"
+		set_default_comp "${GTWS_DEFAULT_RTOS}"
+		SYSTEM_HDRS="${WSPATH}/${GTWS_DEFAULT_RTOS}/INTEGRITY-include ${GTWS_COMPILER_PATH}"
+		KERNEL_HDRS="${GTWS_COMPILER_PATH}"
+	elif [ -f "${HOME}/.maketagsrc" ]; then
 		source ${HOME}/.maketagsrc
 	fi
 fi
@@ -46,8 +51,10 @@ fi
 
 if [ -n "${KERNEL}" ]; then
 	echo "Making kernel tags for $DIRS"
+	HDRS="${KERNEL_HDRS}"
 else
 	echo "Making tags for $DIRS"
+	HDRS="${SYSTEM_HDRS}"
 fi
 
 TMPFILE=`mktemp -t maketags.XXXXXXXXXX` || die "Couldn't make tempfile"
@@ -55,8 +62,8 @@ TMPFILE=`mktemp -t maketags.XXXXXXXXXX` || die "Couldn't make tempfile"
 if [ -n "${PERL}" ]; then
 	find ${DIRS} -type f -and \( -name "*.pl" -or -name "*.pm" -or -name "*.perl"  -or -name "*.py" \) >> ${TMPFILE}
 else
-	if [ -n "${SYSTEM_HDRS}" ]; then
-		find ${SYSTEM_HDRS} -type f -and \( -name "*.h++" -or -name "*.hxx" -or -name "*.hh" -or -name "*.hpp" -or -name "*.H" -or -name "*.h" \) >> ${TMPFILE}
+	if [ -n "${HDRS}" ]; then
+		find ${HDRS} -type f -and \( -name "*.h++" -or -name "*.hxx" -or -name "*.hh" -or -name "*.hpp" -or -name "*.H" -or -name "*.h" \) >> ${TMPFILE}
 	fi
 	find ${DIRS} ${EXTRA_DIRS} -type f -and \( -name "*.c" -or -name "*.cpp" -or -name "*.cxx" -or -name "*.h++" -or -name "*.hxx" -or -name "*.hh" -or -name "*.hpp" -or -name "*.H" -or -name "*.C" -or -name "*.c++" -or -name "*.cc" -or -name "*.h" \) >> ${TMPFILE}
 fi
@@ -70,11 +77,11 @@ rm ${TMPFILE}
 cscope -q -L ${KERNEL} -i cscope.files
 if [ -n "${SKIPRE}" ]; then
 	# We're skipping files; only use files in the list
-	exuberant-ctags -L- < cscope.files
+	ctags -L- < cscope.files
 elif [ -n "${PERL}" ]; then
 	# Only want perl files
-	exuberant-ctags -L- < cscope.files
+	ctags -L- < cscope.files
 else
 	# Tag everything, so that we get languages other than C/C++
-	exuberant-ctags -R
+	ctags -R
 fi
