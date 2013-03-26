@@ -50,7 +50,8 @@ for GV in ${GATED}; do
 	# Workspace check
 	WS="${WSBASE}/${GV}"
 	if [ ! -d "${WS}" ]; then
-		die "No workspace for ${WS}"
+		echo "No workspace for ${WS}; skipping"
+		continue
 	fi
 
 	# Workspace contents check
