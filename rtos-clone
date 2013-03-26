@@ -86,7 +86,7 @@ for i in ${RTOS}; do
 		if [ -d "${WSPATH}/gatt/patches/${i}" ]; then
 			echo "Applying GATT patch"
 			cd "${RDIR}" || die "failed to cd to ${RDIR}"
-			git am "${WSPATH}/gatt/patches/${i}/"*.patch || die "git am failed"
+			git am --whitespace=nowarn "${WSPATH}/gatt/patches/${i}/"*.patch || die "git am failed"
 		else
 			echo "No patches for ${i}; skipping"
 		fi
