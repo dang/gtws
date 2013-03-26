@@ -5,31 +5,31 @@ GBUILD=@GTWSGBUILD@
 IVERSION:=$(strip $(shell basename ${PWD}))
 GVERSION:=$(strip $(shell basename $(shell dirname ${PWD})))
 
-all: developer
+all: userspace
 
 developer:
-	@$(GBUILD) -parallel=12 -DNO_VALS -DGATED_DEBUG -DCHECK_GATED -top pcx86/default.gpj gated-developer-dd
+	@$(GBUILD) -parallel=12 -DNO_VALS -DGATED_DEBUG -DCHECK_GATED -top @GTWSBSP@/default.gpj gated-developer-dd
 
 qdeveloper:
-	@$(GBUILD) -parallel=12 -DNO_VALS -DGATED_DEBUG -top pcx86/default.gpj gated-developer-dd
+	@$(GBUILD) -parallel=12 -DNO_VALS -DGATED_DEBUG -top @GTWSBSP@/default.gpj gated-developer-dd
 
 userspace:
-	@$(GBUILD) -parallel=12 -DNO_VALS -DGATED_DEBUG -DCHECK_GATED -top pcx86/default.gpj gated-userspace
+	@$(GBUILD) -parallel=12 -DNO_VALS -DGATED_DEBUG -DCHECK_GATED -top @GTWSBSP@/default.gpj gated-userspace
 
 quserspace:
-	@$(GBUILD) -parallel=12 -DNO_VALS -DGATED_DEBUG -top pcx86/default.gpj gated-userspace
+	@$(GBUILD) -parallel=12 -DNO_VALS -DGATED_DEBUG -top @GTWSBSP@/default.gpj gated-userspace
 
 ikernel:
-	@$(GBUILD) -parallel=12 -DNO_VALS -DGATED_DEBUG -DCHECK_GATED -top pcx86/default.gpj kernel
+	@$(GBUILD) -parallel=12 -DNO_VALS -DGATED_DEBUG -DCHECK_GATED -top @GTWSBSP@/default.gpj kernel
 
 kernelspace:
-	@$(GBUILD) -parallel=12 -DNO_VALS -DGATED_DEBUG -DCHECK_GATED -top pcx86/default.gpj gated-kernelspace
+	@$(GBUILD) -parallel=12 -DNO_VALS -DGATED_DEBUG -DCHECK_GATED -top @GTWSBSP@/default.gpj gated-kernelspace
 
 integrity:
-	@$(GBUILD) -parallel=12 -DNO_VALS -DGATED_DEBUG -DCHECK_GATED -top pcx86/default.gpj
+	@$(GBUILD) -parallel=12 -DNO_VALS -DGATED_DEBUG -DCHECK_GATED -top @GTWSBSP@/default.gpj
 
 qintegrity:
-	@$(GBUILD) -parallel=12 -DNO_VALS -DGATED_DEBUG -top pcx86/default.gpj
+	@$(GBUILD) -parallel=12 -DNO_VALS -DGATED_DEBUG -top @GTWSBSP@/default.gpj
 
 linux:
 	@$(GBUILD) -parallel=12 -DCHECK_GATED -top modules/ghs/gated/gated-linux.gpj
@@ -47,11 +47,11 @@ docclean:
 	@(cd ../docs; rm */*.html */*.dmltag */*.hhc */*.hhk */*.ltx */*.oht */*.tit */*.pdf */*.tex */*.png)
 
 clean:
-	@$(GBUILD) -top pcx86/default.gpj -clean
+	@$(GBUILD) -top @GTWSBSP@/default.gpj -clean
 	@rm -rf bin libs
 
 boot: ikernel quserspace kernelspace
-	scp bin/pcx86/kernel bin/pcx86/gated-userspace bin/pcx86/gated-kernelspace tftp:/tftpboot/dang/$(GVERSION)/$(IVERSION)/
+	scp bin/@GTWSBSP@/kernel bin/@GTWSBSP@/gated-userspace bin/@GTWSBSP@/gated-kernelspace tftp:/tftpboot/dang/$(GVERSION)/$(IVERSION)/
 
 cf4:
 	@/share/tools/vmdk/provision cf4-host.aa.ghs.com cf4-boxa cf4-boxb cf4-boxc cf4-boxd

@@ -93,8 +93,10 @@ for i in ${RTOS}; do
 	fi
 	echo "Creating makefile"
 	set_default_comp "${i}"
+	set_default_bsp "${i}"
 	cp "${GTWSLOC}/Makefile" "${RDIR}" || die "Couldn't copy Makefile"
-	sed -i "s#@GTWSGBUILD@#${GTWS_COMPILER_PATH}/gbuild#" "${RDIR}/Makefile" || die "sed failed"
+	sed -i "s#@GTWSGBUILD@#${GTWS_COMPILER_PATH}/gbuild#" "${RDIR}/Makefile" || die "gbuild sed failed"
+	sed -i "s#@GTWSBSP@#${GTWS_BSP}#" "${RDIR}/Makefile" || die "bsp sed failed"
 	echo "Setting up $i"
 	cd "${RDIR}/modules/ghs" || die "failed to cd to ${RDIR}/modules/ghs"
 	ln -s "${WSPATH}/routing" "gated" || die "failed to symlink gated"

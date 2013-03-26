@@ -83,7 +83,21 @@ function set_default_comp {
 		i5.0-vrf) GTWS_COMPILER_PATH="/share/multi/multi524/linux86" ;;
 		i10.0)    GTWS_COMPILER_PATH="/share/multi/multi524/linux86" ;;
 		i11.0)    GTWS_COMPILER_PATH="/share/ghs/comp/2012.1" ;;
+		i1225)    GTWS_COMPILER_PATH="/share/ghs/comp/2012.5.4" ;;
 		*)        GTWS_COMPILER_PATH="/share/ghs/comp/current" ;;
+	esac
+}
+
+# set_default_bsp "i10.0"
+#
+# Given an INTEGRITY version, set GTWS_BSP to the default BSP for that version.
+function set_default_bsp {
+	if [ -n "${GTWS_BSP}" ]; then
+		return 0
+	fi
+	case "${1}" in
+		i1225)    GTWS_BSP="vmx86" ;;
+		*)        GTWS_BSP="pcx86" ;;
 	esac
 }
 
