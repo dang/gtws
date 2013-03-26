@@ -83,7 +83,15 @@ function gatt() {
 
 function cdorigin() {
 	local WSBASE="${GTWS_ORIGIN:-${HOME}/origin}"
-	cd "${WSBASE}/${GTWS_GATED_VERSION}/$@"
+	local WSORIGIN="${WSBASE}/${GTWS_GATED_VERSION}/$@"
+	if [ ! -d "${WSORIGIN}" ]; then
+		# See if it's rtos
+		WSORIGIN="${WSBASE}/$@"
+	fi
+	if [ ! -d "${WSORIGIN}" ]; then
+		die "No origin for $@"
+	fi
+	cd "${WSORIGIN}"
 }
 
 function wspush() {
