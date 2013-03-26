@@ -41,4 +41,4 @@ LONG_USAGE="${LONGUSAGE}"
 source "$(git --exec-path)/git-sh-setup"
 
 git checkout .
-git status | grep "^\#	" | sed 's/#\t//' | xargs rm -r
+git status | grep "^\#	" | sed 's/#\t//' | xargs -r rm -r
