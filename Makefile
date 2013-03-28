@@ -4,6 +4,11 @@ GBUILD=@GTWSGBUILD@
 
 IVERSION:=$(strip $(shell basename ${PWD}))
 GVERSION:=$(strip $(shell basename $(shell dirname ${PWD})))
+ifeq ($(wildcard bin/@GTWSBSP@),)
+	IBINPATH=@GTWSBSP@
+else
+	IBINPATH=bin/@GTWSBSP@
+endif
 
 all: userspace
 
@@ -50,8 +55,8 @@ clean:
 	@$(GBUILD) -top @GTWSBSP@/default.gpj -clean
 	@rm -rf bin libs
 
-boot: ikernel quserspace kernelspace
-	scp bin/@GTWSBSP@/kernel bin/@GTWSBSP@/gated-userspace bin/@GTWSBSP@/gated-kernelspace tftp:/tftpboot/dang/$(GVERSION)/$(IVERSION)/
+boot: userspace
+	gt-boot -r $(r) -- $(IBINPATH)/gated-userspace
 
 cf4:
 	@/share/tools/vmdk/provision cf4-host.aa.ghs.com cf4-boxa cf4-boxb cf4-boxc cf4-boxd
