@@ -3,7 +3,7 @@
 # Update origin checkouts
 #
 
-GATED="trunk 3.3 3.2 3.1"
+GATED="trunk 3.4 3.3 3.2 3.1"
 WSBASE="${GTWS_ORIGIN:-${HOME}/origin}"
 WSDIRS="routing docs gatt"
 RTOS="itrunk i10.0 i11.0 i5.0 i5.0-vrf dmltools"
