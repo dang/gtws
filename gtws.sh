@@ -22,6 +22,9 @@ is_interactive() {
 # Print a message and exit with failure
 die() {
 	echo "Failed: $@"
+	if [ ! -z "$(declare -F | grep "GTWScleanup")" ]; then
+		GTWScleanup "$@"
+	fi
 	if ! is_interactive; then
 		exit 1
 	fi
@@ -56,53 +59,33 @@ function title {
 	 echo -en "\033]2;$1\007"
 }
 
-# set_default_rtos "3.3"
+# gtws_project_clone_default ${GTWS_ORIGIN} ${GTWS_PROJECT} ${GTWS_PROJECT_VERSION}
 #
-# Given a gated version, set RTOS to the default rtos version
-function set_default_rtos {
-	case "${1}" in
-		trunk) RTOS="itrunk"; RTOS_SUPP="itrunk i11.0" ;;
-		3.3) RTOS="i11.0"; RTOS_SUPP="i11.0 i10.0" ;;
-		3.2) RTOS="i10.0"; RTOS_SUPP="i10.0 i5.0" ;;
-		3.1) RTOS="i5.0"; RTOS_SUPP="i5.0" ;;
-		*) RTOS="itrunk"; RTOS_SUPP="itrunk" ;;
-	esac
-}
+# Clone a version of a project into ${WSPATH} (which is the current working directory).  This is the default version of this that clones <origin>/<project>/<version>/*
+function gtws_project_clone_default {
+	local origin=$1
+	local project=$2
+	local version=$3
+	local opv="${origin}/${project}/${version}"
+	local wspath=${PWD}
 
-# set_default_comp "i10.0"
-#
-# Given an INTEGRITY version, set GTWS_COMPILER_PATH to the path to the default
-# compiler.  Note, the command is not included, just the path.  If
-# GTWS_COMPLIER_PATH is already set, it is *not* overridden
-function set_default_comp {
-	if [ -n "${GTWS_COMPILER_PATH}" ]; then
-		return 0
-	fi
-	case "${1}" in
-		i5.0)     GTWS_COMPILER_PATH="/share/multi/multi506/linux86" ;;
-		i5.0-vrf) GTWS_COMPILER_PATH="/share/multi/multi524/linux86" ;;
-		i10.0)    GTWS_COMPILER_PATH="/share/multi/multi524/linux86" ;;
-		i11.0)    GTWS_COMPILER_PATH="/share/ghs/comp/2012.1" ;;
-		i1225)    GTWS_COMPILER_PATH="/share/ghs/comp/2012.5.4" ;;
-		*)        GTWS_COMPILER_PATH="/share/ghs/comp/current" ;;
-	esac
-}
-
-# set_default_bsp "i10.0"
-#
-# Given an INTEGRITY version, set GTWS_BSP to the default BSP for that version.
-function set_default_bsp {
-	if [ -n "${GTWS_BSP}" ]; then
-		return 0
-	fi
-	case "${1}" in
-		i1225)    GTWS_BSP="vmx86" ;;
-		*)        GTWS_BSP="pcx86" ;;
-	esac
+	for i in "${opv}"/*; do
+		local repo=$(basename $i)
+		git clone "${i}" || die "failed to clone ${i}"
+		cd "${i}" || die "failed to cd to ${i}"
+		for f in ${GTWS_FILES_EXTRA}; do
+			if [ -f "${f}" ]; then
+				echo "$f"
+				cp --parents "${f}" "${wspath}/${repo}" || die "failed to copy ${f}"
+			fi
+		done
+		cd "${wspath}" || die "failed to cd to ${wspath}"
+	done
 }
 
 # load_rc /path/to/workspace
 #
+# This should be in the workspace-level gtwsrc file
 # Recursively load all RC files, starting at /
 function load_rc {
 	local BASE=$(readlink -f "${1}")

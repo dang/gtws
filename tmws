@@ -3,12 +3,26 @@
 # Start or attach to a tmux session in a workspace
 #
 
-GATED="trunk"
+if [ -f "${PWD}/.gtwsrc" ]; then
+	source "${PWD}/.gtwsrc"
+else
+	source "${HOME}/.gtwsrc"
+fi
+
+VERSION=${GTWS_PROJECT_VERSION:-trunk}
+
+if [ -n "${GTWS_PROJECT}" ]; then
+	PROJECT="${GTWS_PROJECT}"
+elif [ -n "${GTWS_DEFAULT_PROJECT}" ]; then
+	PROJECT="${GTWS_DEFAULT_PROJECT}"
+fi
+
 
 # Set usage output
-USAGE="[-h |--help] [-v <version> | --version=<version>] <name>"
+USAGE="[-h |--help] [-p <project> | --project=<project>] [-v <version> | --version=<version>] <name>"
 LONGUSAGE="\t-h, --help\n\t\tPrint this help message
-\t-v <version>, --version=<version>\n\t\tGateD version (default: ${GATED})
+\t-p <project>, --project=<project>\n\t\tProject (default: ${PROJECT:-none})
+\t-v <version>, --version=<version>\n\t\tProject version (default: ${VERSION})
 \t<name>\n\t\tWorkspace name"
 
 # Standard functions
@@ -19,7 +33,7 @@ source ${GTWSLOC}/gtws.sh
 ME=$(basename $0)
 
 # Parse arguments
-ARGS=`getopt -o hv: --long help,version: -n "${ME}" -- "$@"`
+ARGS=`getopt -o hp:v: --long help,project:,version: -n "${ME}" -- "$@"`
 
 if [ $? != 0 ] ; then
 	usage 
@@ -29,7 +43,8 @@ eval set -- "$ARGS"
 while true ; do
 	case "$1" in
 		-h|--help) usage; shift ;;
-		-v|--version) GATED=$2 ; shift 2 ;;
+		-p|--project) PROJECT=$2 ; shift 2 ;;
+		-v|--version) VERSION=$2 ; shift 2 ;;
 		--) shift ; break ;;
 		* ) usage "Invalid argument $1";;
 	esac
@@ -41,27 +56,28 @@ if [ -z "${1}" ]; then
 fi
 
 NAME="${1}"
+BASE=${GTWS_BASE_SRCDIR:-${HOME}/src}
 
 if [ -n "$TMUX" ]; then
 	usage "Do not run from within tmux"
 fi
 
-if [ ! -f ${HOME}/src/${GATED}/${NAME}/.gtwsrc ]; then
-	usage "No .gtwsrc for ${GATED}/${NAME}"
+if [ ! -f "${BASE}/${PROJECT}/${VERSION}}/${NAME}/.gtwsrc" ]; then
+	usage "No .gtwsrc for ${PROJECT}/${VERSION}}/${NAME}"
 	exit 1
 fi
 
-SESNAME="${GATED}-${NAME}"
+SESNAME="${PROJECT}-${NAME}"
 
-cd "${HOME}/src/${GATED}/${NAME}"
+cd "${BASE}/${PROJECT}/${VERSION}}/${NAME}"
 
 NUM_SES=$(tmux ls | grep "^${SESNAME}" | wc -l)
 if [ "${NUM_SES}" == "0" ]; then
 	echo "Launching tmux base session ${SESNAME} ..."
-	tmux new-session -s ${SESNAME} -n "Edit" "startws -v ${GATED} ${NAME}" \; \
-		new-window -n "Build" "startws -v ${GATED} ${NAME}" \; \
-		split-window -v  "startws -v ${GATED} ${NAME}" \; \
-		split-window -v  "startws -v ${GATED} ${NAME}" \; \
+	tmux new-session -s ${SESNAME} -n "Edit" "startws -v ${PROJECT} ${NAME}" \; \
+		new-window -n "Build" "startws -v ${PROJECT} ${NAME}" \; \
+		split-window -v  "startws -v ${PROJECT} ${NAME}" \; \
+		split-window -v  "startws -v ${PROJECT} ${NAME}" \; \
 		select-layout even-horizontal \; \
 		select-window -t :0
 else

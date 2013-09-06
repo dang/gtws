@@ -1,7 +1,0 @@
-# ex: set filetype=sh:
-export GTWS_GATED_VERSION="trunk"
-export GTWS_DEFAULT_RTOS="itrunk"
-export GTWS_SUPP_RTOS="itrunk i11.0"
-export GTWS_COMPILER_PATH="/share/ghs/comp/current"
-export GTWS_BASE_WORKDIR="${GTWS_BASE_WORKDIR}/${GTWS_GATED_VERSION}"
-

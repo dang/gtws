@@ -1,14 +1,29 @@
 #!/bin/bash
 #
-# Start or attach to a tmux session in a workspace
+# Start session in a workspace
 #
 
-GATED="trunk"
+if [ -f "${PWD}/.gtwsrc" ]; then
+	source "${PWD}/.gtwsrc"
+else
+	source "${HOME}/.gtwsrc"
+fi
+
+VERSION=${GTWS_PROJECT_VERSION:-trunk}
+
+if [ -n "${GTWS_PROJECT}" ]; then
+	PROJECT="${GTWS_PROJECT}"
+elif [ -n "${GTWS_DEFAULT_PROJECT}" ]; then
+	PROJECT="${GTWS_DEFAULT_PROJECT}"
+else
+	PROJECT=$(basename $(dirname "$PWD"));
+fi
 
 # Set usage output
-USAGE="[-h |--help] [-v <version> | --version=<version>] <name>"
+USAGE="[-h |--help] [-p <project> | --project=<project>] [-v <version> | --version=<version>] <name>"
 LONGUSAGE="\t-h, --help\n\t\tPrint this help message
-\t-v <version>, --version=<version>\n\t\tGateD version (default: ${GATED})
+\t-p <project>, --project=<project>\n\t\tProject (default: ${PROJECT:-none})
+\t-v <version>, --version=<version>\n\t\tProject version (default: ${VERSION})
 \t<name>\n\t\tWorkspace name"
 
 # Standard functions
@@ -19,7 +34,7 @@ source ${GTWSLOC}/gtws.sh
 ME=$(basename $0)
 
 # Parse arguments
-ARGS=`getopt -o hv: --long help,version: -n "${ME}" -- "$@"`
+ARGS=`getopt -o hp:v: --long help,project:,version: -n "${ME}" -- "$@"`
 
 if [ $? != 0 ] ; then
 	usage 
@@ -29,7 +44,8 @@ eval set -- "$ARGS"
 while true ; do
 	case "$1" in
 		-h|--help) usage; shift ;;
-		-v|--version) GATED=$2 ; shift 2 ;;
+		-p|--project) PROJECT=$2 ; shift 2 ;;
+		-v|--version) VERSION=$2 ; shift 2 ;;
 		--) shift ; break ;;
 		* ) usage "Invalid argument $1";;
 	esac
@@ -42,8 +58,10 @@ fi
 
 NAME="${1}"
 
-if [ ! -f ${HOME}/src/${GATED}/${NAME}/.gtwsrc ]; then
-	usage "No env for ${GATED}/${NAME}"
+BASE=${GTWS_BASE_SRCDIR:-${HOME}/src}
+
+if [ ! -f ${BASE}/${PROJECT}/${VERSION}/${NAME}/.gtwsrc ]; then
+	usage "No env for ${PROJECT}/${VERSION}/${NAME}"
 fi
 
-exec bash --rcfile ${HOME}/src/${GATED}/${NAME}/.gtwsrc
+exec bash --rcfile ${BASE}/${PROJECT}/${VERSION}/${NAME}/.gtwsrc

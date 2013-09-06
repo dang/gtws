@@ -1,36 +1,45 @@
 #!/bin/bash
 #
-# Create a new GateD development workspace
+# Create a new Project development workspace
 #
 
 if [ -f "${PWD}/.gtwsrc" ]; then
 	source "${PWD}/.gtwsrc"
+else
+	source "${HOME}/.gtwsrc"
 fi
-if [ -z "${GTWS_GATED_VERSION}" ]; then
-	GTWS_GATED_VERSION=$(basename "${PWD}")
+VERSION=${GTWS_PROJECT_VERSION:-$(basename "${PWD}")}
+
+if [ -n "${GTWS_PROJECT}" ]; then
+	PROJECT="${GTWS_PROJECT}"
+elif [ -n "${GTWS_DEFAULT_PROJECT}" ]; then
+	PROJECT="${GTWS_DEFAULT_PROJECT}"
+else
+	PROJECT=$(basename $(dirname "$PWD"));
 fi
 
 # Set usage output
-USAGE="[-h |--help] [-a | --all-rtos] [-r <rtos> | --rtos=<rtos>] [-v <version> | --version=<version>] <name>"
+USAGE="[-h |--help]] [-p <project> | --project=<project>] [-v <version> | --version=<version>] <name>"
 LONGUSAGE="\t-h, --help\n\t\tPrint this help message
-\t-v <version>, --version=<version>\n\t\tGateD version (default: ${GTWS_GATED_VERSION})
-\t-a, --all-rtos\n\t\t Get all rtos versions
-\t-s, --supported-rtos\n\t\t Get all supported rtos versions
-\t-r <rtos>, --rtos=<rtos>\n\t\tRTOS version (default: depends on GateD version)
+\t-v <version>, --version=<version>\n\t\tProject version (default: ${VERSION})
+\t-p <project>, --project=<project>\n\t\tProject name (default: ${PROJECT:-none})
 \t<name>\n\t\tWorkspace name"
+
+#function GTWScleanup {
+	#rm -rf "${WSPATH}"
+#}
 
 # Standard functions
 GTWSLOC=$(readlink -f $(dirname "$0"))
 source ${GTWSLOC}/gtws.sh
 
-set_default_rtos "${GTWS_GATED_VERSION}"
 WSDIRS="routing docs gatt"
 
 # Script name
 ME=$(basename $0)
 
 # Parse arguments
-ARGS=`getopt -o hasr:v: --long help,all-rtos,supported-rtos,rtos:,version: -n "${ME}" -- "$@"`
+ARGS=`getopt -o hp:v: --long help,project:,version: -n "${ME}" -- "$@"`
 
 if [ $? != 0 ] ; then
 	usage 
@@ -40,8 +49,8 @@ eval set -- "$ARGS"
 while true ; do
 	case "$1" in
 		-h|--help) usage; shift ;;
-		-v|--version) GTWS_GATED_VERSION=$2 ; shift 2 ;;
-		-r|--rtos) RTOS=$2 ; shift 2 ;;
+		-v|--version) VERSION=$2 ; shift 2 ;;
+		-p|--project) PROJECT=$2 ; shift 2 ;;
 		-a|--all-rtos) ALL="yes"; shift ;;
 		-s|--supported-rtos) SUPP="yes"; shift ;;
 		--) shift ; break ;;
@@ -52,6 +61,18 @@ done
 # Remaining arguments are in $1, $2, etc. as normal
 if [ -z "${1}" ]; then
 	usage "Must give a workspace name"
+fi
+
+if [ -z "${PROJECT}" ]; then
+	usage "Must give a project"
+fi
+
+if [ -z "${GTWS_PROJECT}" ]; then
+	# We weren't in a project directory; go there
+	BASE="${GTWS_BASE_SRCDIR:-${HOME}/src}/${PROJECT}/${VERSION}"
+	cd "${BASE}" || die "Couldn't cd to project dir ${BASE}"
+elif [ "${PROJECT}" != "${GTWS_PROJECT}" ]; then
+	die "In wrong project dir: expected ${PROJECT} got ${GTWS_PROJECT}"
 fi
 
 WSPATH=$(readlink -f "${1}")
@@ -68,78 +89,43 @@ cd "${WSPATH}"
 cp "${GTWSLOC}"/gtwsrc "${WSPATH}"/.gtwsrc
 source "${WSPATH}"/.gtwsrc
 
-# Workspace check
-WS="${GTWS_ORIGIN:=${HOME}/origin}/${GTWS_GATED_VERSION}"
-if [ ! -d "${WS}" ]; then
-	rm -rf "${WSPATH}"
-	die "No origin workspace for ${GTWS_GATED_VERSION}"
-fi
-if [ ! -d "${GTWS_ORIGIN}/${RTOS:=${GTWS_DEFAULT_RTOS}}" ]; then
-	rm -rf "${WSPATH}"
-	die "No ${RTOS} in ${GTWS_ORIGIN}"
+# Origin check
+O="${GTWS_ORIGIN:=${HOME}/origin}"
+if [ ! -d "${O}/${PROJECT}" ]; then
+	die "No origin for ${PROJECT}"
 fi
 
-# Workspace contents check
-for i in ${WSDIRS}; do
-	if [ ! -d "${WS}/${i}" ]; then
-		rm -rf "${WSPATH}"
-		die "No ${i} in origin workspace ${WS}"
+HAS_CLONE=$(declare -F | grep "\<gtws_project_clone\>")
+echo "$HAS_CLONE"
+if [ -z "${HAS_CLONE}" ]; then
+	# Workspace contents check
+	found=""
+	for i in "${O}/${PROJECT}/${VERSION}"/*; do
+		if [ ! -d "${i}/.git" ]; then
+			die "${i} in origin ${O}/${PROJECT}/${VERSION} is not git"
+		fi
+		found="yes"
+	done
+
+	if [ -z "$found" ]; then
+		die "No git repos in origin ${O}/${PROJECT}/${VERSION}"
 	fi
-done
-
-if [ -n "${ALL}" ]; then
-	TARGET="all"
-elif [ -n "${SUPP}" ]; then
-	TARGET=${RTOS_SUPP}
-else
-	TARGET=${RTOS}
 fi
 
 # Make workspace
-echo "Making workspace for ${GTWS_GATED_VERSION}:${TARGET} in ${WSPATH}"
+echo "Making workspace for ${VERSION}:${TARGET} in ${WSPATH}"
 # Made directory above
 
-for i in ${WSDIRS}; do
-	git clone "${WS}/${i}" || die "failed to clone ${i}"
-	cp "${WS}/${i}/.git/info/exclude" "${i}/.git/info/" || die "failed to copy exclude"
-	for f in ${GTWS_EXTRA_FILES}; do
-		if [ -f "${WS}/${i}/${f}" ]; then
-			cp "${WS}/${i}/${f}" "${i}/" || die "failed to copy ${f}"
-		fi
-	done
-done
-
-if [ -n "${ALL}" ]; then
-	rtos-clone -a -p
-elif [ -n "${SUPP}" ]; then
-	for r in ${RTOS_SUPP}; do
-		rtos-clone -p "${r}" || die "failed to clone ${r}"
-	done
+if [ -n "${HAS_CLONE}" ]; then
+	# Project provided a clone
+	gtws_project_clone ${O} ${PROJECT} ${VERSION} || die "clone failed"
 else
-	rtos-clone -p "${RTOS}" || die "failed to clone ${r}"
+	# Default clone
+	gtws_project_clone_default ${O} ${PROJECT} ${VERSION} || die "clone failed"
 fi
 
-# Set up GateD
-cd "${WSPATH}/routing" || die "failed to cd to routing"
-export SYSTEM_HDRS="../${RTOS}/INTEGRITY-include /share/ghs/comp/current"
-maketags -c "${PWD}"
-
-# Set up GATT
-cd "${WSPATH}/gatt" || die "failed to cd to gatt"
-maketags -p -c "${PWD}"
-
-# Add dmltools to docs
-cd "${WSPATH}/docs" || die "failed to cd to docs"
-git clone "${GTWS_ORIGIN}/dmltools" || die "failed to clone dmltools"
-
-# Set up workdirs
-echo "Making workdirs"
-export GATED_TOOLS_PATH="${WSPATH}/gatt"
-export GATED_TOOLS_HOMEDIR="/casa/${USER}/test/working/${GTWS_GATED_VERSION}/${WSNAME}"
-if [ -d "${GATED_TOOLS_HOMEDIR}" ]; then
-	rm -rf "${GATED_TOOLS_HOMEDIR}"
+if [ -n "$(declare -F | grep "gtws_project_setup")" ]; then
+	gtws_project_setup ${WSNAME} ${PROJECT} ${VERSION} || die "setup failed"
 fi
-mkdir -p "${GATED_TOOLS_HOMEDIR}"
-${GATED_TOOLS_PATH}/scripts/mkworkdirs
 
 echo "Done"

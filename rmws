@@ -1,9 +1,10 @@
 #!/bin/bash
 #
-# Delete GateD development workspace
+# Delete project development workspace
 #
 
-GATED=$(basename "${PWD}")
+VERSION=$(basename "${PWD}")
+PROJECT=$(basename $(dirname "$PWD"));
 
 # Set usage output
 USAGE="[-h |--help] <name>"
@@ -46,7 +47,13 @@ if [ ! -d "${WSPATH}" ]; then
 	die "Workspace ${WSPATH} doesn't exist"
 fi
 
+# Cleanup
+if [ -n "$(declare -F | grep "gtws_project_cleanup")" ]; then
+	basedir="${PWD}"
+	cd "${WSPATH}"
+	gtws_project_cleanup ${WSNAME} ${PROJECT} ${VERSION} || die "cleanup failed"
+	cd "${basedir}"
+fi
+
 # Nuke workspace
 rm -rf "${WSPATH}"
-# Nuke workdir
-rm -rf "/casa/${USER}/test/working/${GATED}/${WSNAME}"

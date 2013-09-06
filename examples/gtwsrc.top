@@ -1,148 +1,27 @@
 # ex: set filetype=sh:
+# GTWS top level config
+
+
 # I want to be able to use .gtwsrc as a bashrc, so source my .bashrc
 source "${HOME}/.bashrc"
-# GTWS config goes here
+
+# GTWS global config goes here
 export GTWS_ORIGIN="${HOME}/origin"
-export GTWS_BASE_WORKDIR="/casa/${USER}/test/working/"
+export GTWS_BASE_SRCDIR="${HOME}/src"
+export GTWS_DEFAULT_PROJECT="enkive"
 export GTWS_SETPROMPT=1
-export GTWS_EXTRA_FILES=".project.vim .syntastic_c_config"
-
-
-# GATT config goes here
-export TESTG_INTEGRITY=1
-export TESTG_INTEGRITY_NOKILL=1
-export TESTG_PAUSE_ON_FAIL=1
-export TESTG_GHNET=1
-
-# Local stuff
-function autobot {
-	if [ -z "${1}" ]; then
-		echo "Give some tests"
-		echo "Usage: autobot <testfile> <racks> [<rtosver>] [<autobot-arg>...]"
-		return
-	fi
-	if [ -z "${2}" ]; then
-		echo "Give some racks"
-		echo "Usage: autobot <testfile> <racks> [<rtosver>] [<autobot-arg>...]"
-		return
-	fi
-
-	TESTFILE="${1}"
-	if [ -n "${3}" ]; then
-		RACK=${2}
-		RTOS=${3}
-		shift 3
-	else
-		RACK=${2}
-		RTOS="${GTWS_DEFAULT_RTOS}"
-		shift 2
-	fi
-	
-	./autobot.pl -rtos_dir ${WSPATH}/${RTOS}/ -kernel gated-userspace -rack ${RACK} -tests ${TESTFILE} $@ | tee autobot.log
-}
-
-function gatt() {
-	TGT="${1}"
-	shift
-	case "${TGT}" in
-		ospf3)
-			cd ${GATED_TOOLS_PATH}/tests/cli/system/ospf3/"$@"
-			;;
-		ospf2)
-			cd ${GATED_TOOLS_PATH}/tests/cli/system/ospf/"$@"
-			;;
-		bgp)
-			cd ${GATED_TOOLS_PATH}/tests/cli/system/bgp/"$@"
-			;;
-		mpbgp)
-			cd ${GATED_TOOLS_PATH}/tests/cli/system/mpbgp/"$@"
-			;;
-		mpbgpv4v6)
-			cd ${GATED_TOOLS_PATH}/tests/cli/system/mpbgpv4v6/"$@"
-			;;
-		rip2)
-			cd ${GATED_TOOLS_PATH}/tests/cli/system/rip/"$@"
-			;;
-		ripng)
-			cd ${GATED_TOOLS_PATH}/tests/cli/system/ripng/"$@"
-			;;
-		leak)
-			cd ${GATED_TOOLS_PATH}/tests/cli/system/leak/"$@"
-			;;
-		scripts)
-			cd ${GATED_TOOLS_PATH}/scripts/"$@"
-			;;
-		data)
-			cd ${GATED_TOOLS_PATH}/data/"$@"
-			;;
-		*)
-			cd ${GATED_TOOLS_PATH}/"${TGT}"/"$@"
-			;;
-	esac
-}
+export GTWS_FILES_EXTRA=".project.vim .git/info/exclude"
 
 function cdorigin() {
-	local WSBASE="${GTWS_ORIGIN:-${HOME}/origin}"
-	local WSORIGIN="${WSBASE}/${GTWS_GATED_VERSION}/$@"
+	local WSBASE="${GTWS_ORIGIN}/${GTWS_PROJECT}"
+	local WSORIGIN="${WSBASE}/${GTWS_PROJECT_VERSION}/$@"
 	if [ ! -d "${WSORIGIN}" ]; then
-		# See if it's rtos
+		# See if it's not versioned
 		WSORIGIN="${WSBASE}/$@"
 	fi
 	if [ ! -d "${WSORIGIN}" ]; then
 		die "No origin for $@"
 	fi
 	cd "${WSORIGIN}"
-}
-
-function wspush() {
-	local WSBASE=$(basename $PWD)
-	git push && cdorigin ${WSBASE} && git reset --hard && git svn dcommit && cd - && git sync
-}
-
-function debugws() {
-	if [ -z "${2}" ]; then
-		echo "debugws <gversion> <wsname> [<iversion>]"
-		return 1
-	elif [ -z "${3}" ]; then
-		local TGVER="${1}"
-		local TWS="${2}"
-		case "${TGVER}" in
-			"3.1")
-				TIVER="i5.0"
-				;;
-			"3.2")
-				TIVER="i10.0"
-				;;
-			"3.3")
-				TIVER="i11.0"
-				;;
-			"trunk")
-				TIVER="itrunk"
-				;;
-		esac
-	else
-		local TGVER="${1}"
-		local TWS="${2}"
-		local TIVER="${3}"
-	fi
-	case "${TIVER}" in
-		"itrunk")
-			TBIN="bin/pcx86"
-			;;
-		"i11.0")
-			TBIN="bin/pcx86"
-			;;
-		"i10.0")
-			TBIN="pcx86"
-			;;
-		"i5.0")
-			TBIN="pcx86"
-			;;
-		"i5.0-vrf")
-			TBIN="pcx86"
-			;;
-	esac
-
-	cd "${HOME}/src/${TGVER}/${TWS}/${TIVER}/${TBIN}"
 }
 

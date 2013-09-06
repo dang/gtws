@@ -1,0 +1,73 @@
+# ex: set filetype=sh:
+# GTWS project level config
+
+# Stuff for GTWS
+export GTWS_PROJECT="enkive"
+
+# If non-standard orgin layout is used, define this function
+
+# gtws_project_clone ${GTWS_ORIGIN} ${GTWS_PROJECT} ${GTWS_PROJECT_VERSION}
+#
+# Clone a version of a project into ${WSPATH} (which is the current working directory)
+#function gtws_project_clone {
+	#local origin=$1
+	#local project=$2
+	#local version=$3
+	#local opv="${origin}/${project}/${version}"
+	#local wspath=${PWD}
+#}
+
+
+# If post-clone setup is desired, define this function
+
+# gtws_project_setup ${WSNAME} ${GTWS_PROJECT} ${GTWS_PROJECT_VERSION}
+#
+# Post clone setup of a workspace in ${WSPATH} (which is PWD)
+function gtws_project_setup {
+	local wsname=$1
+	local project=$2
+	local version=$3
+	local wspath=${PWD}
+
+	for i in "${wspath}"/*; do
+		cd ${i} || die "Couldn't cd to ${i}"
+		maketags > /dev/null 2> /dev/null &
+		cd ${wspath} || die "Couldn't cd to ${wspath}"
+	done
+}
+
+
+# If pre-delete cleanup during removal is desired, define this function
+
+# gtws_project_cleanup ${WSNAME} ${GTWS_PROJECT} ${GTWS_PROJECT_VERSION}
+#
+# Pre-delete cleanup of a workspace in ${WSPATH} (which is PWD)
+#function gtws_project_cleanup {
+	#local wsname=$1
+	#local wspath=$1
+	#local project=$2
+	#local version=$3
+	#local wspath=${PWD}
+
+	#rm -rf "/casa/${USER}/test/working/${version}/${wsname}"
+#}
+
+
+# Stuff specific to this project.  It can be assumed that the following are set:
+#	WSPATH - Path to the workspace
+#	WSNAME - Name of the workspace
+#export GTWS_FILES_EXTRA="${GTWS_FILES_EXTRA} .syntastic_c_config"
+export ENKIVE_USER=${USER:-dang}
+
+# Local stuff
+alias eclipse="/usr/bin/eclipse -data ${WSPATH} -noSplash"
+
+function wspush() {
+	local WSBASE=$(basename $PWD)
+	git push && cdorigin ${WSBASE} && git reset --hard && git push && cd - && git sync
+}
+
+# Override grepall to skip the build directories
+function grepall {
+	ack --ignore-dir=build "$@"
+}

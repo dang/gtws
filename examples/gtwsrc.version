@@ -1,0 +1,10 @@
+# ex: set filetype=sh:
+# GTWS version level config
+
+# Stuff for GTWS
+export GTWS_PROJECT_VERSION="trunk"
+
+# Stuff specific to this project version.  It can be assumed that the following are set:
+#	WSPATH - Path to the workspace
+#	WSNAME - Name of the workspace
+

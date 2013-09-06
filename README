@@ -1,10 +1,24 @@
-GateD Testing Workspaces
+Great Teeming Workspaces
+
+This handles workspaces for multiple versions of multiple projects.  You can
+create, update, enter and leave workspaces easily, and each <project, version>
+combo has at most one local origin that syncs to and from upstream.  All other
+workspaces update from the local origin.
+
+Layout is as follows:
+
+${GTWS_ORIGIN}/<project>/<repo>[/<version>]
+${GTWS_BASE_SRCDIR}/<project>/<version>/<workspacename>/{<repo>[,<repo>...]}
+
+Each level in the source tree (plus the homedir for globals) can have a .gtwsrc
+file in it that maintains settings and bash code relevant to that level.  Each
+more specific level overrides higher levels.
 
 - Setup Overview
 	- Checkout gtws
 		git clone ssh://git@buildbot.aa.ghs.com/home/git/gtws.git
 	- Set up your ${HOME}/.gtwsrc
-		- Should include GTWS_ORIGIN, GTWS_BASE_WORKDIR, optionally GTWS_SETPROMPT
+		- Should include GTWS_ORIGIN, optionally GTWS_SETPROMPT
 	- Add the repo directory to your path
 		export PATH="${PATH}:/path/to/gtws
 	- Profit
@@ -12,57 +26,66 @@ GateD Testing Workspaces
 - Configuration
 	Configuration is via cascading .gtwsrc files.  The real path down from
 	the root is walked, and each .gtwsrc file found is sourced in turn.
-	More specific files oveeride less specific ones.
+	More specific files override less specific ones.
 
-	Here are some settings that must be set somewhere in the tree:
+	These settings should be in your top level ~/.gtws/.gtwsrc:
 
-	- GTWS_GATED_VERSION
-		- This should contain a valid GateD version name.
-	- GTWS_DEFAULT_RTOS
-		- Default RTOS version for new workspaces
-	- GTWS_SUPP_RTOS
-		- Supported RTOS versions for new workspace
-
-	Here are optional settings.
-
+	- GTWS_BASE_SRCDIR
+		- This is the base of all the projects source trees.  Defaults to $HOME/src
 	- GTWS_ORIGIN
 		- This sets the location of the origin git trees.  Defaults to $HOME/origin
 	- GTWS_SETPROMPT
 		- This is optional.  If set, the shell prompt will be changed
 		  to have the workspace name in it.
-	- GTWS_BASE_WORKDIR
-		- This sets the base of the working directories for GATT.  Each
-		  workspace will have it's own directory in here based on it's
-		  name.
-	- GTWS_COMPILER_PATH
-		- The path to a GHS compiler.  If not given, it defaults to a
-		  sane value based on the integrity version
+	- GTWS_DEFAULT_PROJECT
+		- This is the project used when no project is given or known.
+		  If this is not given, projects must be specified on the
+		  command line.
+	- GTWS_DEFAULT_VERSION
+		- Default version to check out.  Defaults to "trunk"
+
+	These settings should be at the project level of each project:
+
+	- GTWS_PROJECT
+		- Name (and base directory) of the project in question
+	- gtws_project_clone
+		- This is a function used to clone a specific version if a
+		  project.  If it is not defined, then it is assumed that the
+		  origin for the project contains a single directory per
+		  version, and that contains a set of git repo to clone.
+	- gtws_project_setup
+		- This optional function is called after all cloning is done.
+
+	These settings should be set at the project version level:
+	- GTWS_PROJECT_VERSION
+		- This is the version of the project.  It's used to pull from
+		  the origin correctly.
+
+	
+	These things can go anywhere in the tree, and can be overridden
+	multiple times if that makes sense:
+
+	GTWS_PATH_EXTRA
+		- Extra path elements to be added to the path inside the workspace
+	GTWS_FILES_EXTRA
+		- Extra files not under version control that should be copied
+		  into each checkout in the workspace.  This is things like
+		  .git/info/exclude and each file is relative to the base of
+		  it's repo.
+
 
 - Origin dirs
-	GTWS_ORIGIN (in most scripts) points to the prestine git checkouts to
-	pull from and push to.  For me, the GateD/Gatt checkouts are git svn
-	clones, the RTOS checkouts are clones from buildbot's repos.
+	GTWS_ORIGIN (in most scripts) points to the pristine git checkouts to
+	pull from and push to.
 
-	- Layout
-		- /dmltools
-			- git svn clone of http://rtosvc.ghs.com/trunk/rtos/INTEGRITY-docs/dmltools
-			- Necessary because git doesn't do externals
-		- i<version>
-			- RTOS versions
-			- itrunk, i11.0, i5.0, i5.0-vrf
-			- Must start with 'i' for scripts to work
-		- GateD versions
-			- 3.1, 3.2, 3.3, trunk
-			- Each contains:
-				- /docs
-					- git svn clone gated-docs/<version>
-				- /gatt
-					- git svn clone gated-tools/<version>
-				- /routing
-					- git svn clone gated/<version>
-			- Each clone needs set in .git/config:
-				[receive]
-				        denyCurrentBranch = warn
+	- Layout of ${GTWS_ORIGIN}
+		- /<project>
+			- This is the base for repos for a project.
+			- If gtws_project_clone is given, this can have any
+			  layout desired.
+			- If gtws_project_clone is *not* given, this must
+			  contain a single subdirectory per version, each
+			  containing a set of git repos to clone.
 
 - Workflow
 	- Need new workspace for ROUTE-2222 on gtrunk itrunk
