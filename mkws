@@ -25,9 +25,9 @@ LONGUSAGE="\t-h, --help\n\t\tPrint this help message
 \t-p <project>, --project=<project>\n\t\tProject name (default: ${PROJECT:-none})
 \t<name>\n\t\tWorkspace name"
 
-#function GTWScleanup {
-	#rm -rf "${WSPATH}"
-#}
+function GTWScleanup {
+	rm -rf "${WSPATH}"
+}
 
 # Standard functions
 GTWSLOC=$(readlink -f $(dirname "$0"))
