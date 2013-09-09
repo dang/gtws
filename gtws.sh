@@ -75,7 +75,6 @@ function gtws_project_clone_default {
 		cd "${i}" || die "failed to cd to ${i}"
 		for f in ${GTWS_FILES_EXTRA}; do
 			if [ -f "${f}" ]; then
-				echo "$f"
 				cp --parents "${f}" "${wspath}/${repo}" || die "failed to copy ${f}"
 			fi
 		done

@@ -125,7 +125,7 @@ else
 fi
 
 if [ -n "$(declare -F | grep "gtws_project_setup")" ]; then
-	gtws_project_setup ${WSNAME} ${PROJECT} ${VERSION} || die "setup failed"
+	gtws_project_setup ${WSNAME} ${O} ${PROJECT} ${VERSION} || die "setup failed"
 fi
 
 echo "Done"

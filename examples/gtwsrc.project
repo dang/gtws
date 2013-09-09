@@ -20,20 +20,57 @@ export GTWS_PROJECT="enkive"
 
 # If post-clone setup is desired, define this function
 
-# gtws_project_setup ${WSNAME} ${GTWS_PROJECT} ${GTWS_PROJECT_VERSION}
+# gtws_project_setup ${WSNAME} ${GTWS_ORIGIN} ${GTWS_PROJECT} ${GTWS_PROJECT_VERSION}
 #
 # Post clone setup of a workspace in ${WSPATH} (which is PWD)
 function gtws_project_setup {
 	local wsname=$1
-	local project=$2
-	local version=$3
+	local origin=$2
+	local project=$3
+	local version=$4
 	local wspath=${PWD}
+	local opg="${origin}/${project}/gtws"
 
 	for i in "${wspath}"/*; do
 		cd ${i} || die "Couldn't cd to ${i}"
 		maketags > /dev/null 2> /dev/null &
 		cd ${wspath} || die "Couldn't cd to ${wspath}"
 	done
+
+	cd "${wspath}/enkive" || die "Failed to cd to ${wspath}/enkive"
+	echo "Creating build.properties"
+	cp "${opg}/build.properties" "." ||
+		die "Couldn't copy build.properties"
+	sed -i "s#@GTWSJAVAPATH@#${GTWS_JAVA_PATH}#" "build.properties" ||
+		die "java sed failed"
+
+	echo "Creating .project"
+	cp "${opg}/enkive.project" ".project" ||
+		die "Couldn't copy .project"
+	sed -i "s#@NAME@#${i}#" ".project" ||
+		die "project name sed failed"
+	git update-index --assume-unchanged .project ||
+		die "unchanged project failed"
+
+	sed -i "s#kind=\"var\" path=\"ENKIVE_JAVA#kind=\"lib\" path=\"${GTWS_JAVA_PATH}#" ".classpath" ||
+		die "ENKIVE_JAVA sed failed"
+	sed -i "s#kind=\"var\" path=\"INDRI_INSTALL#kind=\"lib\" path=\"/opt/indri#" ".classpath" ||
+		die "INDRI_INSTALL sed failed"
+	git update-index --assume-unchanged .classpath ||
+		die "unchanged classpath failed"
+	cd ${wspath} || die "Couldn't cd to ${wspath}"
+
+	echo "Creating launches"
+	LDIR=".metadata/.plugins/org.eclipse.debug.core/.launches"
+	mkdir -p "${LDIR}" || die "Failed to make ${LDIR}"
+	cp -a "${opg}/launches/"* "${LDIR}" || die "failed to copy launches"
+
+	ECLIPSE_SETTINGS=".plugins/org.eclipse.core.runtime/.settings/org.eclipse.ui.workbench.prefs .plugins/org.eclipse.e4.workbench/workbench.xmi"
+
+	for i in ${ECLIPSE_SETTINGS}; do
+		echo cp "${GTWSLOC}/enkive/.metadata/${i}" "${WSPATH}/.metadata/${i}"
+	done
+
 }
 
 
@@ -57,6 +94,8 @@ function gtws_project_setup {
 #	WSPATH - Path to the workspace
 #	WSNAME - Name of the workspace
 #export GTWS_FILES_EXTRA="${GTWS_FILES_EXTRA} .syntastic_c_config"
+export ENKIVE_HOME="${WSPATH}/enkive"
+export GTWS_PATH_EXTRA="${ENKIVE_HOME}/scripts"
 export ENKIVE_USER=${USER:-dang}
 
 # Local stuff
