@@ -1,0 +1,55 @@
+#!/bin/bash
+#
+# Copyright (c) 2013 Daniel Gryniewicz
+#
+# Remove whitespace errors from uncommitted code.  Basically, this means:
+# git diff > tmp.patch
+# git checkout .
+# git apply --whitespace=fix tmp.patch
+
+# Set usage output
+USAGE="[-h |--help] [-f | --force]"
+LONGUSAGE="\t-h, --help\n\t\tPrint this help message
+\t-f, --force\n\t\tFix whitespace even if there is staged changes"
+
+# Standard functions
+source ${SCRIPTS}/functions.sh
+
+# Script name
+ME=$(basename $0)
+
+# Parse arguments
+ARGS=`getopt -o hf --long help,force -n "${ME}" -- "$@"`
+
+if [ $? != 0 ] ; then
+	usage 
+fi
+eval set -- "$ARGS"
+
+while true ; do
+	case "$1" in
+		-h|--help) usage; shift ;;
+		-f|--force) FORCE="yes"; shift ;;
+		--) shift ; break ;;
+		* ) usage "Invalid argument $1";;
+	esac
+done
+
+# Remaining arguments are in $1, $2, etc. as normal
+
+SUBDIRECTORY_OK=Yes
+OPTIONS_SPEC=
+LONG_USAGE="${LONGUSAGE}"
+# Source the git environment
+GIT_PATH=
+source "$(git --exec-path )/git-sh-setup"
+
+if [ -z "${FORCE}" ]; then
+	git status | grep "git reset HEAD" > /dev/null && die "Current branch has staged changes"
+fi
+
+TMPFILE=$(mktemp)
+git diff > "${TMPFILE}" || die "Failed to diff"
+git checkout . || die "Failed to checkout"
+git apply --whitespace=fix "${TMPFILE}" || die "Failed to apply"
+rm -f ${TMPFILE}
