@@ -3,21 +3,25 @@
 # Recursively make tags file for all c, cpp, C, c++, h files
 #
 
-USAGE="[-hk] [<directories>]"
+USAGE="[-hkecpj] [<directories>]"
 LONGUSAGE="\t-h\tPrint this help message
 \t-k\tKernel database (no system includes)
-\t-c\tClean build (no .gtwsrc)
+\t-e\tEmtpy build (no .maketagsrc)
+\t-c\tOnly tag C/C++
 \t-p\tOnly tag perl and python
+\t-j\tOnly tag java
 \t<directories>\tDirectories to scan (defaults to '.')"
 
 GTWSLOC=$(readlink -f $(dirname "$0"))
 source ${GTWSLOC}/gtws.sh
 
-while getopts ":hkcp" option; do
+while getopts ":hkecpj" option; do
 	case ${option} in
-		c ) CLEAN="-c";;
+		e ) CLEAN="-e";;
+		c ) CPP="-c";;
 		k ) KERNEL="-k";;
 		p ) PERL="-p";;
+		j ) JAVA="-j";;
 		h ) usage;;
 		\? ) usage "Invalid argument ${OPTARG}";;
 		* ) usage "Invalid argument ${option}";;
@@ -31,9 +35,6 @@ echo "$0 $@" > ".#maketags.dfg"
 if [ -z "${CLEAN}" ]; then
 	if [ -f ".gtwsrc" ]; then
 		source ".gtwsrc"
-		set_default_comp "${GTWS_DEFAULT_RTOS}"
-		SYSTEM_HDRS="${WSPATH}/${GTWS_DEFAULT_RTOS}/INTEGRITY-include ${GTWS_COMPILER_PATH}"
-		KERNEL_HDRS="${GTWS_COMPILER_PATH}"
 	elif [ -f "${HOME}/.maketagsrc" ]; then
 		source ${HOME}/.maketagsrc
 	fi
@@ -59,27 +60,32 @@ fi
 
 TMPFILE=`mktemp -t maketags.XXXXXXXXXX` || die "Couldn't make tempfile"
 
-if [ -n "${PERL}" ]; then
-	find ${DIRS} -type f -and \( -name "*.pl" -or -name "*.pm" -or -name "*.perl"  -or -name "*.py" \) >> ${TMPFILE}
-else
+if [ -n "${CPP}" ]; then
 	if [ -n "${HDRS}" ]; then
 		find ${HDRS} -type f -and \( -name "*.h++" -or -name "*.hxx" -or -name "*.hh" -or -name "*.hpp" -or -name "*.H" -or -name "*.h" \) >> ${TMPFILE}
 	fi
 	find ${DIRS} ${EXTRA_DIRS} -type f -and \( -name "*.c" -or -name "*.cpp" -or -name "*.cxx" -or -name "*.h++" -or -name "*.hxx" -or -name "*.hh" -or -name "*.hpp" -or -name "*.H" -or -name "*.C" -or -name "*.c++" -or -name "*.cc" -or -name "*.h" \) >> ${TMPFILE}
+	SUBSET="yes"
+elif [ -n "${PERL}" ]; then
+	find ${DIRS} -type f -and \( -name "*.pl" -or -name "*.pm" -or -name "*.perl"  -or -name "*.py" \) >> ${TMPFILE}
+	SUBSET="yes"
+elif [ -n "${JAVA}" ]; then
+	find ${DIRS} -type f -and \( -name "*.java" \) >> ${TMPFILE}
+	SUBSET="yes"
+else
+	find ${DIRS} -type f >> ${TMPFILE}
 fi
 
 if [ -n "${SKIPRE}" ]; then
 	egrep -v "${SKIPRE}" ${TMPFILE} > cscope.files
+	SUBSET="yes"
 else
-	cp ${TMPFILE} cscope.files
+	egrep -v ".svn" ${TMPFILE} > cscope.files
 fi
 rm ${TMPFILE}
 cscope -q -L ${KERNEL} -i cscope.files
-if [ -n "${SKIPRE}" ]; then
-	# We're skipping files; only use files in the list
-	ctags -L- < cscope.files
-elif [ -n "${PERL}" ]; then
-	# Only want perl files
+if [ -n "${SUBSET}" ]; then
+	# We're only using a subset of files; use files in the list
 	ctags -L- < cscope.files
 else
 	# Tag everything, so that we get languages other than C/C++
