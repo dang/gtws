@@ -69,4 +69,7 @@ if [ -n "${GTWS_SETPROMPT}" ]; then
 fi
 PS1="${PROMPT}${GTWS_SAVEPS1}"
 
+# Make bashmarks local to the workspace and persistent
+SDIRS="${WSPATH}/.sdirs"
+
 # Local settings go here
