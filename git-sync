@@ -53,23 +53,34 @@ if [ -z "${FORCE}" ]; then
 fi
 
 BRANCH=$(git branch | grep "\*" | sed 's/\* //')
-
-if [ "${BRANCH}" != "master" ]; then
-	git checkout master
+REMOTE=$(git config --get branch.${BRANCH}.remote)
+if [ -z "${REMOTE}" ]; then
+	UPSTREAM="master"
+elif [ "${REMOTE}" == "." ]; then
+	# Local tracking branch.  Use it instead of master
+	m=$(git config --get branch.${BRANCH}.merge)
+	UPSTREAM=${m##*/}
+elif [ "${REMOTE}" == "origin" ]; then
+	# This branch directly tracks upstream; don't do any form of local upstream
+	UPSTREAM=
 fi
-echo "Updating master"
-if [ -n "${SVN}" ]; then
-	git svn rebase
-else
-	git pull --rebase
-fi
 
-if [ "${BRANCH}" != "master" ]; then
-	echo "Updating ${BRANCH}"
-	git checkout ${BRANCH}
+if [ -n "${UPSTREAM}" ]; then
+	echo "Updating ${UPSTREAM} first..."
+	git checkout ${UPSTREAM} || die "Could not checkout ${UPSTREAM}"
 	if [ -n "${SVN}" ]; then
-		git svn rebase
+		git svn rebase || die "rebase of ${UPSTREAM} failed"
 	else
-		git pull --rebase . master
+		git pull --rebase || die "rebase of ${UPSTREAM} failed"
+		git submodule update || die "submodule update of ${UPSTREAM} failed"
 	fi
+	git checkout ${BRANCH}
+fi
+
+echo "Updating ${BRANCH}"
+if [ -n "${SVN}" ]; then
+	git svn rebase || die "rebase of ${BRANCH} failed"
+else
+	git pull --rebase || die "rebase of ${BRANCH} failed"
+	git submodule update || die "submodule update of ${BRANCH} failed"
 fi
