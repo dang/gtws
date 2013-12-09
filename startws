@@ -3,13 +3,23 @@
 # Start session in a workspace
 #
 
+# Standard functions
+GTWSLOC=$(readlink -f $(dirname "$0"))
+source ${GTWSLOC}/gtws.sh
+
 if [ -f "${PWD}/.gtwsrc" ]; then
-	source "${PWD}/.gtwsrc"
+	load_rc "${PWD}"
 else
 	source "${HOME}/.gtwsrc"
 fi
 
-VERSION=${GTWS_PROJECT_VERSION:-trunk}
+if [ -n "${GTWS_PROJECT_VERSION}" ]; then
+	VERSION="${GTWS_PROJECT_VERSION}"
+elif [ -n "${GTWS_DEFAULT_PROJECT_VERSION}" ]; then
+	VERSION="${GTWS_DEFAULT_PROJECT_VERSION}"
+else
+	VERSION=$(basename "$PWD");
+fi
 
 if [ -n "${GTWS_PROJECT}" ]; then
 	PROJECT="${GTWS_PROJECT}"
@@ -20,21 +30,18 @@ else
 fi
 
 # Set usage output
-USAGE="[-h |--help] [-p <project> | --project=<project>] [-v <version> | --version=<version>] <name>"
+USAGE="[-h |--help] [-p <project> | --project=<project>] [-v <version> | --version=<version>] [-V | --verbose] <name>"
 LONGUSAGE="\t-h, --help\n\t\tPrint this help message
 \t-p <project>, --project=<project>\n\t\tProject (default: ${PROJECT:-none})
 \t-v <version>, --version=<version>\n\t\tProject version (default: ${VERSION})
+\t-V, --verbose\n\t\tBe verbose
 \t<name>\n\t\tWorkspace name"
-
-# Standard functions
-GTWSLOC=$(readlink -f $(dirname "$0"))
-source ${GTWSLOC}/gtws.sh
 
 # Script name
 ME=$(basename $0)
 
 # Parse arguments
-ARGS=`getopt -o hp:v: --long help,project:,version: -n "${ME}" -- "$@"`
+ARGS=`getopt -o hVp:v: --long help,verbose,project:,version: -n "${ME}" -- "$@"`
 
 if [ $? != 0 ] ; then
 	usage 
@@ -46,6 +53,7 @@ while true ; do
 		-h|--help) usage; shift ;;
 		-p|--project) PROJECT=$2 ; shift 2 ;;
 		-v|--version) VERSION=$2 ; shift 2 ;;
+		-V|--verbose) export GTWS_VERBOSE=yes; shift ;;
 		--) shift ; break ;;
 		* ) usage "Invalid argument $1";;
 	esac
@@ -56,12 +64,15 @@ if [ -z "${1}" ]; then
 	usage "Must give a workspace name"
 fi
 
-NAME="${1}"
-
-BASE=${GTWS_BASE_SRCDIR:-${HOME}/src}
-
-if [ ! -f ${BASE}/${PROJECT}/${VERSION}/${NAME}/.gtwsrc ]; then
-	usage "No env for ${PROJECT}/${VERSION}/${NAME}"
+if [ -z "${PROJECT}" ]; then
+	usage "Must give a project"
 fi
 
-exec bash --rcfile ${BASE}/${PROJECT}/${VERSION}/${NAME}/.gtwsrc
+WSNAME="${1}"
+BASE=${GTWS_BASE_SRCDIR:-${HOME}/src}
+
+if [ ! -f "${BASE}/${PROJECT}/${VERSION}/${WSNAME}/.gtwsrc" ]; then
+	usage "No .gtwsrc for ${PROJECT}/${VERSION}/${WSNAME}"
+fi
+
+exec bash --rcfile ${BASE}/${PROJECT}/${VERSION}/${WSNAME}/.gtwsrc

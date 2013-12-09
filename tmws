@@ -3,37 +3,45 @@
 # Start or attach to a tmux session in a workspace
 #
 
+# Standard functions
+GTWSLOC=$(readlink -f $(dirname "$0"))
+source ${GTWSLOC}/gtws.sh
+
 if [ -f "${PWD}/.gtwsrc" ]; then
-	source "${PWD}/.gtwsrc"
+	load_rc "${PWD}"
 else
 	source "${HOME}/.gtwsrc"
 fi
 
-VERSION=${GTWS_PROJECT_VERSION:-trunk}
+if [ -n "${GTWS_PROJECT_VERSION}" ]; then
+	VERSION="${GTWS_PROJECT_VERSION}"
+elif [ -n "${GTWS_DEFAULT_PROJECT_VERSION}" ]; then
+	VERSION="${GTWS_DEFAULT_PROJECT_VERSION}"
+else
+	VERSION=$(basename "$PWD");
+fi
 
 if [ -n "${GTWS_PROJECT}" ]; then
 	PROJECT="${GTWS_PROJECT}"
 elif [ -n "${GTWS_DEFAULT_PROJECT}" ]; then
 	PROJECT="${GTWS_DEFAULT_PROJECT}"
+else
+	PROJECT=$(basename $(dirname "$PWD"));
 fi
 
-
 # Set usage output
-USAGE="[-h |--help] [-p <project> | --project=<project>] [-v <version> | --version=<version>] <name>"
+USAGE="[-h |--help] [-p <project> | --project=<project>] [-v <version> | --version=<version>] [-V | --verbose] <name>"
 LONGUSAGE="\t-h, --help\n\t\tPrint this help message
 \t-p <project>, --project=<project>\n\t\tProject (default: ${PROJECT:-none})
 \t-v <version>, --version=<version>\n\t\tProject version (default: ${VERSION})
+\t-V, --verbose\n\t\tBe verbose
 \t<name>\n\t\tWorkspace name"
-
-# Standard functions
-GTWSLOC=$(readlink -f $(dirname "$0"))
-source ${GTWSLOC}/gtws.sh
 
 # Script name
 ME=$(basename $0)
 
 # Parse arguments
-ARGS=`getopt -o hp:v: --long help,project:,version: -n "${ME}" -- "$@"`
+ARGS=`getopt -o hVp:v: --long help,verbose,project:,version: -n "${ME}" -- "$@"`
 
 if [ $? != 0 ] ; then
 	usage 
@@ -45,6 +53,7 @@ while true ; do
 		-h|--help) usage; shift ;;
 		-p|--project) PROJECT=$2 ; shift 2 ;;
 		-v|--version) VERSION=$2 ; shift 2 ;;
+		-V|--verbose) export GTWS_VERBOSE=yes; shift ;;
 		--) shift ; break ;;
 		* ) usage "Invalid argument $1";;
 	esac
@@ -55,29 +64,32 @@ if [ -z "${1}" ]; then
 	usage "Must give a workspace name"
 fi
 
-NAME="${1}"
+if [ -z "${PROJECT}" ]; then
+	usage "Must give a project"
+fi
+
+WSNAME="${1}"
 BASE=${GTWS_BASE_SRCDIR:-${HOME}/src}
+
+if [ ! -f "${BASE}/${PROJECT}/${VERSION}/${WSNAME}/.gtwsrc" ]; then
+	usage "No .gtwsrc for ${PROJECT}/${VERSION}/${WSNAME}"
+fi
 
 if [ -n "$TMUX" ]; then
 	usage "Do not run from within tmux"
 fi
 
-if [ ! -f "${BASE}/${PROJECT}/${VERSION}}/${NAME}/.gtwsrc" ]; then
-	usage "No .gtwsrc for ${PROJECT}/${VERSION}}/${NAME}"
-	exit 1
-fi
+SESNAME="${PROJECT}-${WSNAME}"
 
-SESNAME="${PROJECT}-${NAME}"
-
-cd "${BASE}/${PROJECT}/${VERSION}}/${NAME}"
+cd "${BASE}/${PROJECT}/${VERSION}/${WSNAME}"
 
 NUM_SES=$(tmux ls | grep "^${SESNAME}" | wc -l)
 if [ "${NUM_SES}" == "0" ]; then
 	echo "Launching tmux base session ${SESNAME} ..."
-	tmux new-session -s ${SESNAME} -n "Edit" "startws -v ${PROJECT} ${NAME}" \; \
-		new-window -n "Build" "startws -v ${PROJECT} ${NAME}" \; \
-		split-window -v  "startws -v ${PROJECT} ${NAME}" \; \
-		split-window -v  "startws -v ${PROJECT} ${NAME}" \; \
+	tmux new-session -s ${SESNAME} -n "Edit" "startws -p ${PROJECT} -v ${VERSION} ${WSNAME}" \; \
+		new-window -n "Build" "startws -p ${PROJECT} -v ${VERSION} ${WSNAME}" \; \
+		split-window -v  "startws -p ${PROJECT} -v ${VERSION} ${WSNAME}" \; \
+		split-window -v  "startws -p ${PROJECT} -v ${VERSION} ${WSNAME}" \; \
 		select-layout even-horizontal \; \
 		select-window -t :0
 else

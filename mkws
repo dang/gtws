@@ -3,12 +3,27 @@
 # Create a new Project development workspace
 #
 
+function GTWScleanup {
+	rm -rf "${WSPATH}"
+}
+
+# Standard functions
+GTWSLOC=$(readlink -f $(dirname "$0"))
+source ${GTWSLOC}/gtws.sh
+
 if [ -f "${PWD}/.gtwsrc" ]; then
-	source "${PWD}/.gtwsrc"
+	load_rc "${PWD}"
 else
 	source "${HOME}/.gtwsrc"
 fi
-VERSION=${GTWS_PROJECT_VERSION:-$(basename "${PWD}")}
+
+if [ -n "${GTWS_PROJECT_VERSION}" ]; then
+	VERSION="${GTWS_PROJECT_VERSION}"
+elif [ -n "${GTWS_DEFAULT_PROJECT_VERSION}" ]; then
+	VERSION="${GTWS_DEFAULT_PROJECT_VERSION}"
+else
+	VERSION=$(basename "$PWD");
+fi
 
 if [ -n "${GTWS_PROJECT}" ]; then
 	PROJECT="${GTWS_PROJECT}"
@@ -19,27 +34,18 @@ else
 fi
 
 # Set usage output
-USAGE="[-h |--help]] [-p <project> | --project=<project>] [-v <version> | --version=<version>] <name>"
+USAGE="[-h |--help] [-p <project> | --project=<project>] [-v <version> | --version=<version>] [-V | --verbose] <name>"
 LONGUSAGE="\t-h, --help\n\t\tPrint this help message
+\t-p <project>, --project=<project>\n\t\tProject (default: ${PROJECT:-none})
 \t-v <version>, --version=<version>\n\t\tProject version (default: ${VERSION})
-\t-p <project>, --project=<project>\n\t\tProject name (default: ${PROJECT:-none})
+\t-V, --verbose\n\t\tBe verbose
 \t<name>\n\t\tWorkspace name"
-
-function GTWScleanup {
-	rm -rf "${WSPATH}"
-}
-
-# Standard functions
-GTWSLOC=$(readlink -f $(dirname "$0"))
-source ${GTWSLOC}/gtws.sh
-
-WSDIRS="routing docs gatt"
 
 # Script name
 ME=$(basename $0)
 
 # Parse arguments
-ARGS=`getopt -o hp:v: --long help,project:,version: -n "${ME}" -- "$@"`
+ARGS=`getopt -o hVp:v: --long help,verbose,project:,version: -n "${ME}" -- "$@"`
 
 if [ $? != 0 ] ; then
 	usage 
@@ -49,10 +55,9 @@ eval set -- "$ARGS"
 while true ; do
 	case "$1" in
 		-h|--help) usage; shift ;;
-		-v|--version) VERSION=$2 ; shift 2 ;;
 		-p|--project) PROJECT=$2 ; shift 2 ;;
-		-a|--all-rtos) ALL="yes"; shift ;;
-		-s|--supported-rtos) SUPP="yes"; shift ;;
+		-v|--version) VERSION=$2 ; shift 2 ;;
+		-V|--verbose) export GTWS_VERBOSE=yes; shift ;;
 		--) shift ; break ;;
 		* ) usage "Invalid argument $1";;
 	esac

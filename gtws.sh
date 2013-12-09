@@ -91,7 +91,9 @@ function load_rc {
 	while [ "${BASE}" !=  "/" ]; do
 		if [ -f "${BASE}"/.gtwsrc ]; then
 			load_rc "$(dirname ${BASE})"
-			echo "Loading ${BASE}/.gtwsrc"
+			if [ -n "${GTWS_VERBOSE}" ]; then
+				echo "Loading ${BASE}/.gtwsrc"
+			fi
 			source "${BASE}"/.gtwsrc
 			return 0
 		fi
