@@ -39,5 +39,5 @@ LONG_USAGE="${LONGUSAGE}"
 # Source the git environment
 source "$(git --exec-path)/git-sh-setup"
 
-git status | grep "^\#	" | grep ".orig\>" | sed 's/#\t//' | xargs rm -r 2>/dev/null
-git status | grep "^\#	" | grep ".rej\>" | sed 's/#\t//' | xargs rm -r 2>/dev/null
+git status --porcelain | grep '^??' | grep ".orig" | sed 's/?? //' | xargs rm -r 2>/dev/null
+git status --porcelain | grep '^??' | grep ".rej" | sed 's/?? //' | xargs rm -r 2>/dev/null
