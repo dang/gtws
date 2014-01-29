@@ -80,7 +80,7 @@ if [ -n "${SKIPRE}" ]; then
 	egrep -v "${SKIPRE}" ${TMPFILE} > cscope.files
 	SUBSET="yes"
 else
-	egrep -v ".svn" ${TMPFILE} > cscope.files
+	egrep -v ".svn" ${TMPFILE} | egrep -v "\<tags\>" > cscope.files
 fi
 rm ${TMPFILE}
 cscope -q -L ${KERNEL} -i cscope.files
