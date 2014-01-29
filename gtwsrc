@@ -38,11 +38,17 @@ function load_rc {
 	return 1
 }
 
+__gtws_prompt_command() {
+  printf "\033]0;%s:%s\007" "${GTWS_PROMPT}" "${PWD/#$HOME/~}"
+}
+
 # title "foobar"
 #
 # Set the xterm/gnome-terminal title
 function title {
-	 echo -en "\033]2;$1\007"
+	export GTWS_PROMPT="$1"
+	export PROMPT_COMMAND="__gtws_prompt_command"
+	echo -en "\033]2;$(__gtws_prompt_command)\007"
 }
 
 # Load config files
@@ -57,17 +63,18 @@ fi
 
 export CDPATH=":$WSPATH"
 
-title "${GTWS_PROJECT_VERSION}-${WSNAME}"
+title "${GTWS_PROJECT}:${GTWS_PROJECT_VERSION}:${WSNAME}"
 
 if [ -z "${GTWS_SAVEPS1}" ]; then
 	export GTWS_SAVEPS1="${PS1}"
 fi
 if [ -n "${GTWS_SETPROMPT}" ]; then
-	PROMPT="($GTWS_PROJECT"
-	if [ "$GTWS_PROJECT_VERSION" != "trunk" ]; then
-		PROMPT="${PROMPT}-${GTWS_PROJECT_VERSION}"
-	fi
-	PROMPT="${PROMPT}-${WSNAME})"
+	#PROMPT="($GTWS_PROJECT"
+	#if [ "$GTWS_PROJECT_VERSION" != "trunk" ]; then
+		#PROMPT="${PROMPT}:${GTWS_PROJECT_VERSION}"
+	#fi
+	#PROMPT="${PROMPT}:${WSNAME})"
+	PROMPT="(${WSNAME})"
 fi
 PS1="${PROMPT}${GTWS_SAVEPS1}"
 

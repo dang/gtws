@@ -52,13 +52,6 @@ usage() {
 	exit 1
 }
 
-# title "foobar"
-#
-# Set the xterm/gnome-terminal title
-function title {
-	 echo -en "\033]2;$1\007"
-}
-
 # gtws_project_clone_default ${GTWS_ORIGIN} ${GTWS_PROJECT} ${GTWS_PROJECT_VERSION}
 #
 # Clone a version of a project into ${WSPATH} (which is the current working directory).  This is the default version of this that clones <origin>/<project>/<version>/*
