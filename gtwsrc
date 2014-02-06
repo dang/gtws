@@ -48,7 +48,7 @@ __gtws_prompt_command() {
 function title {
 	export GTWS_PROMPT="$1"
 	export PROMPT_COMMAND="__gtws_prompt_command"
-	echo -en "\033]2;$(__gtws_prompt_command)\007"
+	#echo -en "\033]2;$(__gtws_prompt_command)\007"
 }
 
 # Load config files
