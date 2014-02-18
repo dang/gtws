@@ -52,6 +52,8 @@ if [ -z "${FORCE}" ]; then
 	git status | grep clean > /dev/null || die "Current branch is not clean"
 fi
 
+TOPLEVEL=$(git rev-parse --show-toplevel)
+SAVEDIR=$(PWD)
 BRANCH=$(git branch | grep "\*" | sed 's/\* //')
 REMOTE=$(git config --get branch.${BRANCH}.remote)
 if [ -z "${REMOTE}" ]; then
@@ -64,6 +66,8 @@ elif [ "${REMOTE}" == "origin" ]; then
 	# This branch directly tracks upstream; don't do any form of local upstream
 	UPSTREAM=
 fi
+
+cd "${TOPLEVEL}"
 
 if [ -n "${UPSTREAM}" ]; then
 	echo "Updating ${UPSTREAM} first..."
@@ -84,3 +88,5 @@ else
 	git pull --rebase || die "rebase of ${BRANCH} failed"
 	git submodule update || die "submodule update of ${BRANCH} failed"
 fi
+
+cd "${SAVEDIR}"
