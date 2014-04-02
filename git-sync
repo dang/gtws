@@ -53,7 +53,7 @@ if [ -z "${FORCE}" ]; then
 fi
 
 TOPLEVEL=$(git rev-parse --show-toplevel)
-SAVEDIR=$(PWD)
+SAVEDIR=${PWD}
 BRANCH=$(git branch | grep "\*" | sed 's/\* //')
 REMOTE=$(git config --get branch.${BRANCH}.remote)
 if [ -z "${REMOTE}" ]; then
