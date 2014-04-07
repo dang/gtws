@@ -4,7 +4,7 @@
 #
 
 function GTWScleanup {
-	rm -rf "${WSPATH}"
+	rm -rf "${GTWS_WSPATH}"
 }
 
 # Standard functions
@@ -80,19 +80,19 @@ elif [ "${PROJECT}" != "${GTWS_PROJECT}" ]; then
 	die "In wrong project dir: expected ${PROJECT} got ${GTWS_PROJECT}"
 fi
 
-WSPATH=$(readlink -f "${1}")
-WSNAME=$(basename "${WSPATH}")
+GTWS_WSPATH=$(readlink -f "${1}")
+GTWS_WSNAME=$(basename "${GTWS_WSPATH}")
 
 # Target directory check
-if [ -d "${WSPATH}" ]; then
-	die "Workspace ${WSPATH} already exists"
+if [ -d "${GTWS_WSPATH}" ]; then
+	die "Workspace ${GTWS_WSPATH} already exists"
 fi
 
 # Set up the environment
-mkdir -p "${WSPATH}" || die "Failed to mkdir ${WSPATH}"
-cd "${WSPATH}"
-cp "${GTWSLOC}"/gtwsrc "${WSPATH}"/.gtwsrc
-source "${WSPATH}"/.gtwsrc
+mkdir -p "${GTWS_WSPATH}" || die "Failed to mkdir ${GTWS_WSPATH}"
+cd "${GTWS_WSPATH}"
+cp "${GTWSLOC}"/gtwsrc "${GTWS_WSPATH}"/.gtwsrc
+source "${GTWS_WSPATH}"/.gtwsrc
 
 # Origin
 O="${GTWS_ORIGIN:=${HOME}/origin}"
@@ -119,21 +119,21 @@ if [ -z "${HAS_CLONE}" ]; then
 fi
 
 # Make workspace
-echo "Making workspace for ${VERSION}:${TARGET} in ${WSPATH}"
+echo "Making workspace for ${VERSION}:${TARGET} in ${GTWS_WSPATH}"
 # Made directory above
 
-touch "${WSPATH}/.sdirs"
+touch "${GTWS_WSPATH}/.sdirs"
 
 if [ -n "${HAS_CLONE}" ]; then
 	# Project provided a clone
-	gtws_project_clone ${O} ${PROJECT} ${VERSION} || die "clone failed"
+	gtws_project_clone ${O} ${PROJECT} ${VERSION} ${GTWS_WSNAME} || die "clone failed"
 else
 	# Default clone
 	gtws_project_clone_default ${O} ${PROJECT} ${VERSION} || die "clone failed"
 fi
 
 if [ -n "$(declare -F | grep "gtws_project_setup")" ]; then
-	gtws_project_setup ${WSNAME} ${O} ${PROJECT} ${VERSION} || die "setup failed"
+	gtws_project_setup ${GTWS_WSNAME} ${O} ${PROJECT} ${VERSION} || die "setup failed"
 fi
 
 echo "Done"

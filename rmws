@@ -39,21 +39,21 @@ if [ -z "${1}" ]; then
 	usage "Must give a workspace name"
 fi
 
-WSPATH=$(readlink -f "${1}")
-WSNAME=$(basename "${WSPATH}")
+GTWS_WSPATH=$(readlink -f "${1}")
+GTWS_WSNAME=$(basename "${GTWS_WSPATH}")
 
 # Target directory check
-if [ ! -d "${WSPATH}" ]; then
-	die "Workspace ${WSPATH} doesn't exist"
+if [ ! -d "${GTWS_WSPATH}" ]; then
+	die "Workspace ${GTWS_WSPATH} doesn't exist"
 fi
 
 # Cleanup
 if [ -n "$(declare -F | grep "gtws_project_cleanup")" ]; then
 	basedir="${PWD}"
-	cd "${WSPATH}"
-	gtws_project_cleanup ${WSNAME} ${PROJECT} ${VERSION} || die "cleanup failed"
+	cd "${GTWS_WSPATH}"
+	gtws_project_cleanup ${GTWS_WSNAME} ${PROJECT} ${VERSION} || die "cleanup failed"
 	cd "${basedir}"
 fi
 
 # Nuke workspace
-rm -rf "${WSPATH}"
+rm -rf "${GTWS_WSPATH}"

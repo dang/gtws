@@ -13,8 +13,8 @@
 # GTWS_ORIGIN - Path to origin directory. Defaults to ${HOME}/origin
 # GTWS_SETPROMPT - Set the shell prompt to the workspace name
 
-WSPATH=$(readlink -f ${BASH_ARGV[0]%/*})
-WSNAME=$(basename "${WSPATH}")
+export GTWS_WSPATH=$(readlink -f ${BASH_ARGV[0]%/*})
+export GTWS_WSNAME=$(basename "${GTWS_WSPATH}")
 
 
 # load_rc /path/to/workspace
@@ -52,7 +52,7 @@ function title {
 }
 
 # Load config files
-load_rc ${WSPATH}
+load_rc ${GTWS_WSPATH}
 
 if [ -z "${GTWS_SAVEPATH}" ]; then
 	export GTWS_SAVEPATH="${PATH}"
@@ -61,9 +61,9 @@ if [ -n "${GTWS_PATH_EXTRA}" ]; then
 	export PATH=$GTWS_SAVEPATH:"${GTWS_PATH_EXTRA}"
 fi
 
-export CDPATH=":$WSPATH"
+export CDPATH=":$GTWS_WSPATH"
 
-title "${GTWS_PROJECT}:${GTWS_PROJECT_VERSION}:${WSNAME}"
+title "${GTWS_PROJECT}:${GTWS_PROJECT_VERSION}:${GTWS_WSNAME}"
 
 if [ -z "${GTWS_SAVEPS1}" ]; then
 	export GTWS_SAVEPS1="${PS1}"
@@ -73,12 +73,12 @@ if [ -n "${GTWS_SETPROMPT}" ]; then
 	#if [ "$GTWS_PROJECT_VERSION" != "trunk" ]; then
 		#PROMPT="${PROMPT}:${GTWS_PROJECT_VERSION}"
 	#fi
-	#PROMPT="${PROMPT}:${WSNAME})"
-	PROMPT="(${WSNAME})"
+	#PROMPT="${PROMPT}:${GTWS_WSNAME})"
+	PROMPT="(${GTWS_WSNAME})"
 fi
 PS1="${PROMPT}${GTWS_SAVEPS1}"
 
 # Make bashmarks local to the workspace and persistent
-SDIRS="${WSPATH}/.sdirs"
+SDIRS="${GTWS_WSPATH}/.sdirs"
 
 # Local settings go here

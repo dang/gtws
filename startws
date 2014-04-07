@@ -68,11 +68,11 @@ if [ -z "${PROJECT}" ]; then
 	usage "Must give a project"
 fi
 
-WSNAME="${1}"
+GTWS_WSNAME="${1}"
 BASE=${GTWS_BASE_SRCDIR:-${HOME}/src}
 
-if [ ! -f "${BASE}/${PROJECT}/${VERSION}/${WSNAME}/.gtwsrc" ]; then
-	usage "No .gtwsrc for ${PROJECT}/${VERSION}/${WSNAME}"
+if [ ! -f "${BASE}/${PROJECT}/${VERSION}/${GTWS_WSNAME}/.gtwsrc" ]; then
+	usage "No .gtwsrc for ${PROJECT}/${VERSION}/${GTWS_WSNAME}"
 fi
 
-exec bash --rcfile ${BASE}/${PROJECT}/${VERSION}/${WSNAME}/.gtwsrc
+exec bash --rcfile ${BASE}/${PROJECT}/${VERSION}/${GTWS_WSNAME}/.gtwsrc

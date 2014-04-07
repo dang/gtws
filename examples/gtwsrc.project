@@ -9,9 +9,9 @@ export GTWS_PROJECT="enkive"
 
 # If non-standard orgin layout is used, define this function
 
-# gtws_project_clone ${GTWS_ORIGIN} ${GTWS_PROJECT} ${GTWS_PROJECT_VERSION} ${WSNAME}
+# gtws_project_clone ${GTWS_ORIGIN} ${GTWS_PROJECT} ${GTWS_PROJECT_VERSION} ${GTWS_WSNAME}
 #
-# Clone a version of a project into ${WSPATH} (which is the current working directory)
+# Clone a version of a project into ${GTWS_WSPATH} (which is the current working directory)
 #function gtws_project_clone {
 	#local origin=$1
 	#local project=$2
@@ -29,9 +29,9 @@ export GTWS_PROJECT="enkive"
 
 # If post-clone setup is desired, define this function
 
-# gtws_project_setup ${WSNAME} ${GTWS_ORIGIN} ${GTWS_PROJECT} ${GTWS_PROJECT_VERSION}
+# gtws_project_setup ${GTWS_WSNAME} ${GTWS_ORIGIN} ${GTWS_PROJECT} ${GTWS_PROJECT_VERSION}
 #
-# Post clone setup of a workspace in ${WSPATH} (which is PWD)
+# Post clone setup of a workspace in ${GTWS_WSPATH} (which is PWD)
 function gtws_project_setup {
 	local wsname=$1
 	local origin=$2
@@ -77,7 +77,7 @@ function gtws_project_setup {
 	ECLIPSE_SETTINGS=".plugins/org.eclipse.core.runtime/.settings/org.eclipse.ui.workbench.prefs .plugins/org.eclipse.e4.workbench/workbench.xmi"
 
 	for i in ${ECLIPSE_SETTINGS}; do
-		echo cp "${GTWSLOC}/enkive/.metadata/${i}" "${WSPATH}/.metadata/${i}"
+		echo cp "${GTWSLOC}/enkive/.metadata/${i}" "${GTWS_WSPATH}/.metadata/${i}"
 	done
 
 }
@@ -85,9 +85,9 @@ function gtws_project_setup {
 
 # If pre-delete cleanup during removal is desired, define this function
 
-# gtws_project_cleanup ${WSNAME} ${GTWS_PROJECT} ${GTWS_PROJECT_VERSION}
+# gtws_project_cleanup ${GTWS_WSNAME} ${GTWS_PROJECT} ${GTWS_PROJECT_VERSION}
 #
-# Pre-delete cleanup of a workspace in ${WSPATH} (which is PWD)
+# Pre-delete cleanup of a workspace in ${GTWS_WSPATH} (which is PWD)
 #function gtws_project_cleanup {
 	#local wsname=$1
 	#local wspath=$1
@@ -100,8 +100,8 @@ function gtws_project_setup {
 
 
 # Stuff specific to this project.  It can be assumed that the following are set:
-#	WSPATH - Path to the workspace
-#	WSNAME - Name of the workspace
+#	GTWS_WSPATH - Path to the workspace
+#	GTWS_WSNAME - Name of the workspace
 #export GTWS_FILES_EXTRA="${GTWS_FILES_EXTRA} .syntastic_c_config"
 export ENKIVE_HOME="${WSPATH}/enkive"
 export GTWS_PATH_EXTRA="${ENKIVE_HOME}/scripts"

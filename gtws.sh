@@ -54,7 +54,7 @@ usage() {
 
 # gtws_project_clone_default ${GTWS_ORIGIN} ${GTWS_PROJECT} ${GTWS_PROJECT_VERSION}
 #
-# Clone a version of a project into ${WSPATH} (which is the current working directory).  This is the default version of this that clones <origin>/<project>/<version>/*
+# Clone a version of a project into ${GTWS_WSPATH} (which is the current working directory).  This is the default version of this that clones <origin>/<project>/<version>/*
 function gtws_project_clone_default {
 	local origin=$1
 	local project=$2

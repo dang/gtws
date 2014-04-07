@@ -3,7 +3,7 @@
 # Update rtos in a workspace
 #
 
-WSPATH="${PWD}"
+GTWS_WSPATH="${PWD}"
 
 # Set usage output
 USAGE="[-h |--help] [-a | --all-rtos] [<rtos> ...]"
@@ -66,7 +66,7 @@ for i in ${RTOS}; do
 	cd "${i}"
 	git pull --rebase || die "Pull failed for ${i}"
 	./setup > /dev/null 2>&1
-	cd "${WSPATH}"
+	cd "${GTWS_WSPATH}"
 	echo ""
 done
 

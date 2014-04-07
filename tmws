@@ -68,28 +68,28 @@ if [ -z "${PROJECT}" ]; then
 	usage "Must give a project"
 fi
 
-WSNAME="${1}"
+GTWS_WSNAME="${1}"
 BASE=${GTWS_BASE_SRCDIR:-${HOME}/src}
 
-if [ ! -f "${BASE}/${PROJECT}/${VERSION}/${WSNAME}/.gtwsrc" ]; then
-	usage "No .gtwsrc for ${PROJECT}/${VERSION}/${WSNAME}"
+if [ ! -f "${BASE}/${PROJECT}/${VERSION}/${GTWS_WSNAME}/.gtwsrc" ]; then
+	usage "No .gtwsrc for ${PROJECT}/${VERSION}/${GTWS_WSNAME}"
 fi
 
 if [ -n "$TMUX" ]; then
 	usage "Do not run from within tmux"
 fi
 
-SESNAME="${PROJECT}/${VERSION}/${WSNAME}"
+SESNAME="${PROJECT}/${VERSION}/${GTWS_WSNAME}"
 
-cd "${BASE}/${PROJECT}/${VERSION}/${WSNAME}"
+cd "${BASE}/${PROJECT}/${VERSION}/${GTWS_WSNAME}"
 
 NUM_SES=$(tmux ls | grep "^${SESNAME}" | wc -l)
 if [ "${NUM_SES}" == "0" ]; then
 	echo "Launching tmux base session ${SESNAME} ..."
-	tmux new-session -s ${SESNAME} -n "Edit" "startws -p ${PROJECT} -v ${VERSION} ${WSNAME}" \; \
-		new-window -n "Build" "startws -p ${PROJECT} -v ${VERSION} ${WSNAME}" \; \
-		split-window -v  "startws -p ${PROJECT} -v ${VERSION} ${WSNAME}" \; \
-		split-window -v  "startws -p ${PROJECT} -v ${VERSION} ${WSNAME}" \; \
+	tmux new-session -s ${SESNAME} -n "Edit" "startws -p ${PROJECT} -v ${VERSION} ${GTWS_WSNAME}" \; \
+		new-window -n "Build" "startws -p ${PROJECT} -v ${VERSION} ${GTWS_WSNAME}" \; \
+		split-window -v  "startws -p ${PROJECT} -v ${VERSION} ${GTWS_WSNAME}" \; \
+		split-window -v  "startws -p ${PROJECT} -v ${VERSION} ${GTWS_WSNAME}" \; \
 		select-layout even-horizontal \; \
 		select-window -t :0
 else

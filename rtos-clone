@@ -19,7 +19,7 @@ if [ ! -f ".gtwsrc" ]; then
 	die "${PWD} is not a workspace"
 fi
 source ".gtwsrc"
-WSPATH="${PWD}"
+GTWS_WSPATH="${PWD}"
 GTWS_ORIGIN="${GTWS_ORIGIN:-${HOME}/origin}"
 
 # Script name
@@ -58,7 +58,7 @@ if [ -z "${RTOS}" ]; then
 	usage "Must give an rtos version"
 fi
 
-cd "${WSPATH}"
+cd "${GTWS_WSPATH}"
 
 for i in ${RTOS}; do
 	if [ ! -d "${GTWS_ORIGIN}/${i}" ]; then
@@ -73,20 +73,20 @@ for i in ${RTOS}; do
 		fi
 	done
 	# Detect directory
-	if [ -d "${WSPATH}/${i}/rtos/pcx86" ]; then
-		RDIR="${WSPATH}/${i}/rtos"
+	if [ -d "${GTWS_WSPATH}/${i}/rtos/pcx86" ]; then
+		RDIR="${GTWS_WSPATH}/${i}/rtos"
 		# Can't patch this type
 		unset PATCH
-	elif [ -d "${WSPATH}/${i}/pcx86" ]; then
-		RDIR="${WSPATH}/${i}"
+	elif [ -d "${GTWS_WSPATH}/${i}/pcx86" ]; then
+		RDIR="${GTWS_WSPATH}/${i}"
 	else
-		die "Cannot find target dir in ${WSPATH}/${i}"
+		die "Cannot find target dir in ${GTWS_WSPATH}/${i}"
 	fi
 	if [ -n "${PATCH}" ]; then
-		if [ -d "${WSPATH}/gatt/patches/${i}" ]; then
+		if [ -d "${GTWS_WSPATH}/gatt/patches/${i}" ]; then
 			echo "Applying GATT patch"
 			cd "${RDIR}" || die "failed to cd to ${RDIR}"
-			git am --whitespace=nowarn "${WSPATH}/gatt/patches/${i}/"*.patch || die "git am failed"
+			git am --whitespace=nowarn "${GTWS_WSPATH}/gatt/patches/${i}/"*.patch || die "git am failed"
 		else
 			echo "No patches for ${i}; skipping"
 		fi
@@ -100,10 +100,10 @@ for i in ${RTOS}; do
 	sed -i "s#@GTWSRDIR@#${RDIR}#" "${RDIR}/Makefile" || die "rdir sed failed"
 	echo "Setting up $i"
 	cd "${RDIR}/modules/ghs" || die "failed to cd to ${RDIR}/modules/ghs"
-	ln -s "${WSPATH}/routing" "gated" || die "failed to symlink gated"
+	ln -s "${GTWS_WSPATH}/routing" "gated" || die "failed to symlink gated"
 	cd "${RDIR}" || die "failed to cd to ${RDIR}"
 	./setup > /dev/null 2>&1
-	cd "${WSPATH}"
+	cd "${GTWS_WSPATH}"
 	echo ""
 done
 
