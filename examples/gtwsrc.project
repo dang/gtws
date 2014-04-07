@@ -98,6 +98,9 @@ function gtws_project_setup {
 	#rm -rf "/casa/${USER}/test/working/${version}/${wsname}"
 #}
 
+# Make things installed locally be runnable
+export LD_LIBRARY_PATH="${LD_LIBRARY_PATH}:${GTWS_WSPATH}/install/lib"
+export PYTHONPATH="${PYTHONPATH}:${GTWS_WSPATH}/install/lib/python2.7/site-packages"
 
 # Stuff specific to this project.  It can be assumed that the following are set:
 #	GTWS_WSPATH - Path to the workspace
