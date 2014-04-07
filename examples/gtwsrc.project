@@ -4,17 +4,26 @@
 # Stuff for GTWS
 export GTWS_PROJECT="enkive"
 
+# Optionally specify repos to clone. Defaults to all repos in origin
+#export GTWS_PROJECT_REPOS="foo bar baz"
+
 # If non-standard orgin layout is used, define this function
 
-# gtws_project_clone ${GTWS_ORIGIN} ${GTWS_PROJECT} ${GTWS_PROJECT_VERSION}
+# gtws_project_clone ${GTWS_ORIGIN} ${GTWS_PROJECT} ${GTWS_PROJECT_VERSION} ${WSNAME}
 #
 # Clone a version of a project into ${WSPATH} (which is the current working directory)
 #function gtws_project_clone {
 	#local origin=$1
 	#local project=$2
 	#local version=$3
-	#local opv="${origin}/${project}/${version}"
+	#local name=$4
+	#local opvn="${origin}/${project}/${version}/${name}"
 	#local wspath=${PWD}
+
+	#for repo in ${GTWS_PROJECT_REPOS}; do
+		#local rpath="${opvn}/${repo}"
+		#git clone "${rpath}" || die "failed to clone ${rpath}"
+	#done
 #}
 
 

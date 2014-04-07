@@ -59,13 +59,21 @@ function gtws_project_clone_default {
 	local origin=$1
 	local project=$2
 	local version=$3
+	local name=$4
 	local opv="${origin}/${project}/${version}"
 	local wspath=${PWD}
+	local repos=${GTWS_PROJECT_REPOS}
 
-	for i in "${opv}"/*; do
-		local repo=$(basename $i)
-		git clone "${i}" || die "failed to clone ${i}"
-		cd "${i}" || die "failed to cd to ${i}"
+	if [ -z "${repos}" ]; then
+		for i in "${opv}"/*; do
+			repos="$(basename $i) $repos"
+		done
+	fi
+
+	for repo in ${repos}; do
+		local rpath="${opv}/${repo}"
+		git clone "${rpath}" || die "failed to clone ${rpath}"
+		cd "${rpath}" || die "failed to cd to ${rpath}"
 		for f in ${GTWS_FILES_EXTRA}; do
 			if [ -f "${f}" ]; then
 				cp --parents "${f}" "${wspath}/${repo}" || die "failed to copy ${f}"

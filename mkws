@@ -94,15 +94,16 @@ cd "${WSPATH}"
 cp "${GTWSLOC}"/gtwsrc "${WSPATH}"/.gtwsrc
 source "${WSPATH}"/.gtwsrc
 
-# Origin check
+# Origin
 O="${GTWS_ORIGIN:=${HOME}/origin}"
-if [ ! -d "${O}/${PROJECT}" ]; then
-	die "No origin for ${PROJECT}"
-fi
 
 HAS_CLONE=$(declare -F | grep "\<gtws_project_clone\>")
 echo "$HAS_CLONE"
 if [ -z "${HAS_CLONE}" ]; then
+	# Origin check for default
+	if [ ! -d "${O}/${PROJECT}" ]; then
+		die "No origin for ${PROJECT}"
+	fi
 	# Workspace contents check
 	found=""
 	for i in "${O}/${PROJECT}/${VERSION}"/*; do
