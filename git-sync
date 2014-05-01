@@ -11,9 +11,10 @@
 #
 
 # Set usage output
-USAGE="[-h |--help] [-f | --force]"
+USAGE="[-h |--help] [-f | --force] [-s | --stash]"
 LONGUSAGE="\t-h, --help\n\t\tPrint this help message
-\t-f, --force\n\t\tSync even if the local branch is not up-to-date"
+\t-f, --force\n\t\tSync even if the local branch is not up-to-date
+\t-s, --stash\n\t\tStash before syncing, and pop after"
 
 # Standard functions
 GTWSLOC=$(readlink -f $(dirname "$0"))
@@ -23,7 +24,7 @@ source ${GTWSLOC}/gtws.sh
 ME=$(basename $0)
 
 # Parse arguments
-ARGS=`getopt -o hf --long help,force -n "${ME}" -- "$@"`
+ARGS=`getopt -o hfs --long help,force,stash -n "${ME}" -- "$@"`
 
 if [ $? != 0 ] ; then
 	usage 
@@ -34,6 +35,7 @@ while true ; do
 	case "$1" in
 		-h|--help) usage; shift ;;
 		-f|--force) FORCE="yes"; shift ;;
+		-s|--stash) STASH="yes"; shift ;;
 		--) shift ; break ;;
 		* ) usage "Invalid argument $1";;
 	esac
@@ -46,10 +48,6 @@ git branch 2>&1 | grep -i "Not a git repository" > /dev/null 2>/dev/null && die 
 GITDIR="$(git rev-parse --git-dir 2>/dev/null)"
 if git-issvn > /dev/null 2>&1; then
 	SVN="yes"
-fi
-
-if [ -z "${FORCE}" ]; then
-	git status | grep clean > /dev/null || die "Current branch is not clean"
 fi
 
 TOPLEVEL=$(git rev-parse --show-toplevel)
@@ -69,6 +67,14 @@ fi
 
 cd "${TOPLEVEL}"
 
+if [ -n "${STASH}" ]; then
+	git stash || die "Couldn't stash"
+fi
+
+if [ -z "${FORCE}" ]; then
+	git status | grep clean > /dev/null || die "Current branch is not clean"
+fi
+
 if [ -n "${UPSTREAM}" ]; then
 	echo "Updating ${UPSTREAM} first..."
 	git checkout ${UPSTREAM} || die "Could not checkout ${UPSTREAM}"
@@ -87,6 +93,10 @@ if [ -n "${SVN}" ]; then
 else
 	git pull --rebase || die "rebase of ${BRANCH} failed"
 	git submodule update || die "submodule update of ${BRANCH} failed"
+fi
+
+if [ -n "${STASH}" ]; then
+	git stash pop
 fi
 
 cd "${SAVEDIR}"
