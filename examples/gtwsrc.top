@@ -1,6 +1,11 @@
 # ex: set filetype=sh:
 # GTWS top level config
 
+if [ -n "${GTWS_TOP}" ]; then
+	debug_print "Top already loaded"
+	return
+fi
+GTWS_TOP="yes"
 
 # I want to be able to use .gtwsrc as a bashrc, so source my .bashrc
 source "${HOME}/.bashrc"

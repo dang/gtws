@@ -2,6 +2,9 @@
 # Functions for gtws
 #
 
+GTWSLOC=$(readlink -f $(dirname "${BASH_SOURCE[0]}"))
+export GTWSLOC
+
 # if is_interactive; then echo "interactive" fi
 #
 # Check for an interactive shell
@@ -52,6 +55,15 @@ usage() {
 	exit 1
 }
 
+# debug_print "Print debug information"
+#
+# Print debug information based on GTWS_VERBOSE
+debug_print() {
+	if [ -n "${GTWS_VERBOSE}" ]; then
+		echo "$@"
+	fi
+}
+
 # gtws_project_clone_default ${GTWS_ORIGIN} ${GTWS_PROJECT} ${GTWS_PROJECT_VERSION}
 #
 # Clone a version of a project into ${GTWS_WSPATH} (which is the current working directory).  This is the default version of this that clones <origin>/<project>/<version>/*
@@ -89,18 +101,18 @@ function gtws_project_clone_default {
 # Recursively load all RC files, starting at /
 function load_rc {
 	local BASE=$(readlink -f "${1}")
+	# Load base RC first
+	source "${HOME}"/.gtwsrc
 	while [ "${BASE}" !=  "/" ]; do
 		if [ -f "${BASE}"/.gtwsrc ]; then
 			load_rc "$(dirname ${BASE})"
-			if [ -n "${GTWS_VERBOSE}" ]; then
-				echo "Loading ${BASE}/.gtwsrc"
-			fi
+			debug_print "Loading ${BASE}/.gtwsrc"
 			source "${BASE}"/.gtwsrc
 			return 0
 		fi
 		BASE=$(readlink -f $(dirname "${BASE}"))
 	done
-
 	# Stop at /
+
 	return 1
 }

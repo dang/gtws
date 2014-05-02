@@ -5,6 +5,12 @@
 # Cascades up the path, loading any config it finds.  Each more specific config
 # file overrides less specific ones.
 
+if [ -n "${GTWS_WS_GUARD}" ]; then
+	debug_print "WS Already loaded"
+	return
+fi
+GTWS_WS_GUARD="yes"
+
 # Things expected to come from a higher .gtwsrc:
 # GTWS_PROJECT - Name of project
 # GTWS_PROJECT_VERSION - Version of project
@@ -16,27 +22,7 @@
 export GTWS_WSPATH=$(readlink -f ${BASH_ARGV[0]%/*})
 export GTWS_WSNAME=$(basename "${GTWS_WSPATH}")
 
-
-# load_rc /path/to/workspace
-#
-# Recursively load all RC files, starting at /
-function load_rc {
-	local BASE=$(dirname $(readlink -f "${1}"))
-	while [ "${BASE}" !=  "/" ]; do
-		if [ -f "${BASE}"/.gtwsrc ]; then
-			load_rc "${BASE}"
-			if [ -n "${GTWS_VERBOSE}" ]; then
-				echo "Loading ${BASE}/.gtwsrc"
-			fi
-			source "${BASE}"/.gtwsrc
-			return 0
-		fi
-		BASE=$(readlink -f $(dirname "${BASE}"))
-	done
-
-	# Stop at /
-	return 1
-}
+source ${GTWSLOC}/gtws.sh
 
 __gtws_prompt_command() {
   printf "\033]0;%s:%s\007" "${GTWS_PROMPT}" "${PWD/#$HOME/~}"
