@@ -82,7 +82,7 @@ if [ -n "${UPSTREAM}" ]; then
 		git svn rebase || die "rebase of ${UPSTREAM} failed"
 	else
 		git pull --rebase || die "rebase of ${UPSTREAM} failed"
-		git submodule update --init --recursive || die "submodule update of ${UPSTREAM} failed"
+		git submodule update --init --recursive --remote || die "submodule update of ${UPSTREAM} failed"
 	fi
 	git checkout ${BRANCH}
 fi
@@ -92,7 +92,7 @@ if [ -n "${SVN}" ]; then
 	git svn rebase || die "rebase of ${BRANCH} failed"
 else
 	git pull --rebase || die "rebase of ${BRANCH} failed"
-	git submodule update --init --recursive || die "submodule update of ${BRANCH} failed"
+	git submodule update --init --recursive --remote || die "submodule update of ${BRANCH} failed"
 fi
 
 if [ -n "${STASH}" ]; then
