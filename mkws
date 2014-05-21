@@ -100,15 +100,16 @@ O="${GTWS_ORIGIN:=${HOME}/origin}"
 HAS_CLONE=$(declare -F | grep "\<gtws_project_clone\>")
 echo "$HAS_CLONE"
 if [ -z "${HAS_CLONE}" ]; then
-	# Origin check for default
-	if [ ! -d "${O}/${PROJECT}" ]; then
-		die "No origin for ${PROJECT}"
+	gtws_opv "${O}" "${PROJECT}" "${VERSION}" opv
+	if [ ! -d "${opv}" ]; then
+		die "No origin for ${origin} ${project} ${version}"
 	fi
+
 	# Workspace contents check
 	found=""
-	for i in "${O}/${PROJECT}/${VERSION}"/*; do
+	for i in "${opv}"/*; do
 		if [ ! -d "${i}/.git" ]; then
-			die "${i} in origin ${O}/${PROJECT}/${VERSION} is not git"
+			die "${i} in origin ${opv} is not git"
 		fi
 		found="yes"
 	done

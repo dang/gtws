@@ -22,15 +22,10 @@ export GTWS_DEFAULT_PROJECT
 export GTWS_DEFAULT_PROJECT_VERSION
 
 function cdorigin() {
-	local WSBASE="${GTWS_ORIGIN}/${GTWS_PROJECT}"
-	local WSORIGIN="${WSBASE}/${GTWS_PROJECT_VERSION}/$@"
-	if [ ! -d "${WSORIGIN}" ]; then
-		# See if it's not versioned
-		WSORIGIN="${WSBASE}/$@"
-	fi
-	if [ ! -d "${WSORIGIN}" ]; then
+	local opv=$(gtws_opv "${GTWS_ORIGIN}" "${GTWS_PROJECT}" "${GTWS_PROJECT_VERSION}")
+	if [ ! -d "${opv}" ]; then
 		die "No origin for $@"
 	fi
-	cd "${WSORIGIN}"
+	cd "${opv}"
 }
 

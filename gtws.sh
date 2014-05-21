@@ -64,6 +64,33 @@ debug_print() {
 	fi
 }
 
+# gtws_opv ${GTWS_ORIGIN} ${GTWS_PROJECT} ${GTWS_PROJECT_VERSION} opv
+#
+# Result will be in local variable opv.  Or:
+#
+# opv = $(gtws_opv ${GTWS_ORIGIN} ${GTWS_PROJECT} ${GTWS_PROJECT_VERSION})
+#
+# Result will be in local variable opv.
+function gtws_opv {
+	local origin=$1
+	local project=$2
+	local version=$3
+	local  __resultvar=$4
+	local __opv="${origin}/${project}/${version}"
+
+	if [ ! -d "${__opv}" ]; then
+		__opv="${origin}/${project}/git"
+	fi
+	if [ ! -d "${__opv}" ]; then
+		die "No opv for ${origin} ${project} ${version}"
+	fi
+	if [[ "$__resultvar" ]]; then
+		eval $__resultvar="'$__opv'"
+	else
+		echo "$__opv"
+	fi
+}
+
 # gtws_project_clone_default ${GTWS_ORIGIN} ${GTWS_PROJECT} ${GTWS_PROJECT_VERSION}
 #
 # Clone a version of a project into ${GTWS_WSPATH} (which is the current working directory).  This is the default version of this that clones <origin>/<project>/<version>/*
@@ -72,7 +99,7 @@ function gtws_project_clone_default {
 	local project=$2
 	local version=$3
 	local name=$4
-	local opv="${origin}/${project}/${version}"
+	local opv=$(gtws_opv "${origin}" "${project}" "${version}")
 	local wspath=${PWD}
 	local repos=${GTWS_PROJECT_REPOS}
 
@@ -84,7 +111,7 @@ function gtws_project_clone_default {
 
 	for repo in ${repos}; do
 		local rpath="${opv}/${repo}"
-		git clone "${rpath}" || die "failed to clone ${rpath}"
+		git clone -b "${version}" "${rpath}" || die "failed to clone ${rpath}:${version}"
 		cd "${rpath}" || die "failed to cd to ${rpath}"
 		for f in ${GTWS_FILES_EXTRA}; do
 			if [ -f "${f}" ]; then
