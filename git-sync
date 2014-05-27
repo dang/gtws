@@ -10,11 +10,14 @@
 #   git pull master
 #
 
+SUBREMOTE=""
+
 # Set usage output
-USAGE="[-h |--help] [-f | --force] [-s | --stash]"
+USAGE="[-h |--help] [-f | --force] [-s | --stash] [-r | --remote]"
 LONGUSAGE="\t-h, --help\n\t\tPrint this help message
 \t-f, --force\n\t\tSync even if the local branch is not up-to-date
-\t-s, --stash\n\t\tStash before syncing, and pop after"
+\t-s, --stash\n\t\tStash before syncing, and pop after
+\t-r, --remote\n\t\tUpdate submodules to the most recent version"
 
 # Standard functions
 GTWSLOC=$(readlink -f $(dirname "$0"))
@@ -24,7 +27,7 @@ source ${GTWSLOC}/gtws.sh
 ME=$(basename $0)
 
 # Parse arguments
-ARGS=`getopt -o hfs --long help,force,stash -n "${ME}" -- "$@"`
+ARGS=`getopt -o hfsr --long help,force,stash,remote -n "${ME}" -- "$@"`
 
 if [ $? != 0 ] ; then
 	usage 
@@ -36,6 +39,7 @@ while true ; do
 		-h|--help) usage; shift ;;
 		-f|--force) FORCE="yes"; shift ;;
 		-s|--stash) STASH="yes"; shift ;;
+		-r|--remote) SUBREMOTE="--remote"; shift ;;
 		--) shift ; break ;;
 		* ) usage "Invalid argument $1";;
 	esac
@@ -82,7 +86,7 @@ if [ -n "${UPSTREAM}" ]; then
 		git svn rebase || die "rebase of ${UPSTREAM} failed"
 	else
 		git pull --rebase || die "rebase of ${UPSTREAM} failed"
-		git submodule update --init --recursive --remote || die "submodule update of ${UPSTREAM} failed"
+		git submodule update --init --recursive ${SUBREMOTE} || die "submodule update of ${UPSTREAM} failed"
 	fi
 	git checkout ${BRANCH}
 fi
@@ -92,7 +96,7 @@ if [ -n "${SVN}" ]; then
 	git svn rebase || die "rebase of ${BRANCH} failed"
 else
 	git pull --rebase || die "rebase of ${BRANCH} failed"
-	git submodule update --init --recursive --remote || die "submodule update of ${BRANCH} failed"
+	git submodule update --init --recursive ${SUBREMOTE} || die "submodule update of ${BRANCH} failed"
 fi
 
 if [ -n "${STASH}" ]; then
