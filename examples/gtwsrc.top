@@ -26,6 +26,6 @@ function cdorigin() {
 	if [ ! -d "${opv}" ]; then
 		die "No origin for $@"
 	fi
-	cd "${opv}"
+	cd "${opv}/$@"
 }
 

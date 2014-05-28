@@ -41,7 +41,7 @@ function gtws_project_setup {
 	local opg="${origin}/${project}/gtws"
 
 	for i in "${wspath}"/*; do
-		cd "${i}/src" || cd ${i} || die "Couldn't cd to ${i}"
+		cd "${i}/src" 2>/dev/null || cd ${i} || die "Couldn't cd to ${i}"
 		maketags > /dev/null 2> /dev/null &
 		cd ${wspath} || die "Couldn't cd to ${wspath}"
 	done
