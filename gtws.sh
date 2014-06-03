@@ -60,7 +60,7 @@ usage() {
 # Print debug information based on GTWS_VERBOSE
 debug_print() {
 	if [ -n "${GTWS_VERBOSE}" ]; then
-		echo "$@"
+		echo "$@" >&2
 	fi
 }
 
@@ -78,10 +78,11 @@ function gtws_opv {
 	local  __resultvar=$4
 	local __opv="${origin}/${project}/${version}"
 
-	if [ ! -d "${__opv}" ]; then
+	if [[ $__opv == *:* ]]; then
+		debug_print "remote; skip check"
+	elif [ ! -d "${__opv}" ]; then
 		__opv="${origin}/${project}/git"
-	fi
-	if [ ! -d "${__opv}" ]; then
+	elif [ ! -d "${__opv}" ]; then
 		die "No opv for ${origin} ${project} ${version}"
 	fi
 	if [[ "$__resultvar" ]]; then
