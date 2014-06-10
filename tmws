@@ -68,7 +68,7 @@ if [ -z "${PROJECT}" ]; then
 	usage "Must give a project"
 fi
 
-GTWS_WSNAME="${1}"
+GTWS_WSNAME="${1%/}"
 BASE=${GTWS_BASE_SRCDIR:-${HOME}/src}
 
 if [ ! -f "${BASE}/${PROJECT}/${VERSION}/${GTWS_WSNAME}/.gtwsrc" ]; then
