@@ -47,18 +47,24 @@ done
 
 # Remaining arguments are in $1, $2, etc. as normal
 
-git branch 2>&1 | grep -i "Not a git repository" > /dev/null 2>/dev/null && die "Not a git repo"
+# Source the git environment.  Checks to see if we're in a git repo
+SUBDIRECTORY_OK=Yes
+source "$(git --exec-path)/git-sh-setup"
 
-GITDIR="$(git rev-parse --git-dir 2>/dev/null)"
+GIT_DIR="$(git rev-parse --git-dir 2>/dev/null)"
 if git-issvn > /dev/null 2>&1; then
 	SVN="yes"
 fi
 
-TOPLEVEL=$(git rev-parse --show-toplevel)
 SAVEDIR=${PWD}
 BRANCH=$(git branch | grep "\*" | sed 's/\* //')
 REMOTE=$(git config --get branch.${BRANCH}.remote)
-if [ -z "${REMOTE}" ]; then
+if test "z$(is_bare_repository)" == ztrue; then
+	BARE="true"
+fi
+if [ -n "${BARE}" ]; then
+	UPSTREAM=
+elif [ -z "${REMOTE}" ]; then
 	UPSTREAM="master"
 elif [ "${REMOTE}" == "." ]; then
 	# Local tracking branch.  Use it instead of master
@@ -69,13 +75,13 @@ elif [ "${REMOTE}" == "origin" ]; then
 	UPSTREAM=
 fi
 
-cd "${TOPLEVEL}"
+cd_to_toplevel
 
 if [ -n "${STASH}" ]; then
 	git stash || die "Couldn't stash"
 fi
 
-if [ -z "${FORCE}" ]; then
+if [ -z "${BARE}" -a -z "${FORCE}" ]; then
 	git status | grep clean > /dev/null || die "Current branch is not clean"
 fi
 
@@ -92,7 +98,9 @@ if [ -n "${UPSTREAM}" ]; then
 fi
 
 echo "Updating ${BRANCH}"
-if [ -n "${SVN}" ]; then
+if [ -n "${BARE}" ]; then
+	git fetch --all || die "update of bare repo failed"
+elif [ -n "${SVN}" ]; then
 	git svn rebase || die "rebase of ${BRANCH} failed"
 else
 	git pull --rebase || die "rebase of ${BRANCH} failed"
