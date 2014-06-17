@@ -64,6 +64,23 @@ debug_print() {
 	fi
 }
 
+# is_git_repo ${dir}
+#
+# return success if ${dir} is in a git repo, or failure otherwise
+is_git_repo() {
+	debug_print "is_git_repo $i"
+	if [ ! -d "$1" ]; then
+		debug_print "    fail: not dir"
+		return 1
+	fi
+	cd "$i"
+	git rev-parse --git-dir >/dev/null 2>&1
+	local ret=$?
+	cd -
+	debug_print "    retval: $ret"
+	return $ret
+}
+
 # gtws_opv ${GTWS_ORIGIN} ${GTWS_PROJECT} ${GTWS_PROJECT_VERSION} opv
 #
 # Result will be in local variable opv.  Or:

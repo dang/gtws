@@ -106,17 +106,26 @@ if [ -z "${HAS_CLONE}" ]; then
 	fi
 
 	# Workspace contents check
+	repos=${GTWS_PROJECT_REPOS}
+	if [ -z "${repos}" ]; then
+		for i in "${opv}"/*; do
+			if is_git_repo "$i"; then
+				repos="$(basename $i) $repos"
+			fi
+		done
+	fi
 	found=""
-	for i in "${opv}"/*; do
-		if [ ! -d "${i}/.git" ]; then
-			die "${i} in origin ${opv} is not git"
+	for repo in ${repos}; do
+		rpath="${opv}/${repo}"
+		if ! is_git_repo "$rpath"; then
+			die "${rpath} in origin ${opv} is not git"
 		fi
-		found="yes"
 	done
 
-	if [ -z "$found" ]; then
+	if [ -z "${repos}" ]; then
 		die "No git repos in origin ${O}/${PROJECT}/${VERSION}"
 	fi
+	export GTWS_PROJECT_REPOS=${repos}
 fi
 
 # Make workspace
