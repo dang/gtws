@@ -46,31 +46,31 @@ function gtws_project_setup {
 		cd ${wspath} || die "Couldn't cd to ${wspath}"
 	done
 
-	cd "${wspath}/enkive" || die "Failed to cd to ${wspath}/enkive"
-	echo "Creating build.properties"
-	scp "${opg}/build.properties" "." ||
-		die "Couldn't copy build.properties"
-	sed -i "s#@GTWSJAVAPATH@#${GTWS_JAVA_PATH}#" "build.properties" ||
-		die "java sed failed"
+	#cd "${wspath}/enkive" || die "Failed to cd to ${wspath}/enkive"
+	#echo "Creating build.properties"
+	#scp "${opg}/build.properties" "." ||
+		#die "Couldn't copy build.properties"
+	#sed -i "s#@GTWSJAVAPATH@#${GTWS_JAVA_PATH}#" "build.properties" ||
+		#die "java sed failed"
 
-	echo "Creating .project"
-	scp "${opg}/enkive.project" ".project" ||
-		die "Couldn't copy .project"
-	sed -i "s#@NAME@#${i}#" ".project" ||
-		die "project name sed failed"
-	git update-index --assume-unchanged .project ||
-		die "unchanged project failed"
+	#echo "Creating .project"
+	#scp "${opg}/enkive.project" ".project" ||
+		#die "Couldn't copy .project"
+	#sed -i "s#@NAME@#${i}#" ".project" ||
+		#die "project name sed failed"
+	#git update-index --assume-unchanged .project ||
+		#die "unchanged project failed"
 
-	sed -i "s#kind=\"var\" path=\"ENKIVE_JAVA#kind=\"lib\" path=\"${GTWS_JAVA_PATH}#" ".classpath" ||
-		die "ENKIVE_JAVA sed failed"
-	sed -i "s#kind=\"var\" path=\"INDRI_INSTALL#kind=\"lib\" path=\"/opt/indri#" ".classpath" ||
-		die "INDRI_INSTALL sed failed"
-	git update-index --assume-unchanged .classpath ||
-		die "unchanged classpath failed"
-	cd ${wspath} || die "Couldn't cd to ${wspath}"
+	#sed -i "s#kind=\"var\" path=\"ENKIVE_JAVA#kind=\"lib\" path=\"${GTWS_JAVA_PATH}#" ".classpath" ||
+		#die "ENKIVE_JAVA sed failed"
+	#sed -i "s#kind=\"var\" path=\"INDRI_INSTALL#kind=\"lib\" path=\"/opt/indri#" ".classpath" ||
+		#die "INDRI_INSTALL sed failed"
+	#git update-index --assume-unchanged .classpath ||
+		#die "unchanged classpath failed"
+	#cd ${wspath} || die "Couldn't cd to ${wspath}"
 
-	echo "Setting up eclipse"
-	scp -r "${opg}/.metadata/" .
+	#echo "Setting up eclipse"
+	#scp -r "${opg}/.metadata/" .
 }
 
 
