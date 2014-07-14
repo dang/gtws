@@ -60,7 +60,7 @@ usage() {
 # Print debug information based on GTWS_VERBOSE
 debug_print() {
 	if [ -n "${GTWS_VERBOSE}" ]; then
-		echo "$@" >&2
+		echo -e "$@" >&2
 	fi
 }
 
@@ -147,11 +147,12 @@ function gtws_project_clone_default {
 function load_rc {
 	local BASE=$(readlink -f "${1}")
 	# Load base RC first
+	debug_print "load_rc: Enter + Top: ${BASE}"
 	source "${HOME}"/.gtwsrc
 	while [ "${BASE}" !=  "/" ]; do
 		if [ -f "${BASE}"/.gtwsrc ]; then
 			load_rc "$(dirname ${BASE})"
-			debug_print "Loading ${BASE}/.gtwsrc"
+			debug_print "\tLoading ${BASE}/.gtwsrc"
 			source "${BASE}"/.gtwsrc
 			return 0
 		fi

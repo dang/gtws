@@ -1,6 +1,13 @@
 # ex: set filetype=sh:
 # GTWS project level config
 
+if [ -n "${GTWS_PROJECT_GUARD}" ]; then
+	debug_print "Project already loaded"
+	return
+fi
+GTWS_PROJECT_GUARD="yes"
+debug_print "Loading Project"
+
 # Stuff for GTWS
 export GTWS_PROJECT="enkive"
 
@@ -46,6 +53,9 @@ function gtws_project_setup {
 		cd ${wspath} || die "Couldn't cd to ${wspath}"
 	done
 
+	mkdir "${wspath}"/build
+	mkdir "${wspath}"/install
+
 	#cd "${wspath}/enkive" || die "Failed to cd to ${wspath}/enkive"
 	#echo "Creating build.properties"
 	#scp "${opg}/build.properties" "." ||
@@ -89,9 +99,9 @@ function gtws_project_setup {
 	#rm -rf "/casa/${USER}/test/working/${version}/${wsname}"
 #}
 
-# Make things installed locally be runnable
-export LD_LIBRARY_PATH="${LD_LIBRARY_PATH}:${GTWS_WSPATH}/install/lib:${GTWS_WSPATH}/install/lib64"
-export PYTHONPATH="${PYTHONPATH}:${GTWS_WSPATH}/install/lib/python2.7/site-packages"
+# Allow WS to make things installed locally be runnable
+export GTWS_LD_LIBRARY_PATH="${GTWS_WSPATH}/install/lib:${GTWS_WSPATH}/install/lib64"
+export GTWS_PYTHONPATH="${GTWS_WSPATH}/install/lib/python2.7/site-packages"
 
 # Stuff specific to this project.  It can be assumed that the following are set:
 #	GTWS_WSPATH - Path to the workspace
@@ -100,6 +110,8 @@ export PYTHONPATH="${PYTHONPATH}:${GTWS_WSPATH}/install/lib/python2.7/site-packa
 #export ENKIVE_HOME="${GTWS_WSPATH}/enkive"
 #export GTWS_PATH_EXTRA="${ENKIVE_HOME}/scripts"
 #export ENKIVE_USER=${USER:-dang}
+export CMAKE_SETTINGS="-DCMAKE_BUILD_TYPE:STRING=Debug -DCMAKE_INSTALL_PREFIX=${GTWS_WSPATH}/install"
+alias ccmake="cmake ${CMAKE_SETTINGS}"
 
 # Local aliases/functions
 #alias eclipse="/usr/bin/eclipse -data ${GTWS_WSPATH} -noSplash"

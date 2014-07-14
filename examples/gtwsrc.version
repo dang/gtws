@@ -1,6 +1,13 @@
 # ex: set filetype=sh:
 # GTWS version level config
 
+if [ -n "${GTWS_VERSION_GUARD}" ]; then
+	debug_print "Version already loaded"
+	return
+fi
+GTWS_VERSION_GUARD="yes"
+debug_print "Loading Version"
+
 # Stuff for GTWS
 export GTWS_PROJECT_VERSION=$(basename $(dirname $(readlink -f ${BASH_SOURCE})))
 
@@ -8,4 +15,4 @@ export GTWS_PROJECT_VERSION=$(basename $(dirname $(readlink -f ${BASH_SOURCE})))
 #	GTWS_WSPATH - Path to the workspace
 #	GTWS_WSNAME - Name of the workspace
 
-export GTWS_JAVA_PATH="/opt/java6"
+#export GTWS_JAVA_PATH="/opt/java6"

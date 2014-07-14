@@ -3,13 +3,17 @@
 # Start session in a workspace
 #
 
+SAVEVARS="LOC PROJECT PROJECT_VERSION VERBOSE WSNAME"
+
 # Standard functions
 GTWS_LOC=$(readlink -f $(dirname "$0"))
 source ${GTWS_LOC}/gtws.sh
 
 if [ -f "${PWD}/.gtwsrc" ]; then
+	debug_print "startws: loading ${PWD}"
 	load_rc "${PWD}"
 else
+	debug_print "startws: sourcing Top"
 	source "${HOME}/.gtwsrc"
 fi
 
@@ -75,4 +79,27 @@ if [ ! -f "${BASE}/${PROJECT}/${VERSION}/${GTWS_WSNAME}/.gtwsrc" ]; then
 	usage "No .gtwsrc for ${PROJECT}/${VERSION}/${GTWS_WSNAME}"
 fi
 
+# Save variables
+for i in ${SAVEVARS}; do
+	SRC=GTWS_${i}
+	DST=SAVE_${i}
+	debug_print "\t $i: ${DST} = ${!SRC}"
+	eval ${DST}=${!SRC}
+done
+
+# Clear GTWS evironment
+for i in ${!GTWS*} ; do
+	debug_print "unset $i"
+	unset $i
+done
+
+# Restore variables
+for i in ${SAVEVARS}; do
+	SRC=SAVE_${i}
+	DST=GTWS_${i}
+	debug_print "\t $i: ${DST} = ${!SRC}"
+	eval export ${DST}=${!SRC}
+done
+
+debug_print "exec bash --rcfile ${BASE}/${PROJECT}/${VERSION}/${GTWS_WSNAME}/.gtwsrc"
 exec bash --rcfile ${BASE}/${PROJECT}/${VERSION}/${GTWS_WSNAME}/.gtwsrc

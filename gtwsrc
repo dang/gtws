@@ -23,6 +23,7 @@ export GTWS_WSPATH=$(readlink -f ${BASH_ARGV[0]%/*})
 export GTWS_WSNAME=$(basename "${GTWS_WSPATH}")
 
 source ${GTWS_LOC}/gtws.sh
+debug_print "Loading WS"
 
 __gtws_prompt_command() {
   printf "\033]0;%s:%s\007" "${GTWS_PROMPT}" "${PWD/#$HOME/~}"
@@ -66,5 +67,13 @@ PS1="${PROMPT}${GTWS_SAVEPS1}"
 
 # Make bashmarks local to the workspace and persistent
 SDIRS="${GTWS_WSPATH}/.sdirs"
+
+# Make things installed locally be runnable
+if [ -n "${GTWS_LD_LIBRARY_PATH}" ] ; then
+	export LD_LIBRARY_PATH="${LD_LIBRARY_PATH}:${GTWS_LD_LIBRARY_PATH}"
+fi
+if [ -n "${GTWS_PYTHONPATH}" ] ; then
+	export PYTHONPATH="${PYTHONPATH}:${GTWS_PYTHONPATH}"
+fi
 
 # Local settings go here
