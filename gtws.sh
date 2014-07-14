@@ -2,8 +2,8 @@
 # Functions for gtws
 #
 
-GTWSLOC=$(readlink -f $(dirname "${BASH_SOURCE[0]}"))
-export GTWSLOC
+GTWS_LOC=$(readlink -f $(dirname "${BASH_SOURCE[0]}"))
+export GTWS_LOC
 
 # if is_interactive; then echo "interactive" fi
 #

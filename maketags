@@ -12,8 +12,8 @@ LONGUSAGE="\t-h\tPrint this help message
 \t-j\tOnly tag java
 \t<directories>\tDirectories to scan (defaults to '.')"
 
-GTWSLOC=$(readlink -f $(dirname "$0"))
-source ${GTWSLOC}/gtws.sh
+GTWS_LOC=$(readlink -f $(dirname "$0"))
+source ${GTWS_LOC}/gtws.sh
 
 while getopts ":hkecpj" option; do
 	case ${option} in

@@ -22,7 +22,7 @@ GTWS_WS_GUARD="yes"
 export GTWS_WSPATH=$(readlink -f ${BASH_ARGV[0]%/*})
 export GTWS_WSNAME=$(basename "${GTWS_WSPATH}")
 
-source ${GTWSLOC}/gtws.sh
+source ${GTWS_LOC}/gtws.sh
 
 __gtws_prompt_command() {
   printf "\033]0;%s:%s\007" "${GTWS_PROMPT}" "${PWD/#$HOME/~}"

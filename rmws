@@ -12,8 +12,8 @@ LONGUSAGE="\t-h, --help\n\t\tPrint this help message
 \t<name>\n\t\tWorkspace name"
 
 # Standard functions
-GTWSLOC=$(readlink -f $(dirname "$0"))
-source ${GTWSLOC}/gtws.sh
+GTWS_LOC=$(readlink -f $(dirname "$0"))
+source ${GTWS_LOC}/gtws.sh
 
 # Script name
 ME=$(basename $0)

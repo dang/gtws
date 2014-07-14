@@ -4,8 +4,8 @@
 #
 
 # Standard functions
-GTWSLOC=$(readlink -f $(dirname "$0"))
-source ${GTWSLOC}/gtws.sh
+GTWS_LOC=$(readlink -f $(dirname "$0"))
+source ${GTWS_LOC}/gtws.sh
 
 if [ -f "${PWD}/.gtwsrc" ]; then
 	load_rc "${PWD}"

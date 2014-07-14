@@ -11,8 +11,8 @@ LONGUSAGE="\t-h, --help\n\t\tPrint this help message
 \t<rtos>\n\t\tRTOS version"
 
 # Standard functions
-GTWSLOC=$(readlink -f $(dirname "$0"))
-source ${GTWSLOC}/gtws.sh
+GTWS_LOC=$(readlink -f $(dirname "$0"))
+source ${GTWS_LOC}/gtws.sh
 
 # Workspace settings
 if [ ! -f ".gtwsrc" ]; then
@@ -94,7 +94,7 @@ for i in ${RTOS}; do
 	echo "Creating makefile"
 	set_default_comp "${i}"
 	set_default_bsp "${i}"
-	cp "${GTWSLOC}/Makefile" "${RDIR}" || die "Couldn't copy Makefile"
+	cp "${GTWS_LOC}/Makefile" "${RDIR}" || die "Couldn't copy Makefile"
 	sed -i "s#@GTWSGBUILD@#${GTWS_COMPILER_PATH}/gbuild#" "${RDIR}/Makefile" || die "gbuild sed failed"
 	sed -i "s#@GTWSBSP@#${GTWS_BSP}#" "${RDIR}/Makefile" || die "bsp sed failed"
 	sed -i "s#@GTWSRDIR@#${RDIR}#" "${RDIR}/Makefile" || die "rdir sed failed"

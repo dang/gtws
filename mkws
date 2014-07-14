@@ -8,8 +8,8 @@ function GTWScleanup {
 }
 
 # Standard functions
-GTWSLOC=$(readlink -f $(dirname "$0"))
-source ${GTWSLOC}/gtws.sh
+GTWS_LOC=$(readlink -f $(dirname "$0"))
+source ${GTWS_LOC}/gtws.sh
 
 if [ -f "${PWD}/.gtwsrc" ]; then
 	load_rc "${PWD}"
@@ -91,7 +91,7 @@ fi
 # Set up the environment
 mkdir -p "${GTWS_WSPATH}" || die "Failed to mkdir ${GTWS_WSPATH}"
 cd "${GTWS_WSPATH}"
-cp "${GTWSLOC}"/gtwsrc "${GTWS_WSPATH}"/.gtwsrc
+cp "${GTWS_LOC}"/gtwsrc "${GTWS_WSPATH}"/.gtwsrc
 source "${GTWS_WSPATH}"/.gtwsrc
 
 # Origin
