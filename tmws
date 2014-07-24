@@ -60,7 +60,11 @@ while true ; do
 done
 
 # Remaining arguments are in $1, $2, etc. as normal
-if [ -z "${1}" ]; then
+if [ -n "${1}" ]; then
+	GTWS_WSNAME="${1%/}"
+fi
+
+if [ -z "${GTWS_WSNAME}" ]; then
 	usage "Must give a workspace name"
 fi
 
@@ -68,7 +72,6 @@ if [ -z "${PROJECT}" ]; then
 	usage "Must give a project"
 fi
 
-GTWS_WSNAME="${1%/}"
 BASE=${GTWS_BASE_SRCDIR:-${HOME}/src}
 
 if [ ! -f "${BASE}/${PROJECT}/${VERSION}/${GTWS_WSNAME}/.gtwsrc" ]; then
