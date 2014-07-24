@@ -69,11 +69,11 @@ if [ -n "${1}" ]; then
 fi
 
 if [ -z "${GTWS_WSNAME}" ]; then
-	usage "Must give a workspace name"
+	usage "Must be in a workspace or give a workspace name"
 fi
 
 if [ -z "${PROJECT}" ]; then
-	usage "Must give a project"
+	usage "Must be in a project or give a project name"
 fi
 
 BASE=${GTWS_BASE_SRCDIR:-${HOME}/src}
@@ -104,5 +104,6 @@ for i in ${SAVEVARS}; do
 	eval export ${DST}=${!SRC}
 done
 
+cd "${BASE}/${PROJECT}/${VERSION}/${GTWS_WSNAME}"
 debug_print "exec bash --rcfile ${BASE}/${PROJECT}/${VERSION}/${GTWS_WSNAME}/.gtwsrc"
 exec bash --rcfile ${BASE}/${PROJECT}/${VERSION}/${GTWS_WSNAME}/.gtwsrc
