@@ -110,8 +110,8 @@ export GTWS_PYTHONPATH="${GTWS_WSPATH}/install/lib/python2.7/site-packages"
 #export ENKIVE_HOME="${GTWS_WSPATH}/enkive"
 #export GTWS_PATH_EXTRA="${ENKIVE_HOME}/scripts"
 #export ENKIVE_USER=${USER:-dang}
-export CMAKE_SETTINGS="-DCMAKE_BUILD_TYPE:STRING=Debug -DCMAKE_INSTALL_PREFIX=${GTWS_WSPATH}/install"
-alias ccmake="cmake ${CMAKE_SETTINGS}"
+export GTWS_CMAKE_SETTINGS="-DCMAKE_BUILD_TYPE:STRING=Debug -DCMAKE_INSTALL_PREFIX=${GTWS_WSPATH}/install"
+alias ccmake="cmake ${GTWS_CMAKE_SETTINGS}"
 
 # Local aliases/functions
 #alias eclipse="/usr/bin/eclipse -data ${GTWS_WSPATH} -noSplash"

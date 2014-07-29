@@ -162,3 +162,55 @@ function load_rc {
 
 	return 1
 }
+
+# clear_env
+#
+# Clear the environment of GTWS_* except for the contents of GTWS_SAVEVARS.
+# The default values for GTWS_SAVEVARS are below.
+function clear_env {
+	local savevars=${GTWS_SAVEVARS:-"LOC PROJECT PROJECT_VERSION VERBOSE WSNAME"}
+	local verbose="${GTWS_VERBOSE}"
+	debug_print "savevars=$savevars"
+
+	# Reset prompt
+	if [ -n "${GTWS_SAVEPS1}" ]; then
+		PS1="${GTWS_SAVEPS1}"
+	fi
+	if [ -n "${GTWS_SAVEPATH}" ]; then
+		export PATH=${GTWS_SAVEPATH}
+	fi
+	unset LD_LIBRARY_PATH
+	unset PYTHONPATH
+	unset PROMPT_COMMAND
+	unset CDPATH
+	unset SDIRS
+
+	# Save variables
+	for i in ${savevars}; do
+		SRC=GTWS_${i}
+		DST=SAVE_${i}
+		debug_print "\t $i: ${DST} = ${!SRC}"
+		eval ${DST}=${!SRC}
+	done
+
+	# Clear GTWS evironment
+	for i in ${!GTWS*} ; do
+		if [ -n "${verbose}" ]; then
+			echo -e "unset $i" >&2
+		fi
+		unset $i
+	done
+
+	# Restore variables
+	for i in ${savevars}; do
+		SRC=SAVE_${i}
+		DST=GTWS_${i}
+		if [ -n "${verbose}" ]; then
+			echo -e "\t $i: ${DST} = ${!SRC}" >&2
+		fi
+		if [ -n "${!SRC}" ]; then
+			eval export ${DST}=${!SRC}
+		fi
+		unset ${SRC}
+	done
+}
