@@ -129,7 +129,7 @@ function gtws_project_clone_default {
 
 	for repo in ${repos}; do
 		local rpath="${opv}/${repo}"
-		git clone -b "${version}" "${rpath}" || die "failed to clone ${rpath}:${version}"
+		git clone --recurse-submodules -b "${version}" "${rpath}" || die "failed to clone ${rpath}:${version}"
 		cd "${rpath}" || die "failed to cd to ${rpath}"
 		for f in ${GTWS_FILES_EXTRA}; do
 			if [ -f "${f}" ]; then

@@ -29,7 +29,7 @@ export GTWS_PROJECT="enkive"
 
 	#for repo in ${GTWS_PROJECT_REPOS}; do
 		#local rpath="${opvn}/${repo}"
-		#git clone "${rpath}" || die "failed to clone ${rpath}"
+		#git clone --recurse-submodules "${rpath}" || die "failed to clone ${rpath}"
 	#done
 #}
 
