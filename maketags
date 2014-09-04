@@ -12,6 +12,9 @@ LONGUSAGE="\t-h\tPrint this help message
 \t-j\tOnly tag java
 \t<directories>\tDirectories to scan (defaults to '.')"
 
+# Things to always skip
+BASESKIPRE=".svn|\<tags\>|.git|cscope|.swp\>"
+
 GTWS_LOC=$(readlink -f $(dirname "$0"))
 source ${GTWS_LOC}/gtws.sh
 
@@ -32,9 +35,15 @@ done
 echo "$0 $@" > ".#maketags.dfg"
 
 # Get stuff from the .maketagsrc file
+# This can contain:
+# KERNEL_HDRS	- Location of headers for a kernel build.  Only these headers will be scanned
+# SYSTEM_HDRS	- Location of headers for a normal build.  These will be scanned in addition to /usr/include
+# SKIPRE	- A regular expression of files to skip
 if [ -z "${CLEAN}" ]; then
 	if [ -f ".gtwsrc" ]; then
 		source ".gtwsrc"
+	elif [ -f ".maketagsrc" ]; then
+		source .maketagsrc
 	elif [ -f "${HOME}/.maketagsrc" ]; then
 		source ${HOME}/.maketagsrc
 	fi
@@ -77,10 +86,10 @@ else
 fi
 
 if [ -n "${SKIPRE}" ]; then
-	egrep -v "${SKIPRE}" ${TMPFILE} > cscope.files
+	egrep -v "${SKIPRE}" ${TMPFILE} | egrep -v "${BASESKIPRE}" > cscope.files
 	SUBSET="yes"
 else
-	egrep -v ".svn" ${TMPFILE} | egrep -v "\<tags\>" > cscope.files
+	egrep -v "${BASESKIPRE}" ${TMPFILE} > cscope.files
 fi
 rm ${TMPFILE}
 cscope -q -L ${KERNEL} -i cscope.files
