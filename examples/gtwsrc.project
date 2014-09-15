@@ -10,6 +10,7 @@ debug_print "Loading Project"
 
 # Stuff for GTWS
 export GTWS_PROJECT="enkive"
+GTWS_MAKETAGS_OPTS=""
 
 # Optionally specify repos to clone. Defaults to all repos in origin
 #export GTWS_PROJECT_REPOS="foo bar baz"
@@ -49,7 +50,10 @@ function gtws_project_setup {
 
 	for i in "${wspath}"/*; do
 		cd "${i}/src" 2>/dev/null || cd ${i} || die "Couldn't cd to ${i}"
-		maketags > /dev/null 2> /dev/null &
+		maketags ${GTWS_MAKETAGS_OPTS} > /dev/null 2> /dev/null &
+		if [ -x "src/scripts/git_hooks/install_git_hooks.sh" ]; then
+			./src/scripts/git_hooks/install_git_hooks.sh
+		fi
 		cd ${wspath} || die "Couldn't cd to ${wspath}"
 	done
 
