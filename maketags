@@ -60,12 +60,23 @@ else
 fi
 
 if [ -n "${KERNEL}" ]; then
-	echo "Making kernel tags for $DIRS"
+	TYPE=" kernel"
 	HDRS="${KERNEL_HDRS}"
 else
-	echo "Making tags for $DIRS"
+	TYPE=""
 	HDRS="${SYSTEM_HDRS}"
 fi
+if [ -n "${CPP}" ]; then
+	TYPE="${TYPE} C/C++"
+elif [ -n "${PERL}" ]; then
+	TYPE="${TYPE} Perl"
+elif [ -n "${JAVA}" ]; then
+	TYPE="${TYPE} Java"
+else
+	TYPE="${TYPE} Full"
+fi
+
+echo "Making${TYPE} tags for ${DIRS}"
 
 TMPFILE=`mktemp -t maketags.XXXXXXXXXX` || die "Couldn't make tempfile"
 
