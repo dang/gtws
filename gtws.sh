@@ -81,6 +81,30 @@ is_git_repo() {
 	return $ret
 }
 
+# git_top_dir top
+#
+# Get the top level of the git repo contaning PWD, or return failure;
+#
+# Result will be in local variable top  Or:
+#
+# top = $(git_top_dir)
+#
+# Result will be in local variable top
+function git_top_dir {
+	local  __resultvar=$1
+	local __top="$(git rev-parse --show-toplevel 2>/dev/null)"
+
+	if [ -z "${__top}" ]; then
+		die "${PWD} is not a git repo"
+		return 1
+	fi
+	if [[ "$__resultvar" ]]; then
+		eval $__resultvar="'$__top'"
+	else
+		echo "$__top"
+	fi
+}
+
 # gtws_opv ${GTWS_ORIGIN} ${GTWS_PROJECT} ${GTWS_PROJECT_VERSION} opv
 #
 # Result will be in local variable opv.  Or:
@@ -298,4 +322,33 @@ function gtws_tmux_slave {
 	gtws_tmux_attach "${session}"
 	# When we detach from it, kill the session
 	tmux kill-session -t "${session}"
+}
+
+function cdorigin() {
+	if [ -n "$(declare -F | grep "gtws_project_cdorigin")" ]; then
+		gtws_project_cdorigin $@
+	else
+		gtws_cdorigin $@
+	fi
+}
+
+function gtws_cdorigin() {
+	local opv=$(gtws_opv "${GTWS_ORIGIN}" "${GTWS_PROJECT}" "${GTWS_PROJECT_VERSION}")
+	local target=""
+	if [ -n "$1" ]; then
+		target="$@"
+	else
+		git_top_dir target || return 1
+		target=$(basename $target)
+	fi
+	if [ ! -d "${opv}" ]; then
+		die "No opv for $target"
+	fi
+	if [ ! -d "${opv}/$target" ]; then
+		target=${target}.git
+	fi
+	if [ ! -d "${opv}/$target" ]; then
+		die "No opv for $target"
+	fi
+	cd "${opv}/$target"
 }

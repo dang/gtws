@@ -21,11 +21,3 @@ echo ${GTWS_DEFAULT_PROJECT_VERSION:="master"} >/dev/null
 export GTWS_DEFAULT_PROJECT
 export GTWS_DEFAULT_PROJECT_VERSION
 
-function cdorigin() {
-	local opv=$(gtws_opv "${GTWS_ORIGIN}" "${GTWS_PROJECT}" "${GTWS_PROJECT_VERSION}")
-	if [ ! -d "${opv}" ]; then
-		die "No origin for $@"
-	fi
-	cd "${opv}/$@"
-}
-

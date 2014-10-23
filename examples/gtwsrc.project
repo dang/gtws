@@ -15,7 +15,7 @@ GTWS_MAKETAGS_OPTS=""
 # Optionally specify repos to clone. Defaults to all repos in origin
 #export GTWS_PROJECT_REPOS="foo bar baz"
 
-# If non-standard orgin layout is used, define this function
+# If non-standard orgin layout is used, define these two functions
 
 # gtws_project_clone ${GTWS_ORIGIN} ${GTWS_PROJECT} ${GTWS_PROJECT_VERSION} ${GTWS_WSNAME}
 #
@@ -32,6 +32,14 @@ GTWS_MAKETAGS_OPTS=""
 		#local rpath="${opvn}/${repo}"
 		#git clone --recurse-submodules "${rpath}" || die "failed to clone ${rpath}"
 	#done
+#}
+
+#function gtws_project_cdorigin() {
+	#local opv=$(gtws_opv "${GTWS_ORIGIN}" "${GTWS_PROJECT}" "${GTWS_PROJECT_VERSION}")
+	#if [ ! -d "${opv}" ]; then
+		#die "No origin for $@"
+	#fi
+	#cd "${opv}/$@"
 #}
 
 
