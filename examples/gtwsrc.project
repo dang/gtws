@@ -9,7 +9,7 @@ GTWS_PROJECT_GUARD="yes"
 debug_print "Loading Project"
 
 # Stuff for GTWS
-export GTWS_PROJECT="enkive"
+export GTWS_PROJECT=$(basename $(dirname $(readlink -f ${BASH_SOURCE})))
 GTWS_MAKETAGS_OPTS=""
 
 # Optionally specify repos to clone. Defaults to all repos in origin
@@ -116,6 +116,8 @@ export GTWS_PYTHONPATH="${GTWS_WSPATH}/install/lib/python2.7/site-packages"
 #export ENKIVE_USER=${USER:-dang}
 export GTWS_CMAKE_SETTINGS="-DCMAKE_BUILD_TYPE:STRING=Debug -DCMAKE_INSTALL_PREFIX=${GTWS_WSPATH}/install"
 alias ccmake="cmake ${GTWS_CMAKE_SETTINGS}"
+export CFLAGS="-O0 -g -gdwarf-2 -Werror"
+export CPPFLAGS="${CFLAGS}"
 
 # Local aliases/functions
 #alias eclipse="/usr/bin/eclipse -data ${GTWS_WSPATH} -noSplash"

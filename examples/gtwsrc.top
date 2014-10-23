@@ -16,8 +16,8 @@ export GTWS_BASE_SRCDIR="${HOME}/src"
 export GTWS_SETPROMPT=1
 export GTWS_FILES_EXTRA=".project.vim .git/info/exclude"
 # Allow env to override
-echo ${GTWS_DEFAULT_PROJECT:="enkive"} >/dev/null
-echo ${GTWS_DEFAULT_PROJECT_VERSION:="trunk"} >/dev/null
+echo ${GTWS_DEFAULT_PROJECT:="cohortfs"} >/dev/null
+echo ${GTWS_DEFAULT_PROJECT_VERSION:="master"} >/dev/null
 export GTWS_DEFAULT_PROJECT
 export GTWS_DEFAULT_PROJECT_VERSION
 
