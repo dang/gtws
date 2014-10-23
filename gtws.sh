@@ -214,3 +214,88 @@ function clear_env {
 		unset ${SRC}
 	done
 }
+
+# gtws_tmux_session_info ${SESSION_NAME} running attached
+#
+# Determine if a session is running, and if it is attached
+#
+# Result will be in local variables running and attached
+#
+# Test with:
+# if $running ; then
+#	echo "is running"
+# fi
+
+function gtws_tmux_session_info {
+	local ses_name=$1
+	local  __result_running=$2
+	local  __result_attached=$3
+
+	local __num_ses=$(tmux ls | grep "^${ses_name}" | wc -l)
+	local __attached=$(tmux ls | grep "^${ses_name}" | grep attached)
+
+	echo "$ses_name ses=${__num_ses}"
+
+	if [[ "$__result_running" ]]; then
+		if [ "${__num_ses}" != "0" ]; then
+			eval $__result_running="true"
+		else
+			eval $__result_running="false"
+		fi
+	fi
+	if [[ "$__result_attached" ]]; then
+		if [ -n "${__attached}" ]; then
+			eval $__result_attached="true"
+		else
+			eval $__result_attached="false"
+		fi
+	fi
+}
+
+# gtws_tmux_kill ${BASENAME}
+#
+# Kill all sessiont matching a pattern
+function gtws_tmux_kill {
+	local basename=$1
+        local old_sessions=$(tmux ls 2>/dev/null | fgrep "${basename}" | cut -f 1 -d:)
+	for session in ${old_sessions}; do
+		tmux kill-session -t "${session}"
+	done
+}
+
+# gtws_tmux_cleanup
+#
+# Clean up defunct tmux sessions
+function gtws_tmux_cleanup {
+        local old_sessions=$(tmux ls 2>/dev/null | egrep "^[0-9]{14}.*[0-9]+\)$" | cut -f 1 -d:)
+	for session in ${old_sessions}; do
+		tmux kill-session -t "${session}"
+	done
+}
+
+# gtws_tmux_attach ${SESSION_NAME}
+#
+# Attach to a primary session.  It will remain after detaching.
+function gtws_tmux_attach {
+	local ses_name=$1
+
+	tmux attach-session -t "${ses_name}"
+}
+
+# gtws_tmux_slave ${SESSION_NAME}
+#
+# Create a secondary session attached to the primary session.  It will exit it
+# is detached.
+function gtws_tmux_slave {
+	local ses_name=$1
+
+	# Session is is date and time to prevent conflict
+	local session=`date +%Y%m%d%H%M%S`
+	# Create a new session (without attaching it) and link to base session
+	# to share windows
+	tmux new-session -d -t "${ses_name}" -s "${session}"
+	# Attach to the new session
+	gtws_tmux_attach "${session}"
+	# When we detach from it, kill the session
+	tmux kill-session -t "${session}"
+}

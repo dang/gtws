@@ -93,8 +93,9 @@ cd "${BASE}/${PROJECT}/${VERSION}/${WSNAME}"
 GTWS_SAVEVARS="XXNOPEXX"
 clear_env
 
-NUM_SES=$(tmux ls | grep "^${SESNAME}" | wc -l)
-if [ "${NUM_SES}" == "0" ]; then
+gtws_tmux_session_info "${SESNAME}" RUNNING ATTACHED
+echo "RUNNING=$RUNNING ATTACHED=$ATTACHED"
+if ! ${RUNNING} ; then
 	echo "Launching tmux base session ${SESNAME} ..."
 	tmux new-session -s ${SESNAME} -n "Edit" "startws -p ${PROJECT} -v ${VERSION} ${WSNAME}" \; \
 		new-window -n "Build" "startws -p ${PROJECT} -v ${VERSION} ${WSNAME}" \; \
@@ -103,20 +104,13 @@ if [ "${NUM_SES}" == "0" ]; then
 		select-layout even-horizontal \; \
 		select-window -t :0
 else
-	# Kill defunct sessions first
-        OLD_SESSIONS=$(tmux ls 2>/dev/null | egrep "^[0-9]{14}.*[0-9]+\)$" | cut -f 1 -d:)
-	for SESSION in ${OLD_SESSIONS}; do
-		tmux kill-session -t ${SESSION}
-	done
+	gtws_tmux_cleanup
 
-	echo "Attaching to workspace ${SESNAME} ..."
-	# Session is is date and time to prevent conflict
-	SESSION=`date +%Y%m%d%H%M%S`
-	# Create a new session (without attaching it) and link to base session 
-	# to share windows
-	tmux new-session -d -t ${SESNAME} -s ${SESSION}
-	# Attach to the new session
-	tmux attach-session -t ${SESSION}
-	# When we detach from it, kill the session
-	tmux kill-session -t ${SESSION}
+	if ${ATTACHED} ; then
+		echo "Slaving to workspace ${SESNAME} ..."
+		gtws_tmux_slave "${SESNAME}"
+	else
+		echo "Attaching to workspace ${SESNAME} ..."
+		gtws_tmux_attach "${SESNAME}"
+	fi
 fi
