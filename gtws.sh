@@ -162,13 +162,11 @@ function gtws_project_clone_default {
 			rpath="${opv}/${repo}"
 		fi
 		git clone --recurse-submodules -b "${version}" "${rpath}" || die "failed to clone ${rpath}:${version}"
-		cd "${rpath}" || die "failed to cd to ${rpath}"
 		for f in ${GTWS_FILES_EXTRA}; do
-			if [ -f "${f}" ]; then
-				cp --parents "${f}" "${wspath}/${repo}" || die "failed to copy ${f}"
+			if [ -f "${rpath}/${f}" ]; then
+				cp --parents "${rpath}/${f}" "${wspath}/${repo}" || die "failed to copy ${f}"
 			fi
 		done
-		cd "${wspath}" || die "failed to cd to ${wspath}"
 	done
 }
 

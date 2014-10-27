@@ -69,6 +69,7 @@ function gtws_project_setup {
 
 	mkdir "${wspath}"/build
 	mkdir "${wspath}"/install
+	mkdir "${wspath}"/chroots
 
 	#cd "${wspath}/enkive" || die "Failed to cd to ${wspath}/enkive"
 	#echo "Creating build.properties"
