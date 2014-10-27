@@ -14,6 +14,8 @@ GTWS_MAKETAGS_OPTS=""
 
 # Optionally specify repos to clone. Defaults to all repos in origin
 #export GTWS_PROJECT_REPOS="foo bar baz"
+# If cloning an entire remote workspace, set this
+#export GTWS_REMOTE_IS_WS="yes"
 
 # If non-standard orgin layout is used, define these two functions
 

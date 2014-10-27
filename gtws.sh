@@ -69,7 +69,10 @@ debug_print() {
 # return success if ${dir} is in a git repo, or failure otherwise
 is_git_repo() {
 	debug_print "is_git_repo $i"
-	if [ ! -d "$1" ]; then
+	if [[ $1 == *:* ]]; then
+		debug_print "    remote; assume good"
+		return 0
+	elif [ ! -d "$1" ]; then
 		debug_print "    fail: not dir"
 		return 1
 	fi
@@ -133,7 +136,7 @@ function gtws_opv {
 	fi
 }
 
-# gtws_project_clone_default ${GTWS_ORIGIN} ${GTWS_PROJECT} ${GTWS_PROJECT_VERSION}
+# gtws_project_clone_default ${GTWS_ORIGIN} ${GTWS_PROJECT} ${GTWS_PROJECT_VERSION} ${GTWS_WSNAME}
 #
 # Clone a version of a project into ${GTWS_WSPATH} (which is the current working directory).  This is the default version of this that clones <origin>/<project>/<version>/*
 function gtws_project_clone_default {
@@ -152,7 +155,12 @@ function gtws_project_clone_default {
 	fi
 
 	for repo in ${repos}; do
-		local rpath="${opv}/${repo}"
+		local rpath=""
+		if [ -n "${GTWS_REMOTE_IS_WS}" ]; then
+			rpath="${opv}/${name}/${repo}"
+		else
+			rpath="${opv}/${repo}"
+		fi
 		git clone --recurse-submodules -b "${version}" "${rpath}" || die "failed to clone ${rpath}:${version}"
 		cd "${rpath}" || die "failed to cd to ${rpath}"
 		for f in ${GTWS_FILES_EXTRA}; do
