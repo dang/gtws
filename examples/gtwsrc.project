@@ -61,6 +61,9 @@ function gtws_project_setup {
 	local opg="${origin}/${project}/gtws"
 
 	for i in "${wspath}"/*; do
+		if [ ! -d "${i}" ]; then
+			continue
+		fi
 		cd "${i}/src" 2>/dev/null || cd ${i} || die "Couldn't cd to ${i}"
 		maketags ${GTWS_MAKETAGS_OPTS} > /dev/null 2> /dev/null &
 		if [ -x "src/scripts/git_hooks/install_git_hooks.sh" ]; then
