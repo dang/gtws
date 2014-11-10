@@ -16,6 +16,8 @@ GTWS_MAKETAGS_OPTS=""
 #export GTWS_PROJECT_REPOS="foo bar baz"
 # If cloning an entire remote workspace, set this
 #export GTWS_REMOTE_IS_WS="yes"
+# Modules for gtws_kmod_install
+#export GTWS_KMOD_LIST="fs/nfs/placelayout/nfs_layout_nfsv41_placement.ko fs/nfs/nfsv4.ko"
 
 # If non-standard orgin layout is used, define these two functions
 
@@ -144,4 +146,29 @@ function wspush() {
 # Override grepall to skip the build directories
 function grepall {
 	ack --ignore-dir=build "$@"
+}
+
+
+function gtws_kmod_install {
+	if [ -z "${GTWS_KMOD_LIST}" ]; then
+		echo "Please set GTWS_KMOD_LIST"
+		return -1
+	fi
+	uname=$(uname -r)
+	mnames=""
+	for mod in ${GTWS_KMOD_LIST}; do
+		mnames="${mnames} $(basename ${mod} .ko)"
+	done
+	echo rmmod ${mnames}
+	sudo rmmod ${mnames}
+	for mod in ${GTWS_KMOD_LIST}; do
+		mpath=$(dirname ${mod})
+		sudo install -m 744 ${mod} /lib/modules/${uname}/kernel/${mpath}
+	done
+	echo depmod -a
+	sudo depmod -a
+	sudo cp arch/x86/boot/bzImage /boot/vmlinuz-${uname}
+	echo modprobe -a ${mnames}
+	sudo modprobe -a ${mnames}
+	echo "Done"
 }
