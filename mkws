@@ -111,11 +111,13 @@ if [ -z "${HAS_CLONE}" ]; then
 			fi
 		done
 	fi
-	found=""
 	for repo in ${repos}; do
 		rpath="${opv}/${repo}"
 		if ! is_git_repo "$rpath"; then
-			die "${rpath} in origin ${opv} is not git"
+			rpath="${opv}/${repo}.git"
+			if ! is_git_repo "$rpath"; then
+				die "${rpath} in origin ${opv} is not git"
+			fi
 		fi
 	done
 

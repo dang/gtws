@@ -68,7 +68,7 @@ debug_print() {
 #
 # return success if ${dir} is in a git repo, or failure otherwise
 is_git_repo() {
-	debug_print "is_git_repo $i"
+	debug_print "is_git_repo $1"
 	if [[ $1 == *:* ]]; then
 		debug_print "    remote; assume good"
 		return 0
@@ -76,7 +76,7 @@ is_git_repo() {
 		debug_print "    fail: not dir"
 		return 1
 	fi
-	cd "$i"
+	cd "$1"
 	git rev-parse --git-dir >/dev/null 2>&1
 	local ret=$?
 	cd -
