@@ -131,7 +131,9 @@ export GTWS_PYTHONPATH="${GTWS_WSPATH}/install/lib/python2.7/site-packages"
 #export GTWS_PATH_EXTRA="${ENKIVE_HOME}/scripts"
 #export ENKIVE_USER=${USER:-dang}
 export GTWS_CMAKE_SETTINGS="-DCMAKE_BUILD_TYPE:STRING=Debug -DCMAKE_INSTALL_PREFIX=${GTWS_WSPATH}/install"
-alias ccmake="cmake ${GTWS_CMAKE_SETTINGS}"
+function ccmake {
+	cmake ${GTWS_CMAKE_SETTINGS} $@
+}
 export CFLAGS="-O0 -g -gdwarf-2 -Werror"
 export CPPFLAGS="${CFLAGS}"
 
