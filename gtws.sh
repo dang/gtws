@@ -1,4 +1,4 @@
-#
+#!/bin/bash
 # Functions for gtws
 #
 
@@ -146,11 +146,23 @@ function gtws_project_clone_default {
 	local name=$4
 	local opv=$(gtws_opv "${origin}" "${project}" "${version}")
 	local wspath=${PWD}
-	local repos=${GTWS_PROJECT_REPOS}
+	local repos=
+	local -A branches
 
-	if [ -z "${repos}" ]; then
+	if [ -z "${GTWS_PROJECT_REPOS}" ]; then
 		for i in "${opv}"/*; do
 			repos="$(basename $i) $repos"
+			branches[$i]=${version}
+		done
+	else
+		for i in ${GTWS_PROJECT_REPOS}; do
+			IFS=':' read -ra ARR <<< "$i"
+			repos="${ARR[0]} $repos"
+			if [ -n "${ARR[1]}" ]; then
+				branches[${ARR[0]}]=${ARR[1]}
+			else
+				branches[${ARR[0]}]=${version}
+			fi
 		done
 	fi
 
@@ -161,7 +173,7 @@ function gtws_project_clone_default {
 		else
 			rpath="${opv}/${repo}"
 		fi
-		git clone --recurse-submodules -b "${version}" "${rpath}" || die "failed to clone ${rpath}:${version}"
+		git clone --recurse-submodules -b "${branches[${repo}]}" "${rpath}" || die "failed to clone ${rpath}:${branches[${repo}]}"
 		for f in ${GTWS_FILES_EXTRA}; do
 			if [ -f "${rpath}/${f}" ]; then
 				cp --parents "${rpath}/${f}" "${wspath}/${repo}" || die "failed to copy ${f}"

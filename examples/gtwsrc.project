@@ -12,8 +12,9 @@ debug_print "Loading Project"
 export GTWS_PROJECT=$(basename $(dirname $(readlink -f ${BASH_SOURCE})))
 GTWS_MAKETAGS_OPTS=""
 
-# Optionally specify repos to clone. Defaults to all repos in origin
-#export GTWS_PROJECT_REPOS="foo bar baz"
+# Optionally specify repos and branches to clone. Defaults to all repos in
+# origin with GTWS_PROJECT_VERSION as the branch.
+#export GTWS_PROJECT_REPOS="foo bar:barbranch baz"
 # If cloning an entire remote workspace, set this
 #export GTWS_REMOTE_IS_WS="yes"
 # Modules for gtws_kmod_install
