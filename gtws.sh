@@ -370,3 +370,19 @@ function gtws_cdorigin() {
 	fi
 	cd "${opv}/$target"
 }
+
+# Copy files to another machine in the same workspace
+function wsrcp {
+	local target="${!#}"
+	local length=$(($#-1))
+	local base=${PWD}
+
+	if [ -z "${1}" -o -z "${2}" ]; then
+		echo "usage: ${FUNCNAME} <path> [<path>...] <target>"
+		return 1
+	fi
+
+	for path in "${@:1:$length}"; do
+		rsync --rsh=ssh -avzS --progress "${path}" "${target}:${base}/${path}"
+	done
+}
