@@ -20,6 +20,20 @@ is_interactive() {
 	esac
 }
 
+# if can_die; then exit
+#
+# Check to see if it's legal to exit during die
+can_die() {
+	if (( BASH_SUBSHELL > 0 )); then
+		echo -e "\t\tbaby shell; exiting"
+		return 0
+	fi
+	if ! is_interactive; then
+		return 0
+	fi
+	return 1
+}
+
 # command | die "message"
 #
 # Print a message and exit with failure
@@ -28,10 +42,26 @@ die() {
 	if [ ! -z "$(declare -F | grep "GTWScleanup")" ]; then
 		GTWScleanup "$@"
 	fi
-	if ! is_interactive; then
+	if can_die; then
 		exit 1
 	fi
 }
+
+# How do use die properly to handle both interactive and script useage:
+#testfunc() {
+#	(
+#		command1 || die "command1 failed"
+#		command2 || die "command2 failed"
+#		command3 || die "command3 failed"
+#	)
+#	return $?
+#}
+#
+# Optionally, the return can be replaced with this:
+#	local val=$?
+#	[[ "${val}" == "0" ]] || die
+#	return ${val}
+# This will cause the contaning script to abort
 
 # usage "You need to provide a frobnicator"
 #
