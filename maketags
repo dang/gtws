@@ -98,21 +98,26 @@ echo "PERL=${PERL}" >> "${SAVEFILE}"
 echo "JAVA=${JAVA}" >> "${SAVEFILE}"
 echo "DIRS=${DIRS}" >> "${SAVEFILE}"
 
+if [ -n "${CPP}" ]; then
+	FTYPE="${FTYPE} C/C++,"
+fi
+if [ -n "${PERL}" ]; then
+	FTYPE="${FTYPE} Perl/Python,"
+fi
+if [ -n "${JAVA}" ]; then
+	FTYPE="${FTYPE} Java,"
+fi
+if [ -z "${FTYPE}" ]; then
+	FTYPE=" Full"
+	FULL="yes"
+fi
+
 if [ -n "${KERNEL}" ]; then
-	TYPE=" kernel"
+	TYPE=" kernel${FTYPE}"
 	HDRS="${KERNEL_HDRS}"
 else
-	TYPE=""
+	TYPE="${FTYPE}"
 	HDRS="${SYSTEM_HDRS}"
-fi
-if [ -n "${CPP}" ]; then
-	TYPE="${TYPE} C/C++"
-elif [ -n "${PERL}" ]; then
-	TYPE="${TYPE} Perl"
-elif [ -n "${JAVA}" ]; then
-	TYPE="${TYPE} Java"
-else
-	TYPE="${TYPE} Full"
 fi
 
 echo "Making${TYPE} tags for ${DIRS}"
@@ -125,13 +130,16 @@ if [ -n "${CPP}" ]; then
 	fi
 	find ${DIRS} ${EXTRA_DIRS} -type f -and \( -name "*.c" -or -name "*.cpp" -or -name "*.cxx" -or -name "*.h++" -or -name "*.hxx" -or -name "*.hh" -or -name "*.hpp" -or -name "*.H" -or -name "*.C" -or -name "*.c++" -or -name "*.cc" -or -name "*.h" \) >> ${TMPFILE}
 	SUBSET="yes"
-elif [ -n "${PERL}" ]; then
+fi
+if [ -n "${PERL}" ]; then
 	find ${DIRS} -type f -and \( -name "*.pl" -or -name "*.pm" -or -name "*.perl"  -or -name "*.py" \) >> ${TMPFILE}
 	SUBSET="yes"
-elif [ -n "${JAVA}" ]; then
+fi
+if [ -n "${JAVA}" ]; then
 	find ${DIRS} -type f -and \( -name "*.java" \) >> ${TMPFILE}
 	SUBSET="yes"
-else
+fi
+if [ -n "${FULL}" ]; then
 	find ${DIRS} -type f >> ${TMPFILE}
 fi
 
