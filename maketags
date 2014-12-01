@@ -3,61 +3,100 @@
 # Recursively make tags file for all c, cpp, C, c++, h files
 #
 
-USAGE="[-hkecpj] [<directories>]"
-LONGUSAGE="\t-h\tPrint this help message
-\t-k\tKernel database (no system includes)
-\t-e\tEmtpy build (no .maketagsrc)
-\t-c\tOnly tag C/C++
-\t-p\tOnly tag perl and python
-\t-j\tOnly tag java
-\t<directories>\tDirectories to scan (defaults to '.')"
-
+SAVEFILE=".maketagssave"
 # Things to always skip
-BASESKIPRE=".svn|\<tags\>|.git|cscope|.swp\>"
+BASESKIPRE=".svn|\<tags\>|.git|cscope|.swp\>|.maketag"
 
+function GTWScleanup {
+	rm -rf "${GTWS_WSPATH}"
+}
+
+# Standard functions
 GTWS_LOC=$(readlink -f $(dirname "$0"))
 source ${GTWS_LOC}/gtws.sh
 
-while getopts ":hkecpj" option; do
-	case ${option} in
-		e ) CLEAN="-e";;
-		c ) CPP="-c";;
-		k ) KERNEL="-k";;
-		p ) PERL="-p";;
-		j ) JAVA="-j";;
-		h ) usage;;
-		\? ) usage "Invalid argument ${OPTARG}";;
-		* ) usage "Invalid argument ${option}";;
+# Set usage output
+USAGE="[-h |--help] [-r | --repeat] [-e | --empty] [-k | --kernel] [-c | --cpp] [-p | --perl | --python] [-j | --java] [<directory> [<directory>...]]"
+LONGUSAGE="\t-h, --help\n\t\tPrint this help message
+\t-r, --repeat\n\t\tBuild the same tags as last time
+\t-e, --empty\n\t\tIgnore .maketagsrc and .gtwsrc files
+\t-k, --kernel\n\t\tBuild kernel tags (no system includes)
+\t-c, --cpp\n\t\tBuild C/C++ tags
+\t-p, --perl, --python\n\t\tBuild Perl and Python tags
+\t-j, --java\n\t\tBuild Java tags
+\t<directory>\n\t\tBuild tags for directory.  Defaults to '.'"
+
+# Script name
+ME=$(basename $0)
+
+# Parse arguments
+ARGS=`getopt -o hrekcpj --long help,repeat,empty,kernel,cpp,perl,python,java -n "${ME}" -- "$@"`
+
+if [ $? != 0 ] ; then
+	usage
+fi
+eval set -- "$ARGS"
+
+while true ; do
+	case "$1" in
+		-h|--help) usage; shift ;;
+		-r|--repeat) REPEAT="yes" ; shift ;;
+		-e|--empty) EMPTY="yes" ; shift ;;
+		-k|--kernel) KERNEL="-k" ; shift ;;
+		-c|--cpp) CPP="yes" ; shift ;;
+		-p|--perl|--python) PERL="yes" ; shift ;;
+		-j|--java) JAVA="yes" ; shift ;;
+		--) shift ; break ;;
+		* ) usage "Invalid argument $1";;
 	esac
 done
 
-# Store how we got here, so vim can re-run the same arguments
-echo "$0 $@" > ".#maketags.dfg"
+# Remaining arguments are in $1, $2, etc. as normal
+if [ -z "$1" ]; then
+	DIRS="."
+else
+	DIRS="$@"
+fi
 
 # Get stuff from the .maketagsrc file
 # This can contain:
 # KERNEL_HDRS	- Location of headers for a kernel build.  Only these headers will be scanned
 # SYSTEM_HDRS	- Location of headers for a normal build.  These will be scanned in addition to /usr/include
 # SKIPRE	- A regular expression of files to skip
+#
+# Order of precidence from least to most, with later overriding, is:
+#   - ~/.maketagsrc
+#   - ~/.gtwsrc
+#   - ./.maketagsrc
+#   - ./.gtwsrc  (this loads the full GTWS environment)
 if [ -z "${CLEAN}" ]; then
-	if [ -f ".gtwsrc" ]; then
-		source ".gtwsrc"
-	elif [ -f ".maketagsrc" ]; then
-		source .maketagsrc
-	elif [ -f "${HOME}/.maketagsrc" ]; then
+	if [ -f "${HOME}/.maketagsrc" ]; then
 		source ${HOME}/.maketagsrc
+	fi
+	if [ -f "${HOME}/.gtwsrc" ]; then
+		source "${HOME}/.gtwsrc"
+	fi
+	if [ -f ".maketagsrc" ]; then
+		source .maketagsrc
+	fi
+	if [ -f "${PWD}/.gtwsrc" ]; then
+		load_rc "${PWD}"
 	fi
 fi
 
-if [ "${OPTIND}" != "0" ]; then
-	shift $((OPTIND-1))
+if [ -n "${REPEAT}" ]; then
+	# Override command line options with saved versions
+	if [ -f "${SAVEFILE}" ]; then
+		source "${SAVEFILE}"
+	fi
 fi
 
-if [ -z "$1" ]; then
-	DIRS="."
-else
-	DIRS="$@"
-fi
+# Save for next time
+echo "KERNEL=${KERNEL}" > "${SAVEFILE}"
+echo "CPP=${CPP}" >> "${SAVEFILE}"
+echo "PERL=${PERL}" >> "${SAVEFILE}"
+echo "JAVA=${JAVA}" >> "${SAVEFILE}"
+echo "DIRS=${DIRS}" >> "${SAVEFILE}"
 
 if [ -n "${KERNEL}" ]; then
 	TYPE=" kernel"
