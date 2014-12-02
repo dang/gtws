@@ -39,5 +39,12 @@ LONG_USAGE="${LONGUSAGE}"
 # Source the git environment
 source "$(git --exec-path)/git-sh-setup"
 
-git status --porcelain | grep '^??' | grep ".orig" | sed 's/?? //' | xargs rm -r 2>/dev/null
-git status --porcelain | grep '^??' | grep ".rej" | sed 's/?? //' | xargs rm -r 2>/dev/null
+PREFIX=$(git rev-parse --show-prefix)
+
+SEDC='s#?? ##'
+if [ -n "${PREFIX}" ]; then
+	SEDC="${SEDC};s#${PREFIX}##"
+fi
+
+git status --porcelain | grep '^??' | grep ".orig" | sed "${SEDC}" | xargs rm -r 2>/dev/null
+git status --porcelain | grep '^??' | grep ".rej" | sed "${SEDC}" | xargs rm -r 2>/dev/null
