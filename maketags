@@ -92,11 +92,11 @@ if [ -n "${REPEAT}" ]; then
 fi
 
 # Save for next time
-echo "KERNEL=${KERNEL}" > "${SAVEFILE}"
-echo "CPP=${CPP}" >> "${SAVEFILE}"
-echo "PERL=${PERL}" >> "${SAVEFILE}"
-echo "JAVA=${JAVA}" >> "${SAVEFILE}"
-echo "DIRS=${DIRS}" >> "${SAVEFILE}"
+echo "KERNEL=\"${KERNEL}\"" > "${SAVEFILE}"
+echo "CPP=\"${CPP}\"" >> "${SAVEFILE}"
+echo "PERL=\"${PERL}\"" >> "${SAVEFILE}"
+echo "JAVA=\"${JAVA}\"" >> "${SAVEFILE}"
+echo "DIRS=\"${DIRS}\"" >> "${SAVEFILE}"
 
 if [ -n "${CPP}" ]; then
 	FTYPE="${FTYPE} C/C++,"
