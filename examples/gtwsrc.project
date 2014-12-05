@@ -146,7 +146,8 @@ export CPPFLAGS="${CFLAGS}"
 
 function wspush() {
 	local WSBASE=$(basename $PWD)
-	git push && cdorigin ${WSBASE} && git reset --hard && git push && cd - && git sync
+	#git push && cdorigin ${WSBASE} && git reset --hard && git push && cd - && git sync
+	git push && cdorigin ${WSBASE} && git push && cd - && git sync
 }
 
 # Override grepall to skip the build directories
