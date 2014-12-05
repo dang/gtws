@@ -6,6 +6,8 @@
 SAVEFILE=".maketagssave"
 # Things to always skip
 BASESKIPRE=".svn|\<tags\>|.git|cscope|.swp\>|.maketag"
+# Default args for ctags
+CTAGS_ARGS="--extra=q"
 
 function GTWScleanup {
 	rm -rf "${GTWS_WSPATH}"
@@ -153,8 +155,8 @@ rm ${TMPFILE}
 cscope -q -L ${KERNEL} -i cscope.files
 if [ -n "${SUBSET}" ]; then
 	# We're only using a subset of files; use files in the list
-	ctags -L- < cscope.files
+	ctags ${CTAGS_ARGS} -L- < cscope.files
 else
 	# Tag everything, so that we get languages other than C/C++
-	ctags -R
+	ctags ${CTAGS_ARGS} -R
 fi
