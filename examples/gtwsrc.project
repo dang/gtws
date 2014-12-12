@@ -71,9 +71,9 @@ function gtws_project_setup {
 			./src/scripts/git_hooks/install_git_hooks.sh
 		fi
 		cd ${wspath} || die "Couldn't cd to ${wspath}"
+		mkdir -p "${wspath}/build/$(basename ${i})"
 	done
 
-	mkdir "${wspath}"/build
 	mkdir "${wspath}"/install
 	mkdir "${wspath}"/chroots
 
@@ -137,6 +137,27 @@ function ccmake {
 }
 export CFLAGS="-O0 -g -gdwarf-2 -Werror"
 export CPPFLAGS="${CFLAGS}"
+
+function gtws_cmake {
+(
+	src=$(basename ${PWD})
+	dir=$(basename $(dirname ${PWD}))
+	if [  "${dir}" != "build" ]; then
+		die "Not in a build directory"
+	fi
+	cmkdir="../../${src}"
+	if [ ! -f "${cmkdir}"/CMakeLists.txt ]; then
+		cmkdir="../../${src}/src"
+	fi
+	if [ ! -f "${cmkdir}"/CMakeLists.txt ]; then
+		die "Could not find CMakeLists.txt in \"../../${src}\" or \"../../${src}/src\""
+	fi
+	echo "Building for ${src}"
+	cd .. && rm -rf "${src}" && mkdir "${src}" && cd "${src}" && ccmake "${cmkdir}"
+	echo "Done"
+)
+	cd .
+}
 
 # Local aliases/functions
 #alias eclipse="/usr/bin/eclipse -data ${GTWS_WSPATH} -noSplash"
