@@ -25,7 +25,7 @@ is_interactive() {
 # Check to see if it's legal to exit during die
 can_die() {
 	if (( BASH_SUBSHELL > 0 )); then
-		echo -e "\t\tbaby shell; exiting"
+		debug_print "\t\tbaby shell; exiting"
 		return 0
 	fi
 	if ! is_interactive; then
