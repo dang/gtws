@@ -127,7 +127,7 @@ export GTWS_PYTHONPATH="${GTWS_WSPATH}/install/lib/python2.7/site-packages"
 # Stuff specific to this project.  It can be assumed that the following are set:
 #	GTWS_WSPATH - Path to the workspace
 #	GTWS_WSNAME - Name of the workspace
-#export GTWS_FILES_EXTRA="${GTWS_FILES_EXTRA} .syntastic_c_config"
+#export GTWS_FILES_EXTRA="${GTWS_FILES_EXTRA} extra/.project.vim:src"
 #export ENKIVE_HOME="${GTWS_WSPATH}/enkive"
 #export GTWS_PATH_EXTRA="${ENKIVE_HOME}/scripts"
 #export ENKIVE_USER=${USER:-dang}

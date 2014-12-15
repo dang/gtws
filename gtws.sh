@@ -138,6 +138,10 @@ function git_top_dir {
 	fi
 }
 
+function gtws_rcp {
+	rsync --rsh=ssh -avzS --progress "$@"
+}
+
 # gtws_opv ${GTWS_ORIGIN} ${GTWS_PROJECT} ${GTWS_PROJECT_VERSION} opv
 #
 # Result will be in local variable opv.  Or:
@@ -177,6 +181,7 @@ function gtws_project_clone_default {
 	local opv=$(gtws_opv "${origin}" "${project}" "${version}")
 	local wspath=${PWD}
 	local repos=
+	local baserpath=
 	local -A branches
 
 	if [ -z "${GTWS_PROJECT_REPOS}" ]; then
@@ -196,18 +201,32 @@ function gtws_project_clone_default {
 		done
 	fi
 
+	if [ -n "${GTWS_REMOTE_IS_WS}" ]; then
+		baserpath="${opv}/${name}"
+	else
+		baserpath="${opv}"
+	fi
+
 	for repo in ${repos}; do
-		local rpath=""
-		if [ -n "${GTWS_REMOTE_IS_WS}" ]; then
-			rpath="${opv}/${name}/${repo}"
-		else
-			rpath="${opv}/${repo}"
-		fi
+		local rpath="${baserpath}/${repo}"
 		git clone --recurse-submodules -b "${branches[${repo}]}" "${rpath}" || die "failed to clone ${rpath}:${branches[${repo}]}"
-		for f in ${GTWS_FILES_EXTRA}; do
-			if [ -f "${rpath}/${f}" ]; then
-				cp --parents "${rpath}/${f}" "${wspath}/${repo}" || die "failed to copy ${f}"
+		for i in ${GTWS_FILES_EXTRA}; do
+			local esrc=
+
+			IFS=':' read -ra ARR <<< "$i"
+			if [ -n "${ARR[1]}" ]; then
+				dst="${repo}/${ARR[1]}"
+			else
+				dst="${repo}/${ARR[0]}"
 			fi
+
+			if [ -n "${GTWS_REMOTE_IS_WS}" ]; then
+				esrc="${baserpath}/${dst}"
+			else
+				esrc="${baserpath%/git}"
+			fi
+
+			gtws_rcp "${esrc}/${ARR[0]}" "${dst}"
 		done
 	done
 }
@@ -413,6 +432,6 @@ function wsrcp {
 	fi
 
 	for path in "${@:1:$length}"; do
-		rsync --rsh=ssh -avzS --progress "${path}" "${target}:${base}/${path}"
+		gtws_rcp "${path}" "${target}:${base}/${path}"
 	done
 }
