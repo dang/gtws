@@ -5,19 +5,17 @@ if [ -n "${GTWS_TOP}" ]; then
 	debug_print "Top already loaded"
 	return
 fi
+debug_print "Loading Top"
 GTWS_TOP="yes"
 
 # I want to be able to use .gtwsrc as a bashrc, so source my .bashrc
 source "${HOME}/.bashrc"
 
-# GTWS global config goes here
-export GTWS_ORIGIN="${HOME}/origin"
-export GTWS_BASE_SRCDIR="${HOME}/src"
-export GTWS_SETPROMPT=1
-export GTWS_FILES_EXTRA=".project.vim .git/info/exclude"
-# Allow env to override
-echo ${GTWS_DEFAULT_PROJECT:="cohortfs"} >/dev/null
-echo ${GTWS_DEFAULT_PROJECT_VERSION:="master"} >/dev/null
-export GTWS_DEFAULT_PROJECT
-export GTWS_DEFAULT_PROJECT_VERSION
+# GTWS global config goes here.  Env overrides
+export GTWS_ORIGIN=${GTWS_ORIGIN-"${HOME}/origin"}
+export GTWS_BASE_SRCDIR=${GTWS_BASE_SRCDIR-"${HOME}/src"}
+export GTWS_SETPROMPT=${GTWS_SETPROMPT-1}
+export GTWS_FILES_EXTRA=${GTWS_FILES_EXTRA-".project.vim .git/info/exclude"}
+export GTWS_DEFAULT_PROJECT=${GTWS_DEFAULT_PROJECT-"cohortfs"}
+export GTWS_DEFAULT_PROJECT_VERSION=${GTWS_DEFAULT_PROJECT_VERSION-"master"}
 
