@@ -63,6 +63,10 @@ while true ; do
 	esac
 done
 
+if [ -n "${GTWS_WS_GUARD}" ]; then
+	usage "Cannot create workspace in an existng workspace"
+fi
+
 # Remaining arguments are in $1, $2, etc. as normal
 if [ -z "${1}" ]; then
 	usage "Must give a workspace name"
