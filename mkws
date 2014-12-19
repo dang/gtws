@@ -102,7 +102,6 @@ source "${GTWS_WSPATH}"/.gtwsrc
 O="${GTWS_ORIGIN:=${HOME}/origin}"
 
 HAS_CLONE=$(declare -F | grep "\<gtws_project_clone\>")
-echo "$HAS_CLONE"
 if [ -z "${HAS_CLONE}" ]; then
 	gtws_opv "${O}" "${PROJECT}" "${VERSION}" opv
 

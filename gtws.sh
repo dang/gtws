@@ -109,7 +109,7 @@ is_git_repo() {
 	cd "$1"
 	git rev-parse --git-dir >/dev/null 2>&1
 	local ret=$?
-	cd -
+	cd - > /dev/null
 	debug_print "    retval: $ret"
 	return $ret
 }
