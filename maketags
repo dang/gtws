@@ -3,7 +3,7 @@
 # Recursively make tags file for all c, cpp, C, c++, h files
 #
 
-SAVEFILE=".maketagssave"
+SAVEFILE="./.maketagssave"
 # Things to always skip
 BASESKIPRE=".svn|\<tags\>|.git|cscope|.swp\>|.maketag"
 # Default args for ctags
@@ -75,14 +75,13 @@ if [ -z "${CLEAN}" ]; then
 	if [ -f "${HOME}/.maketagsrc" ]; then
 		source ${HOME}/.maketagsrc
 	fi
-	if [ -f "${HOME}/.gtwsrc" ]; then
-		source "${HOME}/.gtwsrc"
-	fi
 	if [ -f ".maketagsrc" ]; then
 		source .maketagsrc
 	fi
 	if [ -f "${PWD}/.gtwsrc" ]; then
 		load_rc "${PWD}"
+	elif [ -f "${HOME}/.gtwsrc" ]; then
+		source "${HOME}/.gtwsrc"
 	fi
 fi
 
