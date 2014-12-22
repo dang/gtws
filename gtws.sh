@@ -29,30 +29,48 @@ can_die() {
 		return 0
 	fi
 	if ! is_interactive; then
+		debug_print "\t\tNot interactive; exiting"
 		return 0
 	fi
+	debug_print "\t\tParent interactive; not exiting"
 	return 1
 }
 
-# command | die "message"
+# In a function:
+# command || die "message" || return 1
+# Outside a function:
+# command || die "message"
 #
 # Print a message and exit with failure
 die() {
-	echo "Failed: $@"
+	echo "Failed: $1"
 	if [ ! -z "$(declare -F | grep "GTWScleanup")" ]; then
-		GTWScleanup "$@"
+		GTWScleanup
 	fi
 	if can_die; then
 		exit 1
+	elif [ -n "${2}" ]; then
+		return 1
 	fi
 }
 
-# How do use die properly to handle both interactive and script useage:
+# Alternativess for using die properly to handle both interactive and script useage:
+#
+# Version 1:
+#
+#testfunc() {
+#	command1 || die "${FUNCNAME}: command1 failed" || return 1
+#	command2 || die "${FUNCNAME}: command2 failed" || return 1
+#	command3 || die "${FUNCNAME}: command3 failed" || return 1
+#}
+#
+# Version 2:
+#
 #testfunc() {
 #	(
-#		command1 || die "command1 failed"
-#		command2 || die "command2 failed"
-#		command3 || die "command3 failed"
+#		command1 || die "${FUNCNAME}: command1 failed"
+#		command2 || die "${FUNCNAME}: command2 failed"
+#		command3 || die "${FUNCNAME}: command3 failed"
 #	)
 #	return $?
 #}
@@ -128,8 +146,7 @@ function git_top_dir {
 	local __top="$(git rev-parse --show-toplevel 2>/dev/null)"
 
 	if [ -z "${__top}" ]; then
-		die "${PWD} is not a git repo"
-		return 1
+		die "${PWD} is not a git repo" ${FUNCNAME} || return 1
 	fi
 	if [[ "$__resultvar" ]]; then
 		eval $__resultvar="'$__top'"
@@ -161,7 +178,7 @@ function gtws_opv {
 	elif [ ! -d "${__opv}" ]; then
 		__opv="${origin}/${project}/git"
 	elif [ ! -d "${__opv}" ]; then
-		die "No opv for ${origin} ${project} ${version}"
+		die "No opv for ${origin} ${project} ${version}" ${FUNCNAME} || return 1
 	fi
 	if [[ "$__resultvar" ]]; then
 		eval $__resultvar="'$__opv'"
@@ -209,7 +226,7 @@ function gtws_project_clone_default {
 
 	for repo in ${repos}; do
 		local rpath="${baserpath}/${repo}"
-		git clone --recurse-submodules -b "${branches[${repo}]}" "${rpath}" || die "failed to clone ${rpath}:${branches[${repo}]}"
+		git clone --recurse-submodules -b "${branches[${repo}]}" "${rpath}" || die "failed to clone ${rpath}:${branches[${repo}]}" ${FUNCNAME} || return 1
 		for i in ${GTWS_FILES_EXTRA}; do
 			local esrc=
 
@@ -409,13 +426,13 @@ function gtws_cdorigin() {
 		target=$(basename $target)
 	fi
 	if [ ! -d "${opv}" ]; then
-		die "No opv for $target"
+		die "No opv for $target" ${FUNCNAME} || return 1
 	fi
 	if [ ! -d "${opv}/$target" ]; then
 		target=${target}.git
 	fi
 	if [ ! -d "${opv}/$target" ]; then
-		die "No opv for $target"
+		die "No opv for $target" ${FUNCNAME} || return 1
 	fi
 	cd "${opv}/$target"
 }
