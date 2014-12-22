@@ -418,13 +418,24 @@ function cdorigin() {
 
 function gtws_cdorigin() {
 	local opv=$(gtws_opv "${GTWS_ORIGIN}" "${GTWS_PROJECT}" "${GTWS_PROJECT_VERSION}")
+	local gitdir=""
 	local target=""
 	if [ -n "$1" ]; then
 		target="$@"
 	else
-		git_top_dir target || return 1
-		target=$(basename $target)
+		git_top_dir gitdir || return 1
+		target=$(basename $gitdir)
 	fi
+
+	# If it's a git repo with a local origin, use that.
+	local origin=$(git config --get remote.origin.url)
+	if [ -d "${origin}" ]; then
+		debug_print "Local origin"
+		cd "${origin}"
+		return 0
+	fi
+
+	# Try to figure it out
 	if [ ! -d "${opv}" ]; then
 		die "No opv for $target" ${FUNCNAME} || return 1
 	fi
