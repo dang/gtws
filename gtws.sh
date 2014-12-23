@@ -146,7 +146,7 @@ function git_top_dir {
 	local __top="$(git rev-parse --show-toplevel 2>/dev/null)"
 
 	if [ -z "${__top}" ]; then
-		die "${PWD} is not a git repo" ${FUNCNAME} || return 1
+		die "${PWD} is not a git repo" || return 1
 	fi
 	if [[ "$__resultvar" ]]; then
 		eval $__resultvar="'$__top'"
@@ -178,7 +178,7 @@ function gtws_opv {
 	elif [ ! -d "${__opv}" ]; then
 		__opv="${origin}/${project}/git"
 	elif [ ! -d "${__opv}" ]; then
-		die "No opv for ${origin} ${project} ${version}" ${FUNCNAME} || return 1
+		die "No opv for ${origin} ${project} ${version}" || return 1
 	fi
 	if [[ "$__resultvar" ]]; then
 		eval $__resultvar="'$__opv'"
@@ -437,13 +437,13 @@ function gtws_cdorigin() {
 
 	# Try to figure it out
 	if [ ! -d "${opv}" ]; then
-		die "No opv for $target" ${FUNCNAME} || return 1
+		die "No opv for $target" || return 1
 	fi
 	if [ ! -d "${opv}/$target" ]; then
 		target=${target}.git
 	fi
 	if [ ! -d "${opv}/$target" ]; then
-		die "No opv for $target" ${FUNCNAME} || return 1
+		die "No opv for $target" || return 1
 	fi
 	cd "${opv}/$target"
 }
