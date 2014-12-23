@@ -1,0 +1,77 @@
+#!/bin/bash
+#
+# Clone a new repo into a workspace
+#
+
+#function GTWScleanup {
+#}
+
+# Standard functions
+GTWS_LOC=$(readlink -f $(dirname "$0"))
+source ${GTWS_LOC}/gtws.sh
+
+BRANCH="master"
+
+if [ -n "${GTWS_WS_GUARD}" ]; then
+	REPO_BASE=$(gtws_opv "${GTWS_ORIGIN}" "${GTWS_PROJECT}" "${GTWS_PROJECT_VERSION}")
+	BRANCH="${GTWS_PROJECT_VERSION}"
+fi
+
+# Set usage output
+USAGE="[-h |--help] [-r <repo-base> | --repo-base=<repo-base>] [-b <branch> | --branch=<branch>] [-V | --verbose] <repo-name>"
+LONGUSAGE="\t-h, --help\n\t\tPrint this help message
+\t-r <repo-base>, --repo-base=<repo-base>\n\t\tBase dir for repo (default: ${REPO_BASE:-none})
+\t-b <branch>, --branch=<branch>\n\t\tRepo branch (default: ${BRANCH})
+\t-V, --verbose\n\t\tBe verbose
+\t<repo-name>\n\t\tRepository name"
+
+# Script name
+ME=$(basename $0)
+
+# Parse arguments
+ARGS=`getopt -o hVr:b: --long help,verbose,repo-base:,branch: -n "${ME}" -- "$@"`
+
+if [ $? != 0 ] ; then
+	usage 
+fi
+eval set -- "$ARGS"
+
+while true ; do
+	case "$1" in
+		-h|--help) usage; shift ;;
+		-r|--repo-base) REPO_BASE=$2 ; shift 2 ;;
+		-b|--branch) BRANCH=$2 ; shift 2 ;;
+		-V|--verbose) export GTWS_VERBOSE=yes; shift ;;
+		--) shift ; break ;;
+		* ) usage "Invalid argument $1";;
+	esac
+done
+
+if [ -z "${GTWS_WS_GUARD}" ]; then
+	usage "Must be run from inside a workspace"
+fi
+
+# Remaining arguments are in $1, $2, etc. as normal
+if [ -z "${1}" ]; then
+	usage "Must give a repository name"
+fi
+REPO="${1}"
+if [ ! -d "${REPO_BASE}" ]; then
+	usage "${REPO_BASE} is not a directory"
+fi
+find_git_repo "${REPO_BASE}" "${REPO}" repodir || die "No repository for ${REPO} in ${REPO_BASE}"
+
+echo "Cloning ${REPO}:${BRANCH} from ${REPO_BASE} into ${GTWS_WSNAME}"
+
+# Go to the workspace
+cd "${GTWS_WS_PATH}" || die "Could not cd to ${GTWS_WS_PATH}"
+
+# Clone the repo.
+# XXX TODO - Allow overriding of clone function
+gtws_repo_clone "${REPO_BASE}" "${REPO}" "${BRANCH}" || die "gtws_repo_clone failed"
+
+# Set up the repo.
+# XXX TODO - Allow overriding of setup function
+gtws_repo_setup "${GTWS_WSPATH}" "${GTWS_WSPATH}/${REPO}" || die "gtws_repo_setup failed"
+
+echo "Done"

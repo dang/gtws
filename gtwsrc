@@ -9,7 +9,7 @@ if [ -n "${GTWS_WS_GUARD}" ]; then
 	debug_print "WS Already loaded"
 	return
 fi
-GTWS_WS_GUARD="yes"
+export GTWS_WS_GUARD="yes"
 
 # Things expected to come from a higher .gtwsrc:
 # GTWS_PROJECT - Name of project

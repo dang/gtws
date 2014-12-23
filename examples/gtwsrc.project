@@ -48,35 +48,23 @@ export GTWS_MAKETAGS_OPTS=${GTWS_MAKETAGS_OPTS-""}
 #}
 
 
-# If post-clone setup is desired, define this function
+# If custom post-clone setup is desired, define this function
 
 # gtws_project_setup ${GTWS_WSNAME} ${GTWS_ORIGIN} ${GTWS_PROJECT} ${GTWS_PROJECT_VERSION}
 #
 # Post clone setup of a workspace in ${GTWS_WSPATH} (which is PWD)
-function gtws_project_setup {
-	local wsname=$1
-	local origin=$2
-	local project=$3
-	local version=$4
-	local wspath=${PWD}
-	local opg="${origin}/${project}/gtws"
+#function gtws_project_setup {
+	#local wsname=$1
+	#local origin=$2
+	#local project=$3
+	#local version=$4
+	#local wspath=${PWD}
+	#local opg="${origin}/${project}/gtws"
 
-	for i in "${wspath}"/*; do
-		if [ ! -d "${i}" ]; then
-			continue
-		fi
-		cd "${i}/src" 2>/dev/null || cd ${i} || die "Couldn't cd to ${i}"
-		maketags ${GTWS_MAKETAGS_OPTS} > /dev/null 2> /dev/null &
-		if [ -x "src/scripts/git_hooks/install_git_hooks.sh" ]; then
-			./src/scripts/git_hooks/install_git_hooks.sh
-		fi
-		cd ${wspath} || die "Couldn't cd to ${wspath}"
-		mkdir -p "${wspath}/build/$(basename ${i})"
-	done
+	## Call the default one to make tags and whatnot
+	#gtws_project_setup_default "$@"
 
-	mkdir "${wspath}"/install
-	mkdir "${wspath}"/chroots
-
+	## Setup local to this project
 	#cd "${wspath}/enkive" || die "Failed to cd to ${wspath}/enkive"
 	#echo "Creating build.properties"
 	#scp "${opg}/build.properties" "." ||
@@ -102,7 +90,7 @@ function gtws_project_setup {
 
 	#echo "Setting up eclipse"
 	#scp -r "${opg}/.metadata/" .
-}
+#}
 
 
 # If pre-delete cleanup during removal is desired, define this function

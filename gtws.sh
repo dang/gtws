@@ -132,6 +132,37 @@ is_git_repo() {
 	return $ret
 }
 
+# find_git_repo ${basedir} ${repo_name} repo_dir
+#
+# Find the git repo for ${repo_name} in ${basedir}.  It's one of ${repo_name}
+# or ${repo_name}.git
+#
+# Result will be in the local variable repo_dir  Or:
+#
+# repo_dir=$(find_git_repo ${basedir} ${repo_name})
+#
+function find_git_repo {
+	local basedir=$1
+	local repo_name=$2
+	local __resultvar=$3
+	local try="${basedir}/${repo_name}"
+
+	if [ ! -d "${try}" ]; then
+		try=${try}.git
+	fi
+	if [ ! -d "${try}" ]; then
+		die "No directory for ${repo_name} in ${basedir}" || return 1
+	fi
+
+	is_git_repo "${try}" || die "${repo_name} in ${basedir} is not a git repository" || return 1
+
+	if [[ "$__resultvar" ]]; then
+		eval $__resultvar="'$try'"
+	else
+		echo "$try"
+	fi
+}
+
 # git_top_dir top
 #
 # Get the top level of the git repo contaning PWD, or return failure;
@@ -187,6 +218,35 @@ function gtws_opv {
 	fi
 }
 
+# gtws_repo_clone <base-repo-path> <repo> <branch>
+function gtws_repo_clone {
+	local baserpath=$1
+	local repo=$2
+	local branch=$3
+	local rpath="${baserpath}/${repo}"
+
+	debug_print "${FUNCNAME}: cloning ${baserpath} - ${repo} : ${branch} into ${GTWS_WSNAME}"
+	git clone --recurse-submodules -b "${branch}" "${rpath}" || die "failed to clone ${rpath}:${branch}" || return 1
+	for i in ${GTWS_FILES_EXTRA}; do
+		local esrc=
+
+		IFS=':' read -ra ARR <<< "$i"
+		if [ -n "${ARR[1]}" ]; then
+			dst="${repo}/${ARR[1]}"
+		else
+			dst="${repo}/${ARR[0]}"
+		fi
+
+		if [ -n "${GTWS_REMOTE_IS_WS}" ]; then
+			esrc="${baserpath}/${dst}"
+		else
+			esrc="${baserpath%/git}"
+		fi
+
+		gtws_rcp "${esrc}/${ARR[0]}" "${dst}"
+	done
+}
+
 # gtws_project_clone_default ${GTWS_ORIGIN} ${GTWS_PROJECT} ${GTWS_PROJECT_VERSION} ${GTWS_WSNAME}
 #
 # Clone a version of a project into ${GTWS_WSPATH} (which is the current working directory).  This is the default version of this that clones <origin>/<project>/<version>/*
@@ -225,27 +285,52 @@ function gtws_project_clone_default {
 	fi
 
 	for repo in ${repos}; do
-		local rpath="${baserpath}/${repo}"
-		git clone --recurse-submodules -b "${branches[${repo}]}" "${rpath}" || die "failed to clone ${rpath}:${branches[${repo}]}" ${FUNCNAME} || return 1
-		for i in ${GTWS_FILES_EXTRA}; do
-			local esrc=
-
-			IFS=':' read -ra ARR <<< "$i"
-			if [ -n "${ARR[1]}" ]; then
-				dst="${repo}/${ARR[1]}"
-			else
-				dst="${repo}/${ARR[0]}"
-			fi
-
-			if [ -n "${GTWS_REMOTE_IS_WS}" ]; then
-				esrc="${baserpath}/${dst}"
-			else
-				esrc="${baserpath%/git}"
-			fi
-
-			gtws_rcp "${esrc}/${ARR[0]}" "${dst}"
-		done
+		gtws_repo_clone "${baserpath}" "${repo}" "${branches[${repo}]}"
 	done
+}
+
+# gtws_repo_setup ${wspath} ${repo_path}
+#
+# Post-clone setup for an individual repo
+function gtws_repo_setup {
+	local wspath=$1
+	local rpath=$2
+	local savedir="${PWD}"
+
+	if [ ! -d "${rpath}" ]; then
+		return 0
+	fi
+
+	cd "${rpath}/src" 2>/dev/null || cd ${rpath} || die "Couldn't cd to ${rpath}" || return 1
+
+	maketags ${GTWS_MAKETAGS_OPTS} > /dev/null 2> /dev/null &
+	if [ -x "src/scripts/git_hooks/install_git_hooks.sh" ]; then
+		./src/scripts/git_hooks/install_git_hooks.sh
+	fi
+
+	cd ${wspath} || die "Couldn't cd to ${wspath}" || return 1
+
+	mkdir -p "${wspath}/build/$(basename ${rpath})"
+
+	cd "${savedir}"
+}
+
+# gtws_project_setup_default ${GTWS_WSNAME} ${GTWS_ORIGIN} ${GTWS_PROJECT} ${GTWS_PROJECT_VERSION}
+#
+# Post clone setup of a workspace in ${GTWS_WSPATH} (which is PWD)
+function gtws_project_setup_default {
+	local wsname=$1
+	local origin=$2
+	local project=$3
+	local version=$4
+	local wspath=${PWD}
+
+	for i in "${wspath}"/*; do
+		gtws_repo_setup "${wspath}" "${i}"
+	done
+
+	mkdir "${wspath}"/install
+	mkdir "${wspath}"/chroots
 }
 
 # load_rc /path/to/workspace
@@ -439,13 +524,8 @@ function gtws_cdorigin() {
 	if [ ! -d "${opv}" ]; then
 		die "No opv for $target" || return 1
 	fi
-	if [ ! -d "${opv}/$target" ]; then
-		target=${target}.git
-	fi
-	if [ ! -d "${opv}/$target" ]; then
-		die "No opv for $target" || return 1
-	fi
-	cd "${opv}/$target"
+	find_git_repo "${opv}" "${target}" origin || return 1
+	cd "${origin}"
 }
 
 # Copy files to another machine in the same workspace
