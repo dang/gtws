@@ -1,0 +1,224 @@
+#!/bin/bash
+#
+# Script that syncs a github fork
+#
+
+TAGS=""
+ALL=""
+BRANCH=""
+COMMAND="unset"
+
+FORK_REMOTENAME="gtws_github_fork"
+UPSTREAM_REMOTENAME="gtws_github_upstream"
+
+# Helper functions
+setcommand() {
+	if [ "${COMMAND}" == "unset" ]; then
+		COMMAND="$1"
+	else
+		usage "Only one command may be given"
+	fi
+	CARG=$2
+}
+
+# Set usage output
+USAGE="[-h |--help] (-i | --init) | (-s | --sync) | (-p | --push)"
+LONGUSAGE="Common options:
+\t-h, --help\n\t\tPrint this help message
+\t-a, --all\n\t\tOperate on all branches
+\t-b <branch>, --branch=<branch>\n\t\tOperate on given branch
+\t-t, --tags\n\t\tOperate on all tags
+\t-f, --force\n\t\tForce operation, even if branches differ
+\t-S, --stash\n\t\tStash before operation
+
+\t Commands:
+\t-i, --init <fork-repo-uri> <upstream-repo-uri>\n\t\tInitialize syncing repo.  Must be done once.
+\t-s, --sync\n\t\tSync fork repo with upstream repo.
+\t-p, --push\n\t\tPush from local repo to fork repo.  One of --branch, --all, or --tags must be given.
+"
+# Standard functions
+GTWS_LOC=$(readlink -f $(dirname "$0"))
+source ${GTWS_LOC}/gtws.sh
+
+# Script name
+ME=$(basename $0)
+
+# Parse arguments
+ARGS=`getopt -o hatfSspb:i: --long help,all,tags,force,stash,sync,push,branch:,init: -n "${ME}" -- "$@"`
+
+if [ $? != 0 ] ; then
+	usage "invalid arguments"
+fi
+eval set -- "$ARGS"
+
+while true ; do
+	case "$1" in
+		-h|--help) usage; shift ;;
+		-a|--all) ALL="--all"; shift ;;
+		-f|--force) FORCE="yes"; shift ;;
+		-S|--stash) STASH="yes"; shift ;;
+		-t|--tags) TAGS="--tags"; shift ;;
+		-b|--branch) BRANCH=$2 ; shift 2 ;;
+		-i|--init) setcommand "init" $2; shift 2;;
+		-s|--sync) setcommand "sync"; shift 1;;
+		-p|--push) setcommand "push"; shift 1;;
+		--) shift ; break ;;
+		* ) usage "Invalid argument $1";;
+	esac
+done
+
+# Remaining arguments are in $1, $2, etc. as normal
+# Argument checking
+case "${COMMAND}" in
+	"init")
+		if [ -z "$1" ]; then
+			usage "--init requires two parameters"
+		fi
+		FORK_REPO=${CARG}
+		UPSTREAM_REPO=$1
+		;;
+	"sync")
+		if [[ -z "${BRANCH}" && -z "${TAGS}" && -z "${ALL}" ]]; then
+			usage "--sync needs one of --branch, --all, or --tags"
+		fi
+		;;
+	"push")
+		if [[ -z "${BRANCH}" && -z "${TAGS}" && -z "${ALL}" ]]; then
+			usage "--push needs one of --branch, --all, or --tags"
+		fi
+		;;
+	"unset")
+		usage "Must give a command"
+		;;
+	* ) usage "Unknown command ${COMMAND}";;
+esac
+
+# Source the git environment.  Checks to see if we're in a git repo
+SUBDIRECTORY_OK=Yes
+source "$(git --exec-path)/git-sh-setup"
+
+if git-issvn > /dev/null 2>&1; then
+	die "Cannot currently sync a git-svn repo with Github"
+fi
+
+SAVEDIR=${PWD}
+CURBRANCH=$(git branch | grep "\*" | sed 's/\* //')
+
+cd_to_toplevel
+
+if [ -n "${STASH}" ]; then
+	git stash || die "Couldn't stash"
+fi
+
+# Sync a branch with a remote.  Remote should have been fetched already
+function sync_branch {
+	local remote=$1
+	local branch=$2
+
+	if [[ -z "${remote}" || -z "${branch}" ]]; then
+		die "${FUNCNAME} - must give remote and branch" || return 1
+	fi
+
+	# Check out branch
+	git branch --no-track "${branch}" > /dev/null 2>&1
+	git checkout "${branch}" \
+		|| die "${FUNCNAME} - Failed to checkout ${branch}" || return 1
+	git reset --hard "${remote}/${branch}" \
+		|| die "${FUNCNAME} - Failed to reset ${branch} to ${remote}" || return 1
+	git clean -f -d || die "${FUNCNAME} - Failed to clean ${branch}" || return 1
+}
+
+# Sync all branches from a remote to this repo
+function sync_all {
+	local remote=$1
+
+	if [ -z "${remote}" ]; then
+		die "${FUNCNAME} - must give remote" || return 1
+	fi
+
+	local branch=""
+	local branches=$(git branch -r | grep "${remote}" | grep -v master | \
+			grep -v HEAD | sed -e 's/.*\///g')
+
+	for branch in ${branches}; do
+		sync_branch "${remote}" "${branch}" || return 1
+	done
+}
+
+# Checck to see if this repo has been set up for syncing
+function is_inited {
+	local remotes=$(git remote show)
+	echo "${remotes}" | grep "${FORK_REMOTENAME}" > /dev/null 2>&1 || return 1
+	echo "${remotes}" | grep "${UPSTREAM_REMOTENAME}" > /dev/null 2>&1 || return 1
+	return 0
+}
+
+function cmd_init {
+	is_inited && die "init - Repo is already initialized" && return 1
+
+	git remote add -f --tags "${FORK_REMOTENAME}" "${FORK_REPO}" > /dev/null 2>&1 \
+		|| die "init - failed to add fork remote" || return 1
+	git remote add -f --tags "${UPSTREAM_REMOTENAME}" "${UPSTREAM_REPO}" > /dev/null 2>&1 \
+		|| die "init - failed to add upstream remote" || return 1
+
+	echo "Initialized to sync ${FORK_REPO} with ${UPSTREAM_REPO}"
+}
+
+function cmd_sync {
+	is_inited || die "sync - Repo has not been initialized" || return 1
+
+	git fetch ${TAGS} "${FORK_REMOTENAME}" > /dev/null 2>&1 \
+		|| die "sync - failed to fetch fork remote" || return 1
+	git fetch ${TAGS} "${UPSTREAM_REMOTENAME}" > /dev/null 2>&1 \
+		|| die "sync - failed to fetch upstream remote" || return 1
+
+	if [ -n "${ALL}" ]; then
+		#sync_all "${FORK_REMOTENAME}" || return 1
+		sync_all "${UPSTREAM_REMOTENAME}" || return 1
+		return 0
+	fi
+
+	# Sync a specific branch
+	sync_branch "${UPSTREAM_REMOTENAME}" "${BRANCH}" || return 1
+}
+
+function cmd_push {
+	is_inited || die "push - Repo has not been initialized" || return 1
+	if [ -n "${TAGS}" ]; then
+		git push ${TAGS} "${FORK_REMOTENAME}" \
+			|| die "push - failed to push tags to fork remote" || return 1
+	fi
+
+	if [ -n "${ALL}" ]; then
+		git push --all "${FORK_REMOTENAME}" \
+			|| die "push - failed to push all branches to fork remote" \
+			|| return 1
+	elif [ -n "${BRANCH}" ]; then
+		git push "${FORK_REMOTENAME}" "${BRANCH}" \
+			|| die "push - failed to push ${BRANCH} to fork remote" \
+			|| return 1
+	fi
+}
+
+# Run command
+case "${COMMAND}" in
+	"init")
+		cmd_init
+		;;
+	"sync")
+		cmd_sync
+		;;
+	"push")
+		cmd_push
+		;;
+	* ) usage "Unknown command ${COMMAND}";;
+esac
+
+git checkout "${CURBRANCH}" > /dev/null 2>&1
+
+if [ -n "${STASH}" ]; then
+	git stash pop
+fi
+
+cd "${SAVEDIR}"
+
