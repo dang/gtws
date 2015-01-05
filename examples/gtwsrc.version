@@ -10,6 +10,7 @@ debug_print "Loading Version"
 
 # Stuff for GTWS
 export GTWS_PROJECT_VERSION=$(basename $(dirname $(readlink -f ${BASH_SOURCE})))
+#export GTWS_DOCKER_IMAGE=some_version_image
 
 # Stuff specific to this project version.  It can be assumed that the following are set:
 #	GTWS_WSPATH - Path to the workspace

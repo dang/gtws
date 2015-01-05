@@ -11,6 +11,7 @@ debug_print "Loading Project"
 # Stuff for GTWS
 export GTWS_PROJECT=$(basename $(dirname $(readlink -f ${BASH_SOURCE})))
 export GTWS_MAKETAGS_OPTS=${GTWS_MAKETAGS_OPTS-""}
+export GTWS_DOCKER_IMAGE=${GTWS_DOCKER_IMAGE-""}
 
 # Optionally specify repos and branches to clone. Defaults to all repos in
 # origin with GTWS_PROJECT_VERSION as the branch.
