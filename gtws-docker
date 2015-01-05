@@ -1,0 +1,84 @@
+#!/bin/bash
+#
+# Start a docker on this workspace
+#
+# Config
+# GTWS_DOCKER_IMAGE - Docker image to use.
+# GTWS_DOCKER_MOUNTS - Extra directories to mount as space-separated "/outside/path:/inside/path"
+#
+
+#function GTWScleanup {
+#}
+
+# Standard functions
+GTWS_LOC=$(readlink -f $(dirname "$0"))
+source ${GTWS_LOC}/gtws.sh
+
+# Set usage output
+USAGE="[-h |--help] [-V | --verbose] [-c | --clean] [-i <image-name> | --image=<image-name>] [<extra-mount-dir> [<extra-mount-dir...]]"
+LONGUSAGE="\t-h, --help\n\t\tPrint this help message
+\t-i <image-name>, --image=<image-name>\n\t\tDocker image to start (default: ${GTWS_DOCKER_IMAGE:-none})
+\t-V, --verbose\n\t\tBe verbose
+\t-c, --clean\n\t\tStart clean from the image
+\t<extra-mount-dir>\n\t\tExtra directory to mount, in the format /outside/path:/inside/path"
+
+# Script name
+ME=$(basename $0)
+
+# Parse arguments
+ARGS=`getopt -o hVci: --long help,verbose,clean,image: -n "${ME}" -- "$@"`
+
+if [ $? != 0 ] ; then
+	usage 
+fi
+eval set -- "$ARGS"
+
+while true ; do
+	case "$1" in
+		-h|--help) usage; shift ;;
+		-i|--image) GTWS_DOCKER_IMAGE=$2 ; shift 2 ;;
+		-V|--verbose) export GTWS_VERBOSE=yes; shift ;;
+		-c|--clean) export CLEAN=yes; shift ;;
+		--) shift ; break ;;
+		* ) usage "Invalid argument $1";;
+	esac
+done
+
+if [ -z "${GTWS_WS_GUARD}" ]; then
+	usage "Must be run from inside a workspace"
+fi
+
+# Remaining arguments are in $1, $2, etc. as normal
+EXTRA_DIRS="${@}"
+
+if [ -z "${GTWS_DOCKER_IMAGE}" ]; then
+	usage "Must specify a docker image"
+fi
+
+MOUNTS="-v ${GTWS_WSPATH}:${GTWS_WSPATH}" 
+for i in ${GTWS_DOCKER_MOUNTS}; do
+	MOUNTS="${MOUNTS} -v $i"
+done
+for i in ${EXTRA_DIRS}; do
+	MOUNTS="${MOUNTS} -v $i"
+done
+
+SESNAME="${GTWS_PROJECT}_${GTWS_PROJECT_VERSION}_${GTWS_WSNAME}"
+
+if [ -n "${CLEAN}" ]; then
+	docker rm -f "${SESNAME}"
+fi
+
+if docker ps | grep -q "\<${SESNAME}\>" ; then
+	echo "Attaching to docker session for ${GTWS_WSNAME}"
+	DOCKER="docker attach ${SESNAME}"
+elif docker ps -a | grep -q "\<${SESNAME}\>" ; then
+	echo "Starting docker session for ${GTWS_WSNAME}"
+	DOCKER="docker start -i -a  ${SESNAME}"
+else
+	echo "Creating docker session for ${GTWS_WSNAME}"
+	DOCKER="docker run -t -i -w ${GTWS_WSPATH} --name ${SESNAME} -u ${USER} ${MOUNTS} ${GTWS_DOCKER_IMAGE} /home/${USER}/.scripts/gtws/startws -i --project=${GTWS_PROJECT} --version=${GTWS_PROJECT_VERSION}"
+fi
+
+${DOCKER}
+

@@ -32,8 +32,9 @@ else
 fi
 
 # Set usage output
-USAGE="[-h |--help] [-p <project> | --project=<project>] [-v <version> | --version=<version>] [-V | --verbose] <name>"
+USAGE="[-h |--help] [-i |--init] [-p <project> | --project=<project>] [-v <version> | --version=<version>] [-V | --verbose] <name>"
 LONGUSAGE="\t-h, --help\n\t\tPrint this help message
+\t-i, --init\n\t\tInit WS tree
 \t-p <project>, --project=<project>\n\t\tProject (default: ${PROJECT:-none})
 \t-v <version>, --version=<version>\n\t\tProject version (default: ${VERSION})
 \t-V, --verbose\n\t\tBe verbose
@@ -43,7 +44,7 @@ LONGUSAGE="\t-h, --help\n\t\tPrint this help message
 ME=$(basename $0)
 
 # Parse arguments
-ARGS=`getopt -o hVp:v: --long help,verbose,project:,version: -n "${ME}" -- "$@"`
+ARGS=`getopt -o hVip:v: --long help,verbose,init,project:,version: -n "${ME}" -- "$@"`
 
 if [ $? != 0 ] ; then
 	usage 
@@ -53,6 +54,7 @@ eval set -- "$ARGS"
 while true ; do
 	case "$1" in
 		-h|--help) usage; shift ;;
+		-i|--init) INIT=yes; shift ;;
 		-p|--project) PROJECT=$2 ; shift 2 ;;
 		-v|--version) VERSION=$2 ; shift 2 ;;
 		-V|--verbose) export GTWS_VERBOSE=yes; shift ;;
@@ -75,6 +77,24 @@ if [ -z "${PROJECT}" ]; then
 fi
 
 BASE=${GTWS_BASE_SRCDIR:-${HOME}/src}
+
+if [ -n "${INIT}" ]; then
+	mkdir -p "${BASE}" || die "Failed to make ${BASE}"
+	cd "${BASE}" || die "Failed to cd to ${BASE}"
+	mkdir -p "${PROJECT}/${VERSION}/" || die "Failed to make ${PROJECT}/${VERSION}"
+	cd "${PROJECT}" || die "Failed to cd to ${PROJECT}"
+	if [ ! -f ".gtwsrc" ]; then
+		sudo chown ${USER}: . || die "Couldn't chown ${PROJECT}"
+		cp "${GTWS_LOC}/examples/gtwsrc.project" .gtwsrc \
+			|| die "Couldn't copy project gtwsrc"
+	fi
+	cd "${VERSION}" || die "Failed to cd to ${VERSION}"
+	if [ ! -f ".gtwsrc" ]; then
+		sudo chown ${USER}: . || die "Couldn't chown ${VERSION}"
+		cp "${GTWS_LOC}/examples/gtwsrc.version" .gtwsrc \
+			|| die "Couldn't copy version gtwsrc"
+	fi
+fi
 
 if [ ! -f "${BASE}/${PROJECT}/${VERSION}/${GTWS_WSNAME}/.gtwsrc" ]; then
 	usage "No .gtwsrc for ${PROJECT}/${VERSION}/${GTWS_WSNAME}"
