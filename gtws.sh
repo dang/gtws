@@ -112,6 +112,16 @@ debug_print() {
 	fi
 }
 
+# cmd_exists ${cmd}
+#
+# Determine if a command exists on the system
+function cmd_exists {
+	which $1 > /dev/null 2>&1
+	if [ "$?" == "1" ]; then
+		die "You don't have $1 installed, sorry" || return 1
+	fi
+}
+
 # is_git_repo ${dir}
 #
 # return success if ${dir} is in a git repo, or failure otherwise
@@ -184,6 +194,15 @@ function git_top_dir {
 	else
 		echo "$__top"
 	fi
+}
+
+# is_docker
+#
+# return success if process is running inside docker
+is_docker() {
+	debug_print "is_docker"
+	grep -q docker /proc/self/cgroup
+	return $?
 }
 
 function gtws_rcp {
@@ -405,6 +424,27 @@ function clear_env {
 			eval export ${DST}=${!SRC}
 		fi
 		unset ${SRC}
+	done
+}
+
+# save_env ${file} ${nukevars}
+#
+# Save the environment of GTWS_* to the give file, except for the variables
+# given to nuke.  The default values to nuke are given below.
+function save_env {
+	local fname=${1}
+	local nukevars=${2:-"SAVEPATH ORIGIN WS_GUARD LOC SAVEPS1"}
+	debug_print "nukevars=$nukevars"
+
+	for i in ${!GTWS*} ; do
+		for j in ${nukevars}; do
+			if [ "${i}" == "GTWS_${j}" ]; then
+				debug_print "skipping $i"
+				continue 2
+			fi
+		done
+		debug_print "saving $i"
+		echo "export $i=\"${!i}\"" >> "${fname}"
 	done
 }
 

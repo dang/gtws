@@ -3,7 +3,8 @@
 # Start a docker on this workspace
 #
 # Config
-# GTWS_DOCKER_IMAGE - Docker image to use.
+# GTWS_DEFAULT_DOCKER_IMAGE - System-wide default docker image.
+# GTWS_DOCKER_IMAGE - Docker image to use for this workspace.
 # GTWS_DOCKER_MOUNTS - Extra directories to mount as space-separated "/outside/path:/inside/path"
 # GTWS_DOCKER_OPTS - Additional options to use to create the container
 #
@@ -14,11 +15,13 @@
 # Standard functions
 GTWS_LOC=$(readlink -f $(dirname "$0"))
 source ${GTWS_LOC}/gtws.sh
+GTWS_DOCKER_IMAGE=${GTWS_DOCKER_IMAGE:-${GTWS_DEFAULT_DOCKER_IMAGE:-none}}
+DOCKER_ENV=".gtwsrc_docker"
 
 # Set usage output
 USAGE="[-h |--help] [-V | --verbose] [-c | --clean] [-i <image-name> | --image=<image-name>] [<extra-mount-dir> [<extra-mount-dir...]]"
 LONGUSAGE="\t-h, --help\n\t\tPrint this help message
-\t-i <image-name>, --image=<image-name>\n\t\tDocker image to start (default: ${GTWS_DOCKER_IMAGE:-none})
+\t-i <image-name>, --image=<image-name>\n\t\tDocker image to start (default: ${GTWS_DOCKER_IMAGE})
 \t-V, --verbose\n\t\tBe verbose
 \t-c, --clean\n\t\tStart clean from the image
 \t<extra-mount-dir>\n\t\tExtra directory to mount, in the format /outside/path:/inside/path"
@@ -49,6 +52,10 @@ if [ -z "${GTWS_WS_GUARD}" ]; then
 	usage "Must be run from inside a workspace"
 fi
 
+cmd_exists docker || die "Docker not installed"
+
+is_docker && usage "Must not be run from inside docker"
+
 # Remaining arguments are in $1, $2, etc. as normal
 EXTRA_DIRS="${@}"
 
@@ -68,6 +75,12 @@ SESNAME="${GTWS_PROJECT}_${GTWS_PROJECT_VERSION}_${GTWS_WSNAME}"
 
 if [ -n "${CLEAN}" ]; then
 	docker rm -f "${SESNAME}"
+	rm -f "${GTWS_WSPATH}/${DOCKER_ENV}"
+fi
+
+if [ ! -f "${GTWS_WSPATH}/${DOCKER_ENV}" ]; then
+	# Set up saved environment
+	save_env "${GTWS_WSPATH}/${DOCKER_ENV}"
 fi
 
 if docker ps | grep -q "\<${SESNAME}\>" ; then
