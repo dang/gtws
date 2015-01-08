@@ -5,6 +5,7 @@
 # Config
 # GTWS_DOCKER_IMAGE - Docker image to use.
 # GTWS_DOCKER_MOUNTS - Extra directories to mount as space-separated "/outside/path:/inside/path"
+# GTWS_DOCKER_OPTS - Additional options to use to create the container
 #
 
 #function GTWScleanup {
@@ -77,7 +78,7 @@ elif docker ps -a | grep -q "\<${SESNAME}\>" ; then
 	DOCKER="docker start -i -a  ${SESNAME}"
 else
 	echo "Creating docker session for ${GTWS_WSNAME}"
-	DOCKER="docker run -t -i -w ${GTWS_WSPATH} --name ${SESNAME} -u ${USER} ${MOUNTS} ${GTWS_DOCKER_IMAGE} /home/${USER}/.scripts/gtws/startws -i --project=${GTWS_PROJECT} --version=${GTWS_PROJECT_VERSION}"
+	DOCKER="docker run -t -i -w ${GTWS_WSPATH} --name ${SESNAME} -u ${USER} ${MOUNTS} ${GTWS_DOCKER_OPTS} ${GTWS_DOCKER_IMAGE} /home/${USER}/.scripts/gtws/startws -i --project=${GTWS_PROJECT} --version=${GTWS_PROJECT_VERSION}"
 fi
 
 ${DOCKER}
