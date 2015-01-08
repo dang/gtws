@@ -4,7 +4,9 @@
 #
 
 function GTWScleanup {
-	rm -rf "${GTWS_WSPATH}"
+	if [ -n "${MKWS_CLEANUP}" ]; then
+		rm -rf "${GTWS_WSPATH}"
+	fi
 }
 
 # Standard functions
@@ -91,6 +93,9 @@ GTWS_WSNAME=$(basename "${GTWS_WSPATH}")
 if [ -d "${GTWS_WSPATH}" ]; then
 	die "Workspace ${GTWS_WSPATH} already exists"
 fi
+
+# From here on out, clean up on failure
+MKWS_CLEANUP="yes"
 
 # Set up the environment
 mkdir -p "${GTWS_WSPATH}" || die "Failed to mkdir ${GTWS_WSPATH}"
