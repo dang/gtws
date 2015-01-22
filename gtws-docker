@@ -85,7 +85,7 @@ fi
 
 if docker ps | grep -q "\<${SESNAME}\>" ; then
 	echo "Attaching to docker session for ${GTWS_WSNAME}"
-	DOCKER="docker attach ${SESNAME}"
+	DOCKER="docker exec -t -i ${SESNAME} /home/${USER}/.scripts/gtws/startws -i --project=${GTWS_PROJECT} --version=${GTWS_PROJECT_VERSION}"
 elif docker ps -a | grep -q "\<${SESNAME}\>" ; then
 	echo "Starting docker session for ${GTWS_WSNAME}"
 	DOCKER="docker start -i -a  ${SESNAME}"
