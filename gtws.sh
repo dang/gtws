@@ -237,23 +237,61 @@ function gtws_opv {
 	fi
 }
 
+# gtws_submodule_clone
+#
+# This will set up all the submodules in a repo.  Should be called from inside
+# the parent repo
+function gtws_submodule_clone {
+	#local sub_url=$1
+	local opv=$(gtws_opv "${GTWS_ORIGIN}" "${GTWS_PROJECT}" "${GTWS_PROJECT_VERSION}")
+	local sub_paths=$(git submodule status | sed 's/^ *//' | cut -d ' ' -f 2)
+
+	opv="${opv%/git}"
+	git submodule init || die "${FUNCNAME}: Failed to init submodules" || return 1
+	for sub in ${sub_paths}; do
+		local url=$(git config --list | grep submodule | grep "${sub}" | cut -d = -f 2)
+		local refopt=""
+		# XXX TODO - handle remote repositories
+		#if [[ ${opv} == *:* ]]; then
+			## Remote OPV means clone from that checkout; I don't cm
+			#refopt="--reference ${opv}/${name}/${sub}"
+		if [ -d "${opv}/submodule/${urlbase}" ]; then
+			local urlbase=$(basename ${url})
+			refopt="--reference ${opv}/submodule/${urlbase}"
+		fi
+		git submodule update ${refopt} "${sub}"
+	done
+}
+
 # gtws_repo_clone <base-repo-path> <repo> <branch>
 function gtws_repo_clone {
 	local baserpath=$1
 	local repo=$2
 	local branch=$3
 	local rpath="${baserpath}/${repo}"
+	local origpath=${PWD}
+	local rname=${repo%.git}
 
 	debug_print "${FUNCNAME}: cloning ${baserpath} - ${repo} : ${branch} into ${GTWS_WSNAME}"
-	git clone --recurse-submodules -b "${branch}" "${rpath}" || die "failed to clone ${rpath}:${branch}" || return 1
+
+	# Main repo
+	#git clone --recurse-submodules -b "${branch}" "${rpath}" || die "failed to clone ${rpath}:${branch}" || return 1
+	git clone -b "${branch}" "${rpath}" || die "${FUNCNAME}: failed to clone ${rpath}:${branch}" || return 1
+
+	# Update submodules
+	cd "${rname}" || die "${FUNCNAME}: failed to cd to ${rpath}" || return 1
+	gtws_submodule_clone || return 1
+	cd "${origpath}" || die "${FUNCNAME}: Failed to cd to ${origpath}" || return 1
+
+	# Extra files
 	for i in ${GTWS_FILES_EXTRA}; do
 		local esrc=
 
 		IFS=':' read -ra ARR <<< "$i"
 		if [ -n "${ARR[1]}" ]; then
-			dst="${repo}/${ARR[1]}"
+			dst="${rname}/${ARR[1]}"
 		else
-			dst="${repo}/${ARR[0]}"
+			dst="${rname}/${ARR[0]}"
 		fi
 
 		if [ -n "${GTWS_REMOTE_IS_WS}" ]; then
