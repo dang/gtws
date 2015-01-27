@@ -1,0 +1,113 @@
+#!/bin/bash
+#
+# Mirror a repo's uptsream into origin
+#
+
+#function GTWScleanup {
+#}
+
+# Standard functions
+GTWS_LOC=$(readlink -f $(dirname "$0"))
+source ${GTWS_LOC}/gtws.sh
+
+ORIGIN="none"
+PROJECT=""
+
+if [ -n "${GTWS_WS_GUARD}" ]; then
+	REPO_BASE=$(gtws_opv "${GTWS_ORIGIN}" "${GTWS_PROJECT}" "${GTWS_PROJECT_VERSION}")
+	ORIGIN="${GTWS_ORIGIN}"
+	PROJECT="${GTWS_PROJECT}"
+fi
+
+# Set usage output
+USAGE="[-h |--help] [-o <origin> | --origin=<origin>] [-p <project> | --project=<project>] [-s | --submodule] [-V | --verbose]"
+LONGUSAGE="\t-h, --help\n\t\tPrint this help message
+\t-o <origin>, --origin=<origin>\n\t\tOrigin location (default: ${ORIGIN})
+\t-o <project>, --project=<project>\n\t\tProject subdir in origin (default: ${PROJECT:-none})
+\t-s, --submodule\n\t\tOnly mirror submodules (adding any new ones)
+\t-V, --verbose\n\t\tBe verbose"
+
+# Script name
+ME=$(basename $0)
+
+# Parse arguments
+ARGS=`getopt -o hVso:p: --long help,verbose,submodule,origin:,project: -n "${ME}" -- "$@"`
+
+if [ $? != 0 ] ; then
+	usage
+fi
+eval set -- "$ARGS"
+
+while true ; do
+	case "$1" in
+		-h|--help) usage; shift ;;
+		-o|--origin) ORIGIN=$2 ; shift 2 ;;
+		-p|--project) PROJECT=$2 ; shift 2 ;;
+		-s|--submodule) export ONLY_SUBMODULES=yes; shift ;;
+		-V|--verbose) export GTWS_VERBOSE=yes; shift ;;
+		--) shift ; break ;;
+		* ) usage "Invalid argument $1";;
+	esac
+done
+
+# Remaining arguments are in $1, $2, etc. as normal
+if [ ! -d "${ORIGIN}" ]; then
+	usage "${ORIGIN} is not a directory"
+fi
+is_git_repo "${PWD}" || usage "Must be run from within a git repo"
+
+UPSTREAM=$(git config --get remote.origin.url)
+if [ -z "${ONLY_SUBMODULES}" ]; then
+	if [ -d "${UPSTREAM}" ]; then
+		die "upstream is already a local mirror: ${UPSTREAM}"
+	fi
+fi
+
+# Set up origin layout
+if [ ! -d "${ORIGIN}/${PROJECT}" ]; then
+	mkdir -p "${ORIGIN}/${PROJECT}" || die "failed to make project dir ${ORIGIN}/${PROJECT}"
+fi
+if [ ! -d "${ORIGIN}/${PROJECT}/git" ]; then
+	mkdir -p "${ORIGIN}/${PROJECT}/git" || die "failed to make git dir ${ORIGIN}/${PROJECT}/git"
+fi
+if [ ! -d "${ORIGIN}/${PROJECT}/submodule" ]; then
+	mkdir -p "${ORIGIN}/${PROJECT}/submodule" || die "failed to make submodule dir ${ORIGIN}/${PROJECT}/submodule"
+fi
+
+git_top_dir REPODIR || die "Could not get top git dir for PWD";
+
+if [ -z "${ONLY_SUBMODULES}" ]; then
+	# Clone mirror
+	cd "${ORIGIN}/${PROJECT}/git" || die "failed to cd to git dir"
+	git clone --mirror "${UPSTREAM}" || die "Failed to clone main mirror"
+fi
+
+# Mirror submodules
+cd "${REPODIR}"
+SUBPATHS=$(gtws_submodule_paths)
+for sub in ${SUBPATHS}; do
+	gtws_submodule_url ${sub} url
+	debug_print "url: $url"
+	urlbase=$(basename ${url})
+	debug_print "url: $urlbase"
+
+	if [ -d "${ORIGIN}/${PROJECT}/submodule/${urlbase}" ]; then
+		# Already exists
+		echo "mirror for submodule ${urlbase} already exists; skipping"
+		continue
+	fi
+
+	cd "${ORIGIN}/${PROJECT}/submodule" || die "failed to cd to submodule dir"
+	git clone --mirror "${url}" || die "Failed to clone submodule mirror ${urlbase}"
+	if [ ! -d "${urlbase}" ]; then
+		if [ -d "${urlbase}.git" ]; then
+			mv "${urlbase}.git" "${urlbase}"
+		fi
+	fi
+	if [ ! -d "${urlbase}" ]; then
+		die "Mirror for submodule in wrong location. Expected ${urlbase}"
+	fi
+	cd "${REPODIR}"
+done
+
+echo "Done"

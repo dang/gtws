@@ -237,6 +237,28 @@ function gtws_opv {
 	fi
 }
 
+# gtws_submodule_url ${submodule} url
+#
+# Result will be in local variable url  Or:
+#
+# url = $(gtws_submodule_url ${submodule})
+#
+# Result will be in local variable url
+#
+# Get the URL for a submodule
+function gtws_submodule_url {
+	local sub=$1
+	local  __resultvar=$2
+	local __url=$(git config --list | grep submodule | grep "${sub}" | cut -d = -f 2)
+
+	debug_print "${FUNCNAME} $sub url: $__url"
+	if [[ "$__resultvar" ]]; then
+		eval $__resultvar="'$__url'"
+	else
+		echo "$__url"
+	fi
+}
+
 # gtws_submodule_mirror ${opv} ${submodule} mloc
 #
 # Result will be in local variable mloc  Or:
@@ -251,7 +273,7 @@ function gtws_submodule_mirror {
 	local sub=$2
 	local  __resultvar=$3
 	local __mloc=""
-	local url=$(git config --list | grep submodule | grep "${sub}" | cut -d = -f 2)
+	local url=$(gtws_submodule_url)
 	local urlbase=$(basename ${url})
 
 	# XXX TODO - handle remote repositories
