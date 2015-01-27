@@ -237,6 +237,58 @@ function gtws_opv {
 	fi
 }
 
+# gtws_submodule_mirror ${opv} ${submodule} mloc
+#
+# Result will be in local variable mloc  Or:
+#
+# mloc = $(gtws_submodule_mirror ${opv} ${submodule})
+#
+# Result will be in local variable mloc
+#
+# Get the path to a local mirror of the submodule, if it exists
+function gtws_submodule_mirror {
+	local opv=$1
+	local sub=$2
+	local  __resultvar=$3
+	local __mloc=""
+	local url=$(git config --list | grep submodule | grep "${sub}" | cut -d = -f 2)
+	local urlbase=$(basename ${url})
+
+	# XXX TODO - handle remote repositories
+	#if [[ ${opv} == *:* ]]; then
+		## Remote OPV means clone from that checkout; I don't cm
+		#refopt="--reference ${opv}/${name}/${sub}"
+	if [ -d "${opv}/submodule/${urlbase}" ]; then
+		__mloc="${opv}/submodule/${urlbase}"
+	fi
+
+	if [[ "$__resultvar" ]]; then
+		eval $__resultvar="'$__mloc'"
+	else
+		echo "$__mloc"
+	fi
+}
+
+# gtws_submodule_paths subpaths
+#
+# Result will be in local variable subpaths  Or:
+#
+# subpaths = $(gtws_submodule_paths)
+#
+# Result will be in local variable subpaths
+#
+# Get the paths to submodules in a get repo
+function gtws_submodule_paths {
+	local  __resultvar=$1
+	local __subpaths=$(git submodule status | sed 's/^ *//' | cut -d ' ' -f 2)
+
+	if [[ "$__resultvar" ]]; then
+		eval $__resultvar="'$__subpaths'"
+	else
+		echo "$__subpaths"
+	fi
+}
+
 # gtws_submodule_clone
 #
 # This will set up all the submodules in a repo.  Should be called from inside
@@ -244,20 +296,15 @@ function gtws_opv {
 function gtws_submodule_clone {
 	#local sub_url=$1
 	local opv=$(gtws_opv "${GTWS_ORIGIN}" "${GTWS_PROJECT}" "${GTWS_PROJECT_VERSION}")
-	local sub_paths=$(git submodule status | sed 's/^ *//' | cut -d ' ' -f 2)
+	local sub_paths=$(gtws_submodule_paths)
 
 	opv="${opv%/git}"
 	git submodule init || die "${FUNCNAME}: Failed to init submodules" || return 1
 	for sub in ${sub_paths}; do
-		local url=$(git config --list | grep submodule | grep "${sub}" | cut -d = -f 2)
 		local refopt=""
-		# XXX TODO - handle remote repositories
-		#if [[ ${opv} == *:* ]]; then
-			## Remote OPV means clone from that checkout; I don't cm
-			#refopt="--reference ${opv}/${name}/${sub}"
-		if [ -d "${opv}/submodule/${urlbase}" ]; then
-			local urlbase=$(basename ${url})
-			refopt="--reference ${opv}/submodule/${urlbase}"
+		local mirror=$(gtws_submodule_mirror ${opv} ${sub})
+		if [ -n "${mirror}" ]; then
+			refopt="--reference ${mirror}"
 		fi
 		git submodule update ${refopt} "${sub}"
 	done
@@ -579,6 +626,29 @@ function cdorigin() {
 	fi
 }
 
+function gtws_get_origin {
+	local opv=$1
+	local target=$2
+	local __origin=
+	local  __resultvar=$3
+
+	# If it's a git repo with a local origin, use that.
+	__origin=$(git config --get remote.origin.url)
+	if [ ! -d "${__origin}" ]; then
+		# Try to figure it out
+		if [ ! -d "${opv}" ]; then
+			die "No opv for $target" || return 1
+		fi
+		find_git_repo "${opv}" "${target}" __origin || return 1
+	fi
+
+	if [[ "$__resultvar" ]]; then
+		eval $__resultvar="'$__origin'"
+	else
+		echo "$__origin"
+	fi
+}
+
 function gtws_cdorigin() {
 	local opv=$(gtws_opv "${GTWS_ORIGIN}" "${GTWS_PROJECT}" "${GTWS_PROJECT_VERSION}")
 	local gitdir=""
@@ -590,19 +660,7 @@ function gtws_cdorigin() {
 		target=$(basename $gitdir)
 	fi
 
-	# If it's a git repo with a local origin, use that.
-	local origin=$(git config --get remote.origin.url)
-	if [ -d "${origin}" ]; then
-		debug_print "Local origin"
-		cd "${origin}"
-		return 0
-	fi
-
-	# Try to figure it out
-	if [ ! -d "${opv}" ]; then
-		die "No opv for $target" || return 1
-	fi
-	find_git_repo "${opv}" "${target}" origin || return 1
+	gtws_get_origin $opv $target origin || die || return 1
 	cd "${origin}"
 }
 

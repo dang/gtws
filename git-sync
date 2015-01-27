@@ -13,10 +13,11 @@
 SUBREMOTE=""
 
 # Set usage output
-USAGE="[-h |--help] [-f | --force] [-s | --stash] [-r | --remote]"
+USAGE="[-h |--help] [-f | --force] [-s | --stash] [-o | --origin] [-r | --remote]"
 LONGUSAGE="\t-h, --help\n\t\tPrint this help message
 \t-f, --force\n\t\tSync even if the local branch is not up-to-date
 \t-s, --stash\n\t\tStash before syncing, and pop after
+\t-o, --origin\n\t\tIf in a workspace, update origin insted of local
 \t-r, --remote\n\t\tUpdate submodules to the most recent version"
 
 # Standard functions
@@ -27,7 +28,7 @@ source ${GTWS_LOC}/gtws.sh
 ME=$(basename $0)
 
 # Parse arguments
-ARGS=`getopt -o hfsr --long help,force,stash,remote -n "${ME}" -- "$@"`
+ARGS=`getopt -o hfsor --long help,force,stash,origin,remote -n "${ME}" -- "$@"`
 
 if [ $? != 0 ] ; then
 	usage 
@@ -39,6 +40,7 @@ while true ; do
 		-h|--help) usage; shift ;;
 		-f|--force) FORCE="yes"; shift ;;
 		-s|--stash) STASH="yes"; shift ;;
+		-o|--origin) ORIGIN="yes"; shift ;;
 		-r|--remote) SUBREMOTE="--remote"; shift ;;
 		--) shift ; break ;;
 		* ) usage "Invalid argument $1";;
@@ -50,65 +52,117 @@ done
 # Source the git environment.  Checks to see if we're in a git repo
 SUBDIRECTORY_OK=Yes
 source "$(git --exec-path)/git-sh-setup"
+# Re-source my script to replace git's version of functions
+source ${GTWS_LOC}/gtws.sh
 
-GIT_DIR="$(git rev-parse --git-dir 2>/dev/null)"
-if git-issvn > /dev/null 2>&1; then
-	SVN="yes"
-fi
+# update_repo ${repo_path} ${stash}
+function update_repo {
+	local repodir=$1
+	local stash=$2
+	local savedir=${PWD}
+	local branch=$(git branch | grep "\*" | sed 's/\* //')
+	local remote=$(git config --get branch.${branch}.remote)
+	local bare=
+	local upstream=
 
-SAVEDIR=${PWD}
-BRANCH=$(git branch | grep "\*" | sed 's/\* //')
-REMOTE=$(git config --get branch.${BRANCH}.remote)
-if test "z$(is_bare_repository)" == ztrue; then
-	BARE="true"
-fi
-if [ -n "${BARE}" ]; then
-	UPSTREAM=
-elif [ -z "${REMOTE}" ]; then
-	UPSTREAM="master"
-elif [ "${REMOTE}" == "." ]; then
-	# Local tracking branch.  Use it instead of master
-	m=$(git config --get branch.${BRANCH}.merge)
-	UPSTREAM=${m##*/}
-elif [ "${REMOTE}" == "origin" ]; then
-	# This branch directly tracks upstream; don't do any form of local upstream
-	UPSTREAM=
-fi
-
-cd_to_toplevel
-
-if [ -n "${STASH}" ]; then
-	git stash || die "Couldn't stash"
-fi
-
-if [ -z "${BARE}" -a -z "${FORCE}" ]; then
-	git status | grep clean > /dev/null || die "Current branch is not clean"
-fi
-
-if [ -n "${UPSTREAM}" ]; then
-	echo "Updating ${UPSTREAM} first..."
-	git checkout ${UPSTREAM} || die "Could not checkout ${UPSTREAM}"
-	if [ -n "${SVN}" ]; then
-		git svn rebase || die "rebase of ${UPSTREAM} failed"
-	else
-		git pull --rebase || die "rebase of ${UPSTREAM} failed"
-		git submodule update --init --recursive ${SUBREMOTE} || die "submodule update of ${UPSTREAM} failed"
+	GIT_DIR="$(git rev-parse --git-dir 2>/dev/null)"
+	if git-issvn > /dev/null 2>&1; then
+		local svn="yes"
 	fi
-	git checkout ${BRANCH}
+
+	cd "${repodir}"
+
+	if test "z$(is_bare_repository)" == ztrue; then
+		bare="true"
+	fi
+	if [ -n "${bare}" ]; then
+		upstream=
+	elif [ -z "${remote}" ]; then
+		upstream="master"
+	elif [ "${remote}" == "." ]; then
+		# Local tracking branch.  Use it instead of master
+		m=$(git config --get branch.${branch}.merge)
+		upstream=${m##*/}
+	elif [ "${remote}" == "origin" ]; then
+		# This branch directly tracks upstream; don't do any form of
+		# local upstream
+		upstream=
+	fi
+
+	cd_to_toplevel
+
+	if [ -n "${stash}" ]; then
+		git stash || die "Couldn't stash" || return 1
+	fi
+
+	if [ -z "${bare}" -a -z "${FORCE}" ]; then
+		git status | grep clean > /dev/null || \
+			die "Current branch is not clean" || return 1
+	fi
+
+	if [ -n "${upstream}" ]; then
+		echo "Updating ${upstream} first..."
+		git checkout ${upstream} || \
+			die "Could not checkout ${upstream}" || return 1
+		if [ -n "${svn}" ]; then
+			git svn rebase || die "rebase of ${upstream} failed" || return 1
+		else
+			git pull --rebase || \
+				die "rebase of ${upstream} failed" || return 1
+			git submodule update --init --recursive ${SUBREMOTE} || \
+				die "submodule update of ${upstream} failed" || return 1
+		fi
+		git checkout ${branch}
+	fi
+
+	if [ -n "${bare}" ]; then
+		echo "Updating bare"
+		git fetch --all || die "update of bare repo failed" || return 1
+	elif [ -n "${svn}" ]; then
+		echo "Updating svn ${branch}"
+		git svn rebase || die "rebase of ${branch} failed" || return 1
+	else
+		echo "Updating git ${branch}"
+		git pull --rebase || die "rebase of ${branch} failed" || return 1
+		git submodule update --init --recursive ${SUBREMOTE} || \
+			die "submodule update of ${branch} failed" || return 1
+	fi
+
+	if [ -n "${stash}" ]; then
+		git stash pop
+	fi
+
+	cd "${savedir}"
+}
+
+if [ -n "${ORIGIN}" ]; then
+	if [ -z "${GTWS_WS_GUARD}" ]; then
+		usage "--origin may only be given inside a workspace"
+	fi
+
+	OPV=$(gtws_opv "${GTWS_ORIGIN}" "${GTWS_PROJECT}" "${GTWS_PROJECT_VERSION}")
+	# First update upstream
+	git_top_dir GITDIR || die "Failed to get top dir"
+	TARGET=$(basename $GITDIR)
+	gtws_get_origin "${OPV}" "${TARGET}" OREPO || die "failed to get origin"
+	echo ""
+	echo "Updating origin $OREPO"
+	update_repo "${OREPO}"
+
+	OPV="${OPV%/git}"
+	SUBPATHS=$(gtws_submodule_paths)
+	for sub in ${SUBPATHS}; do
+		MIRROR=$(gtws_submodule_mirror ${OPV} ${sub})
+		echo "${sub}: ${MIRROR}"
+		if [ -d "${MIRROR}" ]; then
+			echo ""
+			echo "Updating submodule mirror $MIRROR"
+			update_repo "${MIRROR}" || die
+		fi
+	done
 fi
 
-echo "Updating ${BRANCH}"
-if [ -n "${BARE}" ]; then
-	git fetch --all || die "update of bare repo failed"
-elif [ -n "${SVN}" ]; then
-	git svn rebase || die "rebase of ${BRANCH} failed"
-else
-	git pull --rebase || die "rebase of ${BRANCH} failed"
-	git submodule update --init --recursive ${SUBREMOTE} || die "submodule update of ${BRANCH} failed"
-fi
-
-if [ -n "${STASH}" ]; then
-	git stash pop
-fi
-
-cd "${SAVEDIR}"
+# Update local repo
+echo ""
+echo "Updating checkout";
+update_repo "." ${STASH} || die
