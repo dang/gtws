@@ -273,15 +273,17 @@ function gtws_submodule_mirror {
 	local sub=$2
 	local  __resultvar=$3
 	local __mloc=""
-	local url=$(gtws_submodule_url)
-	local urlbase=$(basename ${url})
-
-	# XXX TODO - handle remote repositories
-	#if [[ ${opv} == *:* ]]; then
+	local url
+	gtws_submodule_url ${sub} url
+	if [ -n "${url}" ]; then
+		local urlbase=$(basename ${url})
+		# XXX TODO - handle remote repositories
+		#if [[ ${opv} == *:* ]]; then
 		## Remote OPV means clone from that checkout; I don't cm
 		#refopt="--reference ${opv}/${name}/${sub}"
-	if [ -d "${opv}/submodule/${urlbase}" ]; then
-		__mloc="${opv}/submodule/${urlbase}"
+		if [ -d "${opv}/submodule/${urlbase}" ]; then
+			__mloc="${opv}/submodule/${urlbase}"
+		fi
 	fi
 
 	if [[ "$__resultvar" ]]; then
