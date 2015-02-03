@@ -49,9 +49,8 @@ die() {
 	fi
 	if can_die; then
 		exit 1
-	elif [ -n "${2}" ]; then
-		return 1
 	fi
+	return 1
 }
 
 # Alternativess for using die properly to handle both interactive and script useage:
