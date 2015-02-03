@@ -312,15 +312,17 @@ function gtws_submodule_paths {
 	fi
 }
 
-# gtws_submodule_clone
+# gtws_submodule_clone [<base-repo-path>]
 #
 # This will set up all the submodules in a repo.  Should be called from inside
 # the parent repo
 function gtws_submodule_clone {
-	#local sub_url=$1
-	local opv=$(gtws_opv "${GTWS_ORIGIN}" "${GTWS_PROJECT}" "${GTWS_PROJECT_VERSION}")
+	local opv=$1
 	local sub_paths=$(gtws_submodule_paths)
 
+	if [ -z "${opv}" ]; then
+		opv=$(gtws_opv "${GTWS_ORIGIN}" "${GTWS_PROJECT}" "${GTWS_PROJECT_VERSION}")
+	fi
 	opv="${opv%/git}"
 	git submodule init || die "${FUNCNAME}: Failed to init submodules" || return 1
 	for sub in ${sub_paths}; do
@@ -335,13 +337,18 @@ function gtws_submodule_clone {
 
 # gtws_repo_clone <base-repo-path> <repo> <branch>
 function gtws_repo_clone {
-	local baserpath=$1
+	local baserpath=${1%/}
 	local repo=$2
 	local branch=$3
 	local rpath="${baserpath}/${repo}"
 	local origpath=${PWD}
 	local rname=${repo%.git}
 
+	if [[ ${rpath} != *:* ]]; then
+		if [ ! -d "${rpath}" ]; then
+			rpath="${rpath}.git"
+		fi
+	fi
 	debug_print "${FUNCNAME}: cloning ${baserpath} - ${repo} : ${branch} into ${GTWS_WSNAME}"
 
 	# Main repo
@@ -350,7 +357,7 @@ function gtws_repo_clone {
 
 	# Update submodules
 	cd "${rname}" || die "${FUNCNAME}: failed to cd to ${rpath}" || return 1
-	gtws_submodule_clone || return 1
+	gtws_submodule_clone "${baserpath}" || return 1
 	cd "${origpath}" || die "${FUNCNAME}: Failed to cd to ${origpath}" || return 1
 
 	# Extra files
@@ -658,6 +665,9 @@ function gtws_get_origin {
 	# If it's a git repo with a local origin, use that.
 	__origin=$(git config --get remote.origin.url)
 	if [ ! -d "${__origin}" ]; then
+		__origin="${__origin}.git"
+	fi
+	if [ ! -d "${__origin}" ]; then
 		# Try to figure it out
 		if [ ! -d "${opv}" ]; then
 			die "No opv for $target" || return 1
@@ -683,7 +693,7 @@ function gtws_cdorigin() {
 		target=$(basename $gitdir)
 	fi
 
-	gtws_get_origin $opv $target origin || die || return 1
+	gtws_get_origin $opv $target origin || return 1
 	cd "${origin}"
 }
 
