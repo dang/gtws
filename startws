@@ -7,6 +7,9 @@
 GTWS_LOC=$(readlink -f $(dirname "$0"))
 source ${GTWS_LOC}/gtws.sh
 
+# Allow starting a workspace from inside another
+clear_env
+
 if [ -f "${PWD}/.gtwsrc" ]; then
 	debug_print "startws: loading ${PWD}"
 	load_rc "${PWD}"
