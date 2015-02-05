@@ -32,7 +32,7 @@ export GTWS_DOCKER_IMAGE=${GTWS_DOCKER_IMAGE-${GTWS_DEFAULT_DOCKER_IMAGE}}
 	#local version=$3
 	#local name=$4
 	#local smorigin=$4
-	#local opvn=$(gtws_opv "${origin}" "${project}" "${version}")/${name}
+	#local opvn=$(gtws_opvn "${origin}" "${project}" "${version}" "${name}")
 	#local wspath=${PWD}
 
 	#for repo in ${GTWS_PROJECT_REPOS}; do
@@ -42,7 +42,7 @@ export GTWS_DOCKER_IMAGE=${GTWS_DOCKER_IMAGE-${GTWS_DEFAULT_DOCKER_IMAGE}}
 #}
 
 #function gtws_project_cdorigin() {
-	#local opv=$(gtws_opv "${GTWS_ORIGIN}" "${GTWS_PROJECT}" "${GTWS_PROJECT_VERSION}")
+	#local opv=$(gtws_opvn "${GTWS_ORIGIN}" "${GTWS_PROJECT}" "${GTWS_PROJECT_VERSION}" "${GTWS_WSNAME}")
 	#if [ ! -d "${opv}" ]; then
 		#die "No origin for $@"
 	#fi

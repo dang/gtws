@@ -13,14 +13,16 @@ source ${GTWS_LOC}/gtws.sh
 BRANCH="master"
 
 if [ -n "${GTWS_WS_GUARD}" ]; then
-	REPO_BASE=$(gtws_opv "${GTWS_ORIGIN}" "${GTWS_PROJECT}" "${GTWS_PROJECT_VERSION}")
+	REPO_BASE=$(gtws_opvn "${GTWS_ORIGIN}" "${GTWS_PROJECT}" "${GTWS_PROJECT_VERSION}" "${GTWS_WSNAME}")
+	SUBMOUDLE_BASE=$(gtws_opvn "${GTWS_SUBMODULE_ORIGIN:-${GTWS_ORIGIN}}" "${GTWS_PROJECT}" "${GTWS_PROJECT_VERSION}" "${GTWS_WSNAME}")
 	BRANCH="${GTWS_PROJECT_VERSION}"
 fi
 
 # Set usage output
-USAGE="[-h |--help] [-r <repo-base> | --repo-base=<repo-base>] [-b <branch> | --branch=<branch>] [-V | --verbose] <repo-name>"
+USAGE="[-h |--help] [-r <repo-base> | --repo-base=<repo-base>] [-s <submodule-base> | --submodule-base=<submodule-base>] [-b <branch> | --branch=<branch>] [-V | --verbose] <repo-name>"
 LONGUSAGE="\t-h, --help\n\t\tPrint this help message
 \t-r <repo-base>, --repo-base=<repo-base>\n\t\tBase dir for repo (default: ${REPO_BASE:-none})
+\t-s <submodule-base>, --submodule-base=<submodule-base>\n\t\tBase dir for submodules (default: ${SUBMODULE_BASE:-none})
 \t-b <branch>, --branch=<branch>\n\t\tRepo branch (default: ${BRANCH})
 \t-V, --verbose\n\t\tBe verbose
 \t<repo-name>\n\t\tRepository name"
@@ -29,7 +31,7 @@ LONGUSAGE="\t-h, --help\n\t\tPrint this help message
 ME=$(basename $0)
 
 # Parse arguments
-ARGS=`getopt -o hVr:b: --long help,verbose,repo-base:,branch: -n "${ME}" -- "$@"`
+ARGS=`getopt -o hVr:s:b: --long help,verbose,repo-base:,submodule-base:,branch: -n "${ME}" -- "$@"`
 
 if [ $? != 0 ] ; then
 	usage 
@@ -40,6 +42,7 @@ while true ; do
 	case "$1" in
 		-h|--help) usage; shift ;;
 		-r|--repo-base) REPO_BASE=$2 ; shift 2 ;;
+		-s|--submodule-base) SUBMODULE_BASE=$2 ; shift 2 ;;
 		-b|--branch) BRANCH=$2 ; shift 2 ;;
 		-V|--verbose) export GTWS_VERBOSE=yes; shift ;;
 		--) shift ; break ;;
@@ -56,9 +59,6 @@ if [ -z "${1}" ]; then
 	usage "Must give a repository name"
 fi
 REPO="${1}"
-if [ ! -d "${REPO_BASE}" ]; then
-	usage "${REPO_BASE} is not a directory"
-fi
 find_git_repo "${REPO_BASE}" "${REPO}" repodir || die "No repository for ${REPO} in ${REPO_BASE}"
 
 echo "Cloning ${REPO}:${BRANCH} from ${REPO_BASE} into ${GTWS_WSNAME}"

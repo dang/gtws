@@ -156,11 +156,8 @@ function find_git_repo {
 	local __resultvar=$3
 	local try="${basedir}/${repo_name}"
 
-	if [ ! -d "${try}" ]; then
+	if ! is_git_repo "${try}" ; then
 		try=${try}.git
-	fi
-	if [ ! -d "${try}" ]; then
-		die "No directory for ${repo_name} in ${basedir}" || return 1
 	fi
 
 	is_git_repo "${try}" || die "${repo_name} in ${basedir} is not a git repository" || return 1
@@ -208,22 +205,24 @@ function gtws_rcp {
 	rsync --rsh=ssh -avzS --progress "$@"
 }
 
-# gtws_opv ${GTWS_ORIGIN} ${GTWS_PROJECT} ${GTWS_PROJECT_VERSION} opv
+# gtws_opvn ${GTWS_ORIGIN} ${GTWS_PROJECT} ${GTWS_PROJECT_VERSION} opv
 #
 # Result will be in local variable opv.  Or:
 #
-# opv = $(gtws_opv ${GTWS_ORIGIN} ${GTWS_PROJECT} ${GTWS_PROJECT_VERSION})
+# opv = $(gtws_opvn ${GTWS_ORIGIN} ${GTWS_PROJECT} ${GTWS_PROJECT_VERSION}) ${GTWS_WSNAM}
 #
 # Result will be in local variable opv.
-function gtws_opv {
+function gtws_opvn {
 	local origin=$1
 	local project=$2
 	local version=$3
-	local  __resultvar=$4
+	local name=$4
+	local  __resultvar=$5
 	local __opv="${origin}/${project}/${version}"
 
 	if [[ $__opv == *:* ]]; then
-		debug_print "remote; skip check"
+		__opv="${__opv}/${name}"
+		debug_print "remote; using opvn $__opv"
 	elif [ ! -d "${__opv}" ]; then
 		__opv="${origin}/${project}/git"
 	elif [ ! -d "${__opv}" ]; then
@@ -321,7 +320,7 @@ function gtws_submodule_clone {
 	local sub_paths=$(gtws_submodule_paths)
 
 	if [ -z "${opv}" ]; then
-		opv=$(gtws_opv "${GTWS_ORIGIN}" "${GTWS_PROJECT}" "${GTWS_PROJECT_VERSION}")
+		opv=$(gtws_opvn "${GTWS_ORIGIN}" "${GTWS_PROJECT}" "${GTWS_PROJECT_VERSION}" "${GTWS_WSNAME}")
 	fi
 	opv="${opv%/git}"
 	git submodule init || die "${FUNCNAME}: Failed to init submodules" || return 1
@@ -395,10 +394,9 @@ function gtws_project_clone_default {
 	local version=$3
 	local name=$4
 	local smorigin=$5
-	local opv=$(gtws_opv "${origin}" "${project}" "${version}")
+	local opv=$(gtws_opvn "${origin}" "${project}" "${version}" "${name}")
 	local wspath=${PWD}
 	local repos=
-	local baserpath=
 	local basesmpath=
 	local -A branches
 
@@ -419,20 +417,14 @@ function gtws_project_clone_default {
 		done
 	fi
 
-	if [ -n "${GTWS_REMOTE_IS_WS}" ]; then
-		baserpath="${opv}/${name}"
-	else
-		baserpath="${opv}"
-	fi
-
 	if [ -n "${smorigin}" ] && [ -d "${smorigin}" ]; then
-		basesmpath=$(gtws_opv "${smorigin}" "${project}" "${version}")
+		basesmpath=$(gtws_opvn "${smorigin}" "${project}" "${version}" "${name}")
 	else
-		basesmpath="${baserpath}"
+		basesmpath="${opv}"
 	fi
 
 	for repo in ${repos}; do
-		gtws_repo_clone "${baserpath}" "${repo}" "${branches[${repo}]}" "${basesmpath}"
+		gtws_repo_clone "${opv}" "${repo}" "${branches[${repo}]}" "${basesmpath}"
 	done
 }
 
@@ -696,7 +688,7 @@ function gtws_get_origin {
 }
 
 function gtws_cdorigin() {
-	local opv=$(gtws_opv "${GTWS_ORIGIN}" "${GTWS_PROJECT}" "${GTWS_PROJECT_VERSION}")
+	local opv=$(gtws_opvn "${GTWS_ORIGIN}" "${GTWS_PROJECT}" "${GTWS_PROJECT_VERSION}" "${GTWS_WSNAME}")
 	local gitdir=""
 	local target=""
 	if [ -n "$1" ]; then

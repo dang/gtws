@@ -13,8 +13,9 @@
 SUBREMOTE=""
 
 # Set usage output
-USAGE="[-h |--help] [-f | --force] [-s | --stash] [-o | --origin] [-r | --remote]"
+USAGE="[-h |--help] [-V | --verbose] [-f | --force] [-s | --stash] [-o | --origin] [-r | --remote]"
 LONGUSAGE="\t-h, --help\n\t\tPrint this help message
+\t-V, --verbose\n\t\tPrint verbose debugging info
 \t-f, --force\n\t\tSync even if the local branch is not up-to-date
 \t-s, --stash\n\t\tStash before syncing, and pop after
 \t-o, --origin\n\t\tIf in a workspace, update origin insted of local
@@ -28,7 +29,7 @@ source ${GTWS_LOC}/gtws.sh
 ME=$(basename $0)
 
 # Parse arguments
-ARGS=`getopt -o hfsor --long help,force,stash,origin,remote -n "${ME}" -- "$@"`
+ARGS=`getopt -o hVfsor --long help,verbose,force,stash,origin,remote -n "${ME}" -- "$@"`
 
 if [ $? != 0 ] ; then
 	usage 
@@ -38,6 +39,7 @@ eval set -- "$ARGS"
 while true ; do
 	case "$1" in
 		-h|--help) usage; shift ;;
+		-V|--verbose) GTWS_VERBOSE="yes"; shift ;;
 		-f|--force) FORCE="yes"; shift ;;
 		-s|--stash) STASH="yes"; shift ;;
 		-o|--origin) ORIGIN="yes"; shift ;;
@@ -89,8 +91,6 @@ function update_repo {
 		upstream=
 	fi
 
-	cd_to_toplevel
-
 	if [ -n "${stash}" ]; then
 		git stash || die "Couldn't stash" || return 1
 	fi
@@ -140,7 +140,7 @@ if [ -n "${ORIGIN}" ]; then
 		usage "--origin may only be given inside a workspace"
 	fi
 
-	OPV=$(gtws_opv "${GTWS_ORIGIN}" "${GTWS_PROJECT}" "${GTWS_PROJECT_VERSION}")
+	OPV=$(gtws_opvn "${GTWS_ORIGIN}" "${GTWS_PROJECT}" "${GTWS_PROJECT_VERSION}" "${GTWS_WSNAME}")
 	# First update upstream
 	git_top_dir GITDIR || die "Failed to get top dir"
 	TARGET=$(basename $GITDIR)

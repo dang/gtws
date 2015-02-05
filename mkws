@@ -108,7 +108,7 @@ O="${GTWS_ORIGIN:=${HOME}/origin}"
 
 HAS_CLONE=$(declare -F | grep "\<gtws_project_clone\>")
 if [ -z "${HAS_CLONE}" ]; then
-	gtws_opv "${O}" "${PROJECT}" "${VERSION}" opv
+	gtws_opvn "${O}" "${PROJECT}" "${VERSION}" "${GTWS_WSNAME}" opv
 
 	# Workspace contents check
 	repos=${GTWS_PROJECT_REPOS}
@@ -133,6 +133,7 @@ if [ -z "${HAS_CLONE}" ]; then
 		die "No git repos in origin ${O}/${PROJECT}/${VERSION}"
 	fi
 	export GTWS_PROJECT_REPOS=${repos}
+	debug_print "new repos ${GTWS_PROJECT_REPOS}"
 fi
 
 # Make workspace
