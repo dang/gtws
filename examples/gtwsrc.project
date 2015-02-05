@@ -23,7 +23,7 @@ export GTWS_DOCKER_IMAGE=${GTWS_DOCKER_IMAGE-${GTWS_DEFAULT_DOCKER_IMAGE}}
 
 # If non-standard orgin layout is used, define these two functions
 
-# gtws_project_clone ${GTWS_ORIGIN} ${GTWS_PROJECT} ${GTWS_PROJECT_VERSION} ${GTWS_WSNAME}
+# gtws_project_clone ${GTWS_ORIGIN} ${GTWS_PROJECT} ${GTWS_PROJECT_VERSION} ${GTWS_WSNAME} ${GTWS_SUBMODULE_ORIGIN}
 #
 # Clone a version of a project into ${GTWS_WSPATH} (which is the current working directory)
 #function gtws_project_clone {
@@ -31,6 +31,7 @@ export GTWS_DOCKER_IMAGE=${GTWS_DOCKER_IMAGE-${GTWS_DEFAULT_DOCKER_IMAGE}}
 	#local project=$2
 	#local version=$3
 	#local name=$4
+	#local smorigin=$4
 	#local opvn=$(gtws_opv "${origin}" "${project}" "${version}")/${name}
 	#local wspath=${PWD}
 

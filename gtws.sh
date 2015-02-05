@@ -328,6 +328,7 @@ function gtws_submodule_clone {
 	for sub in ${sub_paths}; do
 		local refopt=""
 		local mirror=$(gtws_submodule_mirror ${opv} ${sub})
+		debug_print "${FUNCNAME} mirror: ${mirror}"
 		if [ -n "${mirror}" ]; then
 			refopt="--reference ${mirror}"
 		fi
@@ -335,11 +336,12 @@ function gtws_submodule_clone {
 	done
 }
 
-# gtws_repo_clone <base-repo-path> <repo> <branch>
+# gtws_repo_clone <base-repo-path> <repo> <branch> [<base-submodule-path>]
 function gtws_repo_clone {
 	local baserpath=${1%/}
 	local repo=$2
 	local branch=$3
+	local basesmpath=$4
 	local rpath="${baserpath}/${repo}"
 	local origpath=${PWD}
 	local rname=${repo%.git}
@@ -349,7 +351,10 @@ function gtws_repo_clone {
 			rpath="${rpath}.git"
 		fi
 	fi
-	debug_print "${FUNCNAME}: cloning ${baserpath} - ${repo} : ${branch} into ${GTWS_WSNAME}"
+	if [ -z "${basesmpath}" ]; then
+		basesmpath="${baserpath}"
+	fi
+	debug_print "${FUNCNAME}: cloning ${baserpath} - ${repo} : ${branch} into ${GTWS_WSNAME} submodules: ${basesmpath}"
 
 	# Main repo
 	#git clone --recurse-submodules -b "${branch}" "${rpath}" || die "failed to clone ${rpath}:${branch}" || return 1
@@ -357,7 +362,7 @@ function gtws_repo_clone {
 
 	# Update submodules
 	cd "${rname}" || die "${FUNCNAME}: failed to cd to ${rpath}" || return 1
-	gtws_submodule_clone "${baserpath}" || return 1
+	gtws_submodule_clone "${basesmpath}" || return 1
 	cd "${origpath}" || die "${FUNCNAME}: Failed to cd to ${origpath}" || return 1
 
 	# Extra files
@@ -381,7 +386,7 @@ function gtws_repo_clone {
 	done
 }
 
-# gtws_project_clone_default ${GTWS_ORIGIN} ${GTWS_PROJECT} ${GTWS_PROJECT_VERSION} ${GTWS_WSNAME}
+# gtws_project_clone_default ${GTWS_ORIGIN} ${GTWS_PROJECT} ${GTWS_PROJECT_VERSION} ${GTWS_WSNAME} [${GTWS_SUBMODULE_ORIGIN}]
 #
 # Clone a version of a project into ${GTWS_WSPATH} (which is the current working directory).  This is the default version of this that clones <origin>/<project>/<version>/*
 function gtws_project_clone_default {
@@ -389,10 +394,12 @@ function gtws_project_clone_default {
 	local project=$2
 	local version=$3
 	local name=$4
+	local smorigin=$5
 	local opv=$(gtws_opv "${origin}" "${project}" "${version}")
 	local wspath=${PWD}
 	local repos=
 	local baserpath=
+	local basesmpath=
 	local -A branches
 
 	if [ -z "${GTWS_PROJECT_REPOS}" ]; then
@@ -418,8 +425,14 @@ function gtws_project_clone_default {
 		baserpath="${opv}"
 	fi
 
+	if [ -n "${smorigin}" ] && [ -d "${smorigin}" ]; then
+		basesmpath=$(gtws_opv "${smorigin}" "${project}" "${version}")
+	else
+		basesmpath="${baserpath}"
+	fi
+
 	for repo in ${repos}; do
-		gtws_repo_clone "${baserpath}" "${repo}" "${branches[${repo}]}"
+		gtws_repo_clone "${baserpath}" "${repo}" "${branches[${repo}]}" "${basesmpath}"
 	done
 }
 

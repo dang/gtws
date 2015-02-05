@@ -143,10 +143,10 @@ touch "${GTWS_WSPATH}/.sdirs"
 
 if [ -n "${HAS_CLONE}" ]; then
 	# Project provided a clone
-	gtws_project_clone "${O}" "${PROJECT}" "${VERSION}" "${GTWS_WSNAME}" || die "clone failed"
+	gtws_project_clone "${O}" "${PROJECT}" "${VERSION}" "${GTWS_WSNAME}" "${GTWS_SUBMODULE_ORIGIN}" || die "clone failed"
 else
 	# Default clone
-	gtws_project_clone_default "${O}" "${PROJECT}" "${VERSION}" "${GTWS_WSNAME}" || die "clone failed"
+	gtws_project_clone_default "${O}" "${PROJECT}" "${VERSION}" "${GTWS_WSNAME}" "${GTWS_SUBMODULE_ORIGIN}" || die "clone failed"
 fi
 
 if [ -n "$(declare -F | grep "\<gtws_project_setup\>")" ]; then

@@ -13,6 +13,7 @@ source "${HOME}/.bashrc"
 
 # GTWS global config goes here.  Env overrides
 export GTWS_ORIGIN=${GTWS_ORIGIN-"${HOME}/origin"}
+export GTWS_SUBMODULE_ORIGIN=${GTWS_SUBMODULE_ORIGIN-"${GTWS_ORIGIN}"}
 export GTWS_BASE_SRCDIR=${GTWS_BASE_SRCDIR-"${HOME}/src"}
 export GTWS_SETPROMPT=${GTWS_SETPROMPT-1}
 export GTWS_FILES_EXTRA=${GTWS_FILES_EXTRA-".project.vim .git/info/exclude"}
