@@ -725,3 +725,12 @@ function wsrcp {
 		gtws_rcp "${path}" "${target}:${base}/${path}"
 	done
 }
+
+# Override "cd" inside the workspace to go to GTWS_WSPATH by default
+function cd {
+	if [ -z "$@" ]; then
+		cd "${GTWS_WSPATH}"
+	else
+		builtin cd $@
+	fi
+}
