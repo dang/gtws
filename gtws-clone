@@ -14,7 +14,7 @@ BRANCH="master"
 
 if [ -n "${GTWS_WS_GUARD}" ]; then
 	REPO_BASE=$(gtws_opvn "${GTWS_ORIGIN}" "${GTWS_PROJECT}" "${GTWS_PROJECT_VERSION}" "${GTWS_WSNAME}")
-	SUBMOUDLE_BASE=$(gtws_opvn "${GTWS_SUBMODULE_ORIGIN:-${GTWS_ORIGIN}}" "${GTWS_PROJECT}" "${GTWS_PROJECT_VERSION}" "${GTWS_WSNAME}")
+	SUBMODULE_BASE=$(gtws_opvn "${GTWS_SUBMODULE_ORIGIN:-${GTWS_ORIGIN}}" "${GTWS_PROJECT}" "${GTWS_PROJECT_VERSION}" "${GTWS_WSNAME}")
 	BRANCH="${GTWS_PROJECT_VERSION}"
 fi
 
@@ -68,7 +68,7 @@ cd "${GTWS_WS_PATH}" || die "Could not cd to ${GTWS_WS_PATH}"
 
 # Clone the repo.
 # XXX TODO - Allow overriding of clone function
-gtws_repo_clone "${REPO_BASE}" "${REPO}" "${BRANCH}" || die "gtws_repo_clone failed"
+gtws_repo_clone "${REPO_BASE}" "${REPO}" "${BRANCH}" "${SUBMODULE_BASE}" || die "gtws_repo_clone failed"
 
 # Set up the repo.
 # XXX TODO - Allow overriding of setup function
