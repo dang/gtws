@@ -66,7 +66,7 @@ while true ; do
 done
 
 if [ -n "${GTWS_WS_GUARD}" ]; then
-	usage "Cannot create workspace in an existng workspace"
+	usage "Cannot create workspace in an existing workspace"
 fi
 
 # Remaining arguments are in $1, $2, etc. as normal
