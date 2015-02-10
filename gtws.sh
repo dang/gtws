@@ -205,11 +205,23 @@ function gtws_rcp {
 	rsync --rsh=ssh -avzS --progress "$@"
 }
 
-# gtws_opvn ${GTWS_ORIGIN} ${GTWS_PROJECT} ${GTWS_PROJECT_VERSION} opv
+function gtws_cpdot {
+	local srcdir=$1
+	local dstdir=$2
+
+	debug_print "${FUNCNAME} - ${srcdir} to ${dstdir}"
+	if [ -d "${srcdir}" ] && [ -d "${dstdir}" ]; then
+		shopt -s dotglob
+		cp -a "${srcdir}"/* "${dstdir}"/
+		shopt -u dotglob
+	fi
+}
+
+# gtws_opvn ${GTWS_ORIGIN} ${GTWS_PROJECT} ${GTWS_PROJECT_VERSION} ${GTWS_WSNAME} opv
 #
 # Result will be in local variable opv.  Or:
 #
-# opv = $(gtws_opvn ${GTWS_ORIGIN} ${GTWS_PROJECT} ${GTWS_PROJECT_VERSION}) ${GTWS_WSNAM}
+# opv = $(gtws_opvn ${GTWS_ORIGIN} ${GTWS_PROJECT} ${GTWS_PROJECT_VERSION} ${GTWS_WSNAME})
 #
 # Result will be in local variable opv.
 function gtws_opvn {
@@ -364,6 +376,9 @@ function gtws_repo_clone {
 	gtws_submodule_clone "${basesmpath}" || return 1
 	cd "${origpath}" || die "${FUNCNAME}: Failed to cd to ${origpath}" || return 1
 
+	# Copy per-repo settings, if they exist
+	gtws_cpdot "${baserpath%/git}/extra/repo/${rname}" "${origpath}/${rname}"
+
 	# Extra files
 	for i in ${GTWS_FILES_EXTRA}; do
 		local esrc=
@@ -426,6 +441,9 @@ function gtws_project_clone_default {
 	for repo in ${repos}; do
 		gtws_repo_clone "${opv}" "${repo}" "${branches[${repo}]}" "${basesmpath}"
 	done
+
+	# Copy per-WS settings, if they exist
+	gtws_cpdot "${opv%/git}/extra/ws" "${wspath}"
 }
 
 # gtws_repo_setup ${wspath} ${repo_path}
@@ -463,6 +481,7 @@ function gtws_project_setup_default {
 	local project=$3
 	local version=$4
 	local wspath=${PWD}
+	local opv=$(gtws_opvn "${origin}" "${project}" "${version}" "placeholder")
 
 	for i in "${wspath}"/*; do
 		gtws_repo_setup "${wspath}" "${i}"
