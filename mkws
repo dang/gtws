@@ -36,8 +36,9 @@ else
 fi
 
 # Set usage output
-USAGE="[-h |--help] [-p <project> | --project=<project>] [-v <version> | --version=<version>] [-V | --verbose] <name>"
+USAGE="[-h |--help] [-s <submodule-base> | --submodule-base=<submodule-base>] [-p <project> | --project=<project>] [-v <version> | --version=<version>] [-V | --verbose] <name>"
 LONGUSAGE="\t-h, --help\n\t\tPrint this help message
+\t-s <submodule-base>, --submodule-base=<submodule-base>\n\t\tBase dir for submodules (default: project origin)
 \t-p <project>, --project=<project>\n\t\tProject (default: ${PROJECT:-none})
 \t-v <version>, --version=<version>\n\t\tProject version (default: ${VERSION})
 \t-V, --verbose\n\t\tBe verbose
@@ -47,7 +48,7 @@ LONGUSAGE="\t-h, --help\n\t\tPrint this help message
 ME=$(basename $0)
 
 # Parse arguments
-ARGS=`getopt -o hVp:v: --long help,verbose,project:,version: -n "${ME}" -- "$@"`
+ARGS=`getopt -o hVs:p:v: --long help,verbose,submodule-base:,project:,version: -n "${ME}" -- "$@"`
 
 if [ $? != 0 ] ; then
 	usage 
@@ -57,6 +58,7 @@ eval set -- "$ARGS"
 while true ; do
 	case "$1" in
 		-h|--help) usage; shift ;;
+		-s|--submodule-base) SUBMODULE_BASE=$2 ; shift 2 ;;
 		-p|--project) PROJECT=$2 ; shift 2 ;;
 		-v|--version) VERSION=$2 ; shift 2 ;;
 		-V|--verbose) export GTWS_VERBOSE=yes; shift ;;
@@ -106,6 +108,10 @@ source "${GTWS_WSPATH}"/.gtwsrc
 # Origin
 O="${GTWS_ORIGIN:=${HOME}/origin}"
 
+if [ -z "${SUBMODULE_BASE}" ]; then
+	SUBMODULE_BASE=$(gtws_opvn "${GTWS_SUBMODULE_ORIGIN:-${O}}" "${PROJECT}" "${VERSION}" "${GTWS_WSNAME}")
+fi
+
 HAS_CLONE=$(declare -F | grep "\<gtws_project_clone\>")
 if [ -z "${HAS_CLONE}" ]; then
 	gtws_opvn "${O}" "${PROJECT}" "${VERSION}" "${GTWS_WSNAME}" opv
@@ -144,10 +150,10 @@ touch "${GTWS_WSPATH}/.sdirs"
 
 if [ -n "${HAS_CLONE}" ]; then
 	# Project provided a clone
-	gtws_project_clone "${O}" "${PROJECT}" "${VERSION}" "${GTWS_WSNAME}" "${GTWS_SUBMODULE_ORIGIN}" || die "clone failed"
+	gtws_project_clone "${O}" "${PROJECT}" "${VERSION}" "${GTWS_WSNAME}" "${SUBMODULE_BASE}" || die "clone failed"
 else
 	# Default clone
-	gtws_project_clone_default "${O}" "${PROJECT}" "${VERSION}" "${GTWS_WSNAME}" "${GTWS_SUBMODULE_ORIGIN}" || die "clone failed"
+	gtws_project_clone_default "${O}" "${PROJECT}" "${VERSION}" "${GTWS_WSNAME}" "${SUBMODULE_BASE}" || die "clone failed"
 fi
 
 if [ -n "$(declare -F | grep "\<gtws_project_setup\>")" ]; then

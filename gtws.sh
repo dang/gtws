@@ -400,7 +400,7 @@ function gtws_repo_clone {
 	done
 }
 
-# gtws_project_clone_default ${GTWS_ORIGIN} ${GTWS_PROJECT} ${GTWS_PROJECT_VERSION} ${GTWS_WSNAME} [${GTWS_SUBMODULE_ORIGIN}]
+# gtws_project_clone_default ${GTWS_ORIGIN} ${GTWS_PROJECT} ${GTWS_PROJECT_VERSION} ${GTWS_WSNAME} [${SUBMODULE_BASE}]
 #
 # Clone a version of a project into ${GTWS_WSPATH} (which is the current working directory).  This is the default version of this that clones <origin>/<project>/<version>/*
 function gtws_project_clone_default {
@@ -408,11 +408,10 @@ function gtws_project_clone_default {
 	local project=$2
 	local version=$3
 	local name=$4
-	local smorigin=$5
+	local basesmpath=$5
 	local opv=$(gtws_opvn "${origin}" "${project}" "${version}" "${name}")
 	local wspath=${PWD}
 	local repos=
-	local basesmpath=
 	local -A branches
 
 	if [ -z "${GTWS_PROJECT_REPOS}" ]; then
@@ -432,9 +431,7 @@ function gtws_project_clone_default {
 		done
 	fi
 
-	if [ -n "${smorigin}" ] && [ -d "${smorigin}" ]; then
-		basesmpath=$(gtws_opvn "${smorigin}" "${project}" "${version}" "${name}")
-	else
+	if [ -z "${basesmpath}" ] || [ ! -d "${basesmpath}" ]; then
 		basesmpath="${opv}"
 	fi
 
