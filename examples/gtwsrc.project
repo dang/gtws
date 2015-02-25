@@ -130,12 +130,12 @@ export CPPFLAGS=${CPPFLAGS-"${CFLAGS}"}
 
 function gtws_cmake {
 (
-	src=$(basename ${PWD})
-	dir=$(basename $(dirname ${PWD}))
+	local src=$(basename ${PWD})
+	local dir=$(basename $(dirname ${PWD}))
 	if [  "${dir}" != "build" ]; then
 		die "Not in a build directory"
 	fi
-	cmkdir="../../${src}"
+	local cmkdir="../../${src}"
 	if [ ! -f "${cmkdir}"/CMakeLists.txt ]; then
 		cmkdir="../../${src}/src"
 	fi
@@ -189,4 +189,21 @@ function gtws_kmod_install {
 	echo modprobe -a ${mnames}
 	sudo modprobe -a ${mnames}
 	echo "Done"
+}
+
+function gtws_interdiff {
+	local target=$1
+	local repo=$(basename ${PWD})
+	local mainpatch="${GTWS_WSPATH}/patches/${repo}-full.patch"
+	local interpatch="${GTWS_WSPATH}/patches/${repo}-incremental.patch"
+
+	if [ -z "${target}" ]; then
+		echo "Usage: ${FUNCNAME} <targethost>"
+		die "Must give targethost" || return 1
+	fi
+	if [ -f "${mainpatch}" ]; then
+		git diff | interdiff "${mainpatch}" - > "${interpatch}"
+	fi
+	git diff > "${mainpatch}"
+	gtws_rcp "${mainpatch}" "${interpatch}" "${target}:${GTWS_WSPATH}/patches"
 }
