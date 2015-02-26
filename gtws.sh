@@ -486,6 +486,7 @@ function gtws_project_setup_default {
 
 	mkdir "${wspath}"/install
 	mkdir "${wspath}"/chroots
+	mkdir "${wspath}"/patches
 }
 
 # load_rc /path/to/workspace
