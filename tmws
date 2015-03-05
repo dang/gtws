@@ -102,7 +102,8 @@ if ! ${RUNNING} ; then
 		split-window -v  "startws -p ${PROJECT} -v ${VERSION} ${WSNAME}" \; \
 		split-window -v  "startws -p ${PROJECT} -v ${VERSION} ${WSNAME}" \; \
 		select-layout even-horizontal \; \
-		select-window -t :0
+		select-window -t :0 \; \
+		set-option -g status-left "${HOSTNAME}:#S"
 else
 	gtws_tmux_cleanup
 
