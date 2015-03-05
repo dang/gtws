@@ -50,9 +50,11 @@ fi
 if [ -z "${GTWS_SAVEPATH}" ]; then
 	export GTWS_SAVEPATH="${PATH}"
 fi
+PATH="${GTWS_SAVEPATH}:${GTWS_WSPATH}/install/bin:${GTWS_WSPATH}/install/sbin"
 if [ -n "${GTWS_PATH_EXTRA}" ]; then
-	export PATH=$GTWS_SAVEPATH:"${GTWS_PATH_EXTRA}"
+	PATH=${PATH}:"${GTWS_PATH_EXTRA}"
 fi
+export PATH
 
 export CDPATH=":$GTWS_WSPATH"
 
