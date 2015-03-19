@@ -445,6 +445,9 @@ function gtws_project_clone_default {
 
 # gtws_repo_setup ${wspath} ${repo_path}
 #
+# The project can define gtws_repo_setup_local taking the same args to do
+# project-specific setup.  It will be called last.
+#
 # Post-clone setup for an individual repo
 function gtws_repo_setup {
 	local wspath=$1
@@ -455,24 +458,31 @@ function gtws_repo_setup {
 		return 0
 	fi
 
-	cd "${rpath}/src" 2>/dev/null || cd ${rpath} || die "Couldn't cd to ${rpath}" || return 1
+	cd "${rpath}/src" 2>/dev/null \
+		|| cd ${rpath} \
+		|| die "Couldn't cd to ${rpath}" || return 1
 
 	maketags ${GTWS_MAKETAGS_OPTS} > /dev/null 2> /dev/null &
-	if [ -x "src/scripts/git_hooks/install_git_hooks.sh" ]; then
-		./src/scripts/git_hooks/install_git_hooks.sh
-	fi
 
 	cd ${wspath} || die "Couldn't cd to ${wspath}" || return 1
 
 	mkdir -p "${wspath}/build/$(basename ${rpath})"
 
 	cd "${savedir}"
+
+	if [ -n "$(declare -F | grep "\<gtws_repo_setup_local\>")" ]; then
+		gtws_repo_setup_local "${wspath}" "${rpath}" \
+			|| die "local repo setup failed" || return 1
+	fi
 }
 
-# gtws_project_setup_default ${GTWS_WSNAME} ${GTWS_ORIGIN} ${GTWS_PROJECT} ${GTWS_PROJECT_VERSION}
+# gtws_project_setup${GTWS_WSNAME} ${GTWS_ORIGIN} ${GTWS_PROJECT} ${GTWS_PROJECT_VERSION}
+#
+# The project can define gtws_project_setup_local taking the same args to do
+# project-specific setup.  It will be called last.
 #
 # Post clone setup of a workspace in ${GTWS_WSPATH} (which is PWD)
-function gtws_project_setup_default {
+function gtws_project_setup {
 	local wsname=$1
 	local origin=$2
 	local project=$3
@@ -487,6 +497,11 @@ function gtws_project_setup_default {
 	mkdir "${wspath}"/install
 	mkdir "${wspath}"/chroots
 	mkdir "${wspath}"/patches
+
+	if [ -n "$(declare -F | grep "\<gtws_project_setup_local\>")" ]; then
+		gtws_project_setup_local "${wsname}" "${origin}" "${project}" \
+			"${version}" || die "local project setup failed" || return 1
+	fi
 }
 
 # load_rc /path/to/workspace

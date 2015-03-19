@@ -52,10 +52,31 @@ export GTWS_DOCKER_IMAGE=${GTWS_DOCKER_IMAGE-${GTWS_DEFAULT_DOCKER_IMAGE}}
 
 # If custom post-clone setup is desired, define this function
 
-# gtws_project_setup ${GTWS_WSNAME} ${GTWS_ORIGIN} ${GTWS_PROJECT} ${GTWS_PROJECT_VERSION}
+# gtws_repo_setup_local ${wspath} ${repo_path}
 #
-# Post clone setup of a workspace in ${GTWS_WSPATH} (which is PWD)
-#function gtws_project_setup {
+# It will be called after the repo is cloned and set up
+#
+# Post-clone setup for an individual repo
+#function gtws_repo_setup_local {
+	#local wspath=$1
+	#local rpath=$2
+	#local savedir="${PWD}"
+
+	#cd ${rpath} || die "Couldn't cd to ${rpath}" || return 1
+	#if [ -x "src/scripts/git_hooks/install_git_hooks.sh" ]; then
+		#./src/scripts/git_hooks/install_git_hooks.sh
+	#fi
+#}
+
+
+# If custom project final setup is desired, define this function
+
+# gtws_project_setup_local ${GTWS_WSNAME} ${GTWS_ORIGIN} ${GTWS_PROJECT} ${GTWS_PROJECT_VERSION}
+#
+# This is called after the global project setup.
+#
+# Final setup of a workspace in ${GTWS_WSPATH} (which is PWD)
+#function gtws_project_setup_local {
 	#local wsname=$1
 	#local origin=$2
 	#local project=$3
@@ -63,32 +84,29 @@ export GTWS_DOCKER_IMAGE=${GTWS_DOCKER_IMAGE-${GTWS_DEFAULT_DOCKER_IMAGE}}
 	#local wspath=${PWD}
 	#local opg="${origin}/${project}/gtws"
 
-	## Call the default one to make tags and whatnot
-	#gtws_project_setup_default "$@"
-
 	## Setup local to this project
 	#cd "${wspath}/enkive" || die "Failed to cd to ${wspath}/enkive"
 	#echo "Creating build.properties"
 	#scp "${opg}/build.properties" "." ||
-		#die "Couldn't copy build.properties"
+		#die "Couldn't copy build.properties" || return 1
 	#sed -i "s#@GTWSJAVAPATH@#${GTWS_JAVA_PATH}#" "build.properties" ||
-		#die "java sed failed"
+		#die "java sed failed" || return 1
 
 	#echo "Creating .project"
 	#scp "${opg}/enkive.project" ".project" ||
-		#die "Couldn't copy .project"
+		#die "Couldn't copy .project" || return 1
 	#sed -i "s#@NAME@#${i}#" ".project" ||
-		#die "project name sed failed"
+		#die "project name sed failed" || return 1
 	#git update-index --assume-unchanged .project ||
-		#die "unchanged project failed"
+		#die "unchanged project failed" || return 1
 
 	#sed -i "s#kind=\"var\" path=\"ENKIVE_JAVA#kind=\"lib\" path=\"${GTWS_JAVA_PATH}#" ".classpath" ||
-		#die "ENKIVE_JAVA sed failed"
+		#die "ENKIVE_JAVA sed failed" || return 1
 	#sed -i "s#kind=\"var\" path=\"INDRI_INSTALL#kind=\"lib\" path=\"/opt/indri#" ".classpath" ||
-		#die "INDRI_INSTALL sed failed"
+		#die "INDRI_INSTALL sed failed" || return 1
 	#git update-index --assume-unchanged .classpath ||
-		#die "unchanged classpath failed"
-	#cd ${wspath} || die "Couldn't cd to ${wspath}"
+		#die "unchanged classpath failed" || return 1
+	#cd ${wspath} || die "Couldn't cd to ${wspath}" || return 1
 
 	#echo "Setting up eclipse"
 	#scp -r "${opg}/.metadata/" .

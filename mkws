@@ -156,10 +156,6 @@ else
 	gtws_project_clone_default "${O}" "${PROJECT}" "${VERSION}" "${GTWS_WSNAME}" "${SUBMODULE_BASE}" || die "clone failed"
 fi
 
-if [ -n "$(declare -F | grep "\<gtws_project_setup\>")" ]; then
-	gtws_project_setup "${GTWS_WSNAME}" "${O}" "${PROJECT}" "${VERSION}" || die "setup failed"
-else
-	gtws_project_setup_default "${GTWS_WSNAME}" "${O}" "${PROJECT}" "${VERSION}" || die "setup failed"
-fi
+gtws_project_setup "${GTWS_WSNAME}" "${O}" "${PROJECT}" "${VERSION}" || die "setup failed"
 
 echo "Done"
