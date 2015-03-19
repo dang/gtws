@@ -743,3 +743,25 @@ function cd {
 		builtin cd $@
 	fi
 }
+
+# Generate diffs/interdiffs for changes and ship to WS on other boxes
+function gtws_interdiff {
+	local targets=$@
+	local target=
+	local repo=$(basename ${PWD})
+	local mainpatch="${GTWS_WSPATH}/patches/${repo}-full.patch"
+	local interpatch="${GTWS_WSPATH}/patches/${repo}-incremental.patch"
+
+	if [ -z "${targets}" ]; then
+		echo "Usage: ${FUNCNAME} <targethost>"
+		die "Must give targethost" || return 1
+	fi
+	if [ -f "${mainpatch}" ]; then
+		git diff | interdiff "${mainpatch}" - > "${interpatch}"
+	fi
+	git diff > "${mainpatch}"
+	for target in ${targets}; do
+		gtws_rcp "${mainpatch}" "${interpatch}" \
+			"${target}:${GTWS_WSPATH}/patches"
+	done
+}
