@@ -161,7 +161,7 @@ function gtws_cmake {
 		die "Could not find CMakeLists.txt in \"../../${src}\" or \"../../${src}/src\""
 	fi
 	echo "Building for ${src}"
-	cd .. && rm -rf "${src}" && mkdir "${src}" && cd "${src}" && ccmake "${cmkdir}"
+	cd .. && rm -rf "${src}" && mkdir "${src}" && cd "${src}" && ccmake $@ "${cmkdir}"
 	echo "Done"
 )
 	cd .
