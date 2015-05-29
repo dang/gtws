@@ -55,7 +55,7 @@ while true ; do
 	case "$1" in
 		-h|--help) usage; shift ;;
 		-a|--all) ALL="--all"; shift ;;
-		-f|--force) FORCE="yes"; shift ;;
+		-f|--force) FORCE="--force"; shift ;;
 		-S|--stash) STASH="yes"; shift ;;
 		-t|--tags) TAGS="--tags"; shift ;;
 		-b|--branch) BRANCH=$2 ; shift 2 ;;
@@ -185,16 +185,16 @@ function cmd_sync {
 function cmd_push {
 	is_inited || die "push - Repo has not been initialized" || return 1
 	if [ -n "${TAGS}" ]; then
-		git push ${TAGS} "${FORK_REMOTENAME}" \
+		git push ${FORCE} ${TAGS} "${FORK_REMOTENAME}" \
 			|| die "push - failed to push tags to fork remote" || return 1
 	fi
 
 	if [ -n "${ALL}" ]; then
-		git push --all "${FORK_REMOTENAME}" \
+		git push ${FORCE} --all "${FORK_REMOTENAME}" \
 			|| die "push - failed to push all branches to fork remote" \
 			|| return 1
 	elif [ -n "${BRANCH}" ]; then
-		git push "${FORK_REMOTENAME}" "${BRANCH}" \
+		git push ${FORCE} "${FORK_REMOTENAME}" "${BRANCH}" \
 			|| die "push - failed to push ${BRANCH} to fork remote" \
 			|| return 1
 	fi
