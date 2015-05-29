@@ -130,7 +130,8 @@ export GTWS_DOCKER_IMAGE=${GTWS_DOCKER_IMAGE-${GTWS_DEFAULT_DOCKER_IMAGE}}
 
 # Allow WS to make things installed locally be runnable
 export GTWS_LD_LIBRARY_PATH=${GTWS_LD_LIBRARY_PATH-"${GTWS_WSPATH}/install/lib:${GTWS_WSPATH}/install/lib64"}
-export GTWS_PYTHONPATH=${GTWS_PYTHONPATH-"${GTWS_WSPATH}/install/lib/python2.7/site-packages"}
+PYVERSION=$(basename $(dirname $(python -m site --user-site)))
+export GTWS_PYTHONPATH=${GTWS_PYTHONPATH-"${GTWS_WSPATH}/install/lib/${PYVERSION}/site-packages"}
 
 # Stuff specific to this project.  It can be assumed that the following are set:
 #	GTWS_WSPATH - Path to the workspace
