@@ -126,6 +126,7 @@ function sync_branch {
 	git reset --hard "${remote}/${branch}" \
 		|| die "${FUNCNAME} - Failed to reset ${branch} to ${remote}" || return 1
 	git clean -f -d || die "${FUNCNAME} - Failed to clean ${branch}" || return 1
+	git submodule update || die "${FUNCNAME} - Failed to update submodules for ${branch}" || return 1
 }
 
 # Sync all branches from a remote to this repo
