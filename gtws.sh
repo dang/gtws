@@ -90,12 +90,18 @@ usage() {
 	else
 		myusage="No usage given"
 	fi
+	local me;
+	if [ -n "${ME}" ]; then
+		me=${ME}
+	else
+		me=$(basename $0)
+	fi
 	if [ -n "$1" ]; then
 		echo "$@"
 	fi
 	echo ""
 	echo "Usage:"
-	echo "`basename $0` ${myusage}"
+	echo "${me} ${myusage}"
 	if [ -n "${LONGUSAGE}" ]; then
 		echo -e "${LONGUSAGE}"
 	fi

@@ -22,19 +22,17 @@ setcommand() {
 }
 
 # Set usage output
-USAGE="[-h |--help] (-i | --init) | (-s | --sync) | (-p | --push)"
+USAGE="[-h |--help] (info | init | push | sync)"
 LONGUSAGE="Common options:
 \t-h, --help\n\t\tPrint this help message
-\t-a, --all\n\t\tOperate on all branches
-\t-b <branch>, --branch=<branch>\n\t\tOperate on given branch
-\t-t, --tags\n\t\tOperate on all tags
-\t-f, --force\n\t\tForce operation, even if branches differ
-\t-S, --stash\n\t\tStash before operation
 
 \t Commands:
-\t-i, --init <fork-repo-uri> <upstream-repo-uri>\n\t\tInitialize syncing repo.  Must be done once.
-\t-s, --sync\n\t\tSync fork repo with upstream repo.
-\t-p, --push\n\t\tPush from local repo to fork repo.  One of --branch, --all, or --tags must be given.
+\tinfo\n\t\tPrints information about the sync repo and state
+\tinit\n\t\tInitialize syncing repo.  Must be done once.
+\tsync\n\t\tSync local fork repo with upstream repo.
+\tpush\n\t\tPush from local fork repo to remote fork repo.
+
+\tFor more info about each command, pass --help to that command
 "
 # Standard functions
 GTWS_LOC=$(readlink -f $(dirname "$0"))
@@ -43,8 +41,8 @@ source ${GTWS_LOC}/gtws.sh
 # Script name
 ME=$(basename $0)
 
-# Parse arguments
-ARGS=`getopt -o hatfSspb:i: --long help,all,tags,force,stash,sync,push,branch:,init: -n "${ME}" -- "$@"`
+# Parse global arguments
+ARGS=`getopt -o +h --long help -n "${ME}" -- "$@"`
 
 if [ $? != 0 ] ; then
 	usage "invalid arguments"
@@ -54,44 +52,157 @@ eval set -- "$ARGS"
 while true ; do
 	case "$1" in
 		-h|--help) usage; shift ;;
-		-a|--all) ALL="--all"; shift ;;
-		-f|--force) FORCE="--force"; shift ;;
-		-S|--stash) STASH="yes"; shift ;;
-		-t|--tags) TAGS="--tags"; shift ;;
-		-b|--branch) BRANCH=$2 ; shift 2 ;;
-		-i|--init) setcommand "init" $2; shift 2;;
-		-s|--sync) setcommand "sync"; shift 1;;
-		-p|--push) setcommand "push"; shift 1;;
 		--) shift ; break ;;
 		* ) usage "Invalid argument $1";;
 	esac
 done
 
-# Remaining arguments are in $1, $2, etc. as normal
-# Argument checking
+info_opts() {
+	local ME="${ME} ${COMMAND}"
+	local USAGE="info [-h |--help]"
+	local LONGUSAGE="
+\t-h, --help\n\t\tPrint this help message
+"
+	local SUBARGS=`getopt -o h --long help -n "${ME}" -- "$@"`
+	if [ $? != 0 ] ; then
+		usage "invalid arguments"
+	fi
+	eval set -- "$SUBARGS"
+
+	while true ; do
+		case "$1" in
+			-h|--help) usage; shift ;;
+			--) shift ; break ;;
+			* ) usage "Invalid argument $1";;
+		esac
+	done
+}
+
+init_opts() {
+	local ME="${ME} ${COMMAND}"
+	local USAGE="[-h |--help] <fork-repo-uri> <upstream-repo-uri>"
+	local LONGUSAGE="
+Initialize syncing repo.  Must be done once.
+
+\t-h, --help\n\t\tPrint this help message
+\t<fork-repo-uri>\n\t\tURI of repository containing fork
+\t<upstream-repo-uri>\n\t\tURI of upsstream repo fork was made from
+"
+	local SUBARGS=`getopt -o h --long help -n "${ME}" -- "$@"`
+	if [ $? != 0 ] ; then
+		usage "invalid arguments"
+	fi
+	eval set -- "$SUBARGS"
+
+	while true ; do
+		case "$1" in
+			-h|--help) usage; shift ;;
+			--) shift ; break ;;
+			* ) usage "Invalid argument $1";;
+		esac
+	done
+	if [ -z "$1" ]; then
+		usage "init requires two parameters - no fork repo give"
+	fi
+	FORK_REPO=$1; shift
+	if [ -z "$1" ]; then
+		usage "init requires two parameters - no upstream repo give"
+	fi
+	UPSTREAM_REPO=$1; shift
+}
+
+sync_opts() {
+	local ME="${ME} ${COMMAND}"
+	local USAGE="[-h |--help] [-a | --all] [-t | --tags] [-f | --force] [-s | --stash] [<branch>]"
+	local LONGUSAGE="
+Sync the local forked repo with it's upstream.  Either --all, or <branch> must be given.
+
+\t-h, --help\n\t\tPrint this help message
+\t-a, --all\n\t\tOperate on all branches
+\t-t, --tags\n\t\tSync tags in addition to commits
+\t-f, --force\n\t\tForce operation, even if branches differ
+\t-S, --stash\n\t\tStash before operation
+\t<branch>\n\t\tBranch to operate on.
+"
+	local SUBARGS=`getopt -o hafst --long help,all,force,stash,tags -n "${ME}" -- "$@"`
+	if [ $? != 0 ] ; then
+		usage "invalid arguments"
+	fi
+	eval set -- "$SUBARGS"
+
+	while true ; do
+		case "$1" in
+			-h|--help) usage; shift ;;
+			-a|--all) ALL="--all"; shift ;;
+			-f|--force) FORCE="--force"; shift ;;
+			-S|--stash) STASH="yes"; shift ;;
+			-t|--tags) TAGS="--tags"; shift ;;
+			--) shift ; break ;;
+			* ) usage "Invalid argument $1";;
+		esac
+	done
+	if [ -n "$1" ]; then
+		if [ -n "${ALL}" ]; then
+			usage "Cannot give both <branch> and --all"
+		fi
+		BRANCH=$1; shift
+	fi
+	if [[ -z "${BRANCH}" && -z "${ALL}" ]]; then
+		usage "Must give one of <branch> or --all"
+	fi
+}
+
+push_opts() {
+	local ME="${ME} ${COMMAND}"
+	local USAGE="[-h |--help] [-a | --all] [-t | --tags] [-f | --force] [<branch>]"
+	local LONGUSAGE="
+Push the local forked repo to it's remote.  Either --all, or <branch> must be given.
+
+\t-h, --help\n\t\tPrint this help message
+\t-a, --all\n\t\tOperate on all branches
+\t-t, --tags\n\t\tSync tags in addition to commits
+\t-f, --force\n\t\tForce operation, even if branches differ
+\t<branch>\n\t\tBranch to operate on.
+"
+	local SUBARGS=`getopt -o haft --long help,all,force,tags -n "${ME}" -- "$@"`
+	if [ $? != 0 ] ; then
+		usage "invalid arguments"
+	fi
+	eval set -- "$SUBARGS"
+
+	while true ; do
+		case "$1" in
+			-h|--help) usage; shift ;;
+			-a|--all) ALL="--all"; shift ;;
+			-f|--force) FORCE="--force"; shift ;;
+			-t|--tags) TAGS="--tags"; shift ;;
+			--) shift ; break ;;
+			* ) usage "Invalid argument $1";;
+		esac
+	done
+	if [ -n "$1" ]; then
+		if [ -n "${ALL}" ]; then
+			usage "Cannot give both <branch> and --all"
+		fi
+		BRANCH=$1; shift
+	fi
+	if [[ -z "${BRANCH}" && -z "${ALL}" ]]; then
+		usage "Must give one of <branch> or --all"
+	fi
+}
+
+# Now get the subcommand.  It will be in $1.
+COMMAND=$1; shift
 case "${COMMAND}" in
-	"init")
-		if [ -z "$1" ]; then
-			usage "--init requires two parameters"
-		fi
-		FORK_REPO=${CARG}
-		UPSTREAM_REPO=$1
-		;;
-	"sync")
-		if [[ -z "${BRANCH}" && -z "${TAGS}" && -z "${ALL}" ]]; then
-			usage "--sync needs one of --branch, --all, or --tags"
-		fi
-		;;
-	"push")
-		if [[ -z "${BRANCH}" && -z "${TAGS}" && -z "${ALL}" ]]; then
-			usage "--push needs one of --branch, --all, or --tags"
-		fi
-		;;
-	"unset")
-		usage "Must give a command"
-		;;
+	"info") info_opts $@ ;;
+	"init") init_opts $@ ;;
+	"push") push_opts $@ ;;
+	"sync") sync_opts $@ ;;
+	"") usage "Must give a command" ;;
 	* ) usage "Unknown command ${COMMAND}";;
 esac
+
+# Remaining arguments are in $1, $2, etc. as normal
 
 # Source the git environment.  Checks to see if we're in a git repo
 SUBDIRECTORY_OK=Yes
@@ -154,6 +265,25 @@ function is_inited {
 	return 0
 }
 
+function cmd_info {
+	if ! is_inited; then
+		die "${COMMAND} - Repo is not initialized" && return 1
+	fi
+
+	local remotes=$(git remote -v show)
+	mapfile -t <<< "${remotes}"
+	for entry in "${MAPFILE[@]}"; do
+		local rem=($entry)
+		if [ "${rem[2]}" != "(fetch)" ]; then
+			continue
+		elif [ "${rem[0]}" == "${FORK_REMOTENAME}" ]; then
+			echo -e "Fork repo:\t${rem[1]}"
+		elif [ "${rem[0]}" == "${UPSTREAM_REMOTENAME}" ]; then
+			echo -e "Upstream repo:\t${rem[1]}"
+		fi
+	done
+}
+
 function cmd_init {
 	is_inited && die "init - Repo is already initialized" && return 1
 
@@ -203,15 +333,10 @@ function cmd_push {
 
 # Run command
 case "${COMMAND}" in
-	"init")
-		cmd_init
-		;;
-	"sync")
-		cmd_sync
-		;;
-	"push")
-		cmd_push
-		;;
+	"info") cmd_info ;;
+	"init") cmd_init ;;
+	"push") cmd_push ;;
+	"sync") cmd_sync ;;
 	* ) usage "Unknown command ${COMMAND}";;
 esac
 
