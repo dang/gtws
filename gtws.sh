@@ -786,3 +786,16 @@ function gtws_interdiff {
 			"${target}:${GTWS_WSPATH}/patches"
 	done
 }
+
+function gtws_debug {
+	local cmd=$1
+	if [ -z "${cmd}" ]; then
+		echo "Must give a command"
+		echo
+		die "${FUNCNAME} <cmd-path>" || return 1
+	fi
+	local cmdbase=$(basename $cmd)
+	local pid=$(pgrep "${cmdbase}")
+
+	cgdb ${cmd} ${pid}
+}
