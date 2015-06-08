@@ -238,11 +238,8 @@ function gtws_smopvn {
 	local version=$3
 	local name=$4
 	local  __resultvar=$5
-	local __smopv=
+	local __smopv="${origin}/${project}/submodule"
 
-	gtws_opvn "${origin}" "${project}" "${version}" "${name}" __smopv || return 1
-	__smopv="${__smopv%/git}"
-	__smopv="${__smopv}/submodule"
 	if [[ "$__resultvar" ]]; then
 		eval $__resultvar="'$__smopv'"
 	else
