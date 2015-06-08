@@ -109,7 +109,7 @@ source "${GTWS_WSPATH}"/.gtwsrc
 O="${GTWS_ORIGIN:=${HOME}/origin}"
 
 if [ -z "${SUBMODULE_BASE}" ]; then
-	SUBMODULE_BASE=$(gtws_opvn "${GTWS_SUBMODULE_ORIGIN:-${O}}" "${PROJECT}" "${VERSION}" "${GTWS_WSNAME}")
+	SUBMODULE_BASE=$(gtws_smopvn "${GTWS_SUBMODULE_ORIGIN:-${O}}" "${PROJECT}" "${VERSION}" "${GTWS_WSNAME}")
 fi
 
 HAS_CLONE=$(declare -F | grep "\<gtws_project_clone\>")

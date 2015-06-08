@@ -43,7 +43,7 @@ can_die() {
 #
 # Print a message and exit with failure
 die() {
-	echo "Failed: $1"
+	echo -e "Failed: $1" >&2
 	if [ ! -z "$(declare -F | grep "GTWScleanup")" ]; then
 		GTWScleanup
 	fi
@@ -223,13 +223,42 @@ function gtws_cpdot {
 	fi
 }
 
-# gtws_opvn ${GTWS_ORIGIN} ${GTWS_PROJECT} ${GTWS_PROJECT_VERSION} ${GTWS_WSNAME} opv
+# gtws_smopvn ${GTWS_SUBMODULE_ORIGIN:-${GTWS_ORIGIN}} ${GTWS_PROJECT} ${GTWS_PROJECT_VERSION} ${GTWS_WSNAME} smopvn
 #
-# Result will be in local variable opv.  Or:
+# Result will be in local variable smopvn.  Or:
 #
-# opv = $(gtws_opvn ${GTWS_ORIGIN} ${GTWS_PROJECT} ${GTWS_PROJECT_VERSION} ${GTWS_WSNAME})
+# smopvn = $(gtws_smopvn ${GTWS_ORIGIN} ${GTWS_PROJECT} ${GTWS_PROJECT_VERSION} ${GTWS_WSNAME})
 #
-# Result will be in local variable opv.
+# Result will be in local variable smovpn
+#
+# Get the path to submodules for this workspace
+function gtws_smopvn {
+	local origin=$1
+	local project=$2
+	local version=$3
+	local name=$4
+	local  __resultvar=$5
+	local __smopv=
+
+	gtws_opvn "${origin}" "${project}" "${version}" "${name}" __smopv || return 1
+	__smopv="${__smopv%/git}"
+	__smopv="${__smopv}/submodule"
+	if [[ "$__resultvar" ]]; then
+		eval $__resultvar="'$__smopv'"
+	else
+		echo "$__smopv"
+	fi
+}
+
+# gtws_opvn ${GTWS_ORIGIN} ${GTWS_PROJECT} ${GTWS_PROJECT_VERSION} ${GTWS_WSNAME} opvn
+#
+# Result will be in local variable opvn.  Or:
+#
+# opvn = $(gtws_opvn ${GTWS_ORIGIN} ${GTWS_PROJECT} ${GTWS_PROJECT_VERSION} ${GTWS_WSNAME})
+#
+# Result will be in local variable opvn.
+#
+# Get the path to git repos for this workspace
 function gtws_opvn {
 	local origin=$1
 	local project=$2
@@ -243,8 +272,9 @@ function gtws_opvn {
 		debug_print "remote; using opvn $__opv"
 	elif [ ! -d "${__opv}" ]; then
 		__opv="${origin}/${project}/git"
-	elif [ ! -d "${__opv}" ]; then
-		die "No opv for ${origin} ${project} ${version}" || return 1
+		if [ ! -d "${__opv}" ]; then
+			die "No opvn for ${origin} ${project} ${version}" || return 1
+		fi
 	fi
 	if [[ "$__resultvar" ]]; then
 		eval $__resultvar="'$__opv'"
@@ -297,8 +327,8 @@ function gtws_submodule_mirror {
 		#if [[ ${opv} == *:* ]]; then
 		## Remote OPV means clone from that checkout; I don't cm
 		#refopt="--reference ${opv}/${name}/${sub}"
-		if [ -d "${opv}/submodule/${urlbase}" ]; then
-			__mloc="${opv}/submodule/${urlbase}"
+		if [ -d "${opv}/${urlbase}" ]; then
+			__mloc="${opv}/${urlbase}"
 		fi
 	fi
 
@@ -338,9 +368,8 @@ function gtws_submodule_clone {
 	local sub_paths=$(gtws_submodule_paths)
 
 	if [ -z "${opv}" ]; then
-		opv=$(gtws_opvn "${GTWS_ORIGIN}" "${GTWS_PROJECT}" "${GTWS_PROJECT_VERSION}" "${GTWS_WSNAME}")
+		opv=$(gtws_smopvn "${GTWS_SUBMODULE_ORIGIN:-${GTWS_ORIGIN}}" "${GTWS_PROJECT}" "${GTWS_PROJECT_VERSION}" "${GTWS_WSNAME}")
 	fi
-	opv="${opv%/git}"
 	git submodule init || die "${FUNCNAME}: Failed to init submodules" || return 1
 	for sub in ${sub_paths}; do
 		local refopt=""

@@ -12,26 +12,32 @@ source ${GTWS_LOC}/gtws.sh
 
 ORIGIN="none"
 PROJECT=""
+SUBMODULE_BASE=
 
 if [ -n "${GTWS_WS_GUARD}" ]; then
 	REPO_BASE=$(gtws_opvn "${GTWS_ORIGIN}" "${GTWS_PROJECT}" "${GTWS_PROJECT_VERSION}" "${GTWS_WSNAME}")
 	ORIGIN="${GTWS_ORIGIN}"
 	PROJECT="${GTWS_PROJECT}"
+	SUBMODULE_BASE=$(gtws_smopvn "${GTWS_SUBMODULE_ORIGIN:-${GTWS_ORIGIN}}" "${GTWS_PROJECT}" "${GTWS_PROJECT_VERSION}" "${GTWS_WSNAME}" 2>/dev/null)
+	if [ -z "${SUBMODULE_BASE}" ]; then
+		SUBMODULE_BASE="${GTWS_SUBMODULE_ORIGIN:-${GTWS_ORIGIN}}/${PROJECT}/submodule"
+	fi
 fi
 
 # Set usage output
-USAGE="[-h |--help] [-o <origin> | --origin=<origin>] [-p <project> | --project=<project>] [-s | --submodule] [-V | --verbose]"
+USAGE="[-h |--help] [-o <origin> | --origin=<origin>] [-p <project> | --project=<project>] [-s <submodule-base> | --submodule-base=<submodule-base>] [-S | --submodule] [-V | --verbose]"
 LONGUSAGE="\t-h, --help\n\t\tPrint this help message
 \t-o <origin>, --origin=<origin>\n\t\tOrigin location (default: ${ORIGIN})
-\t-o <project>, --project=<project>\n\t\tProject subdir in origin (default: ${PROJECT:-none})
-\t-s, --submodule\n\t\tOnly mirror submodules (adding any new ones)
+\t-p <project>, --project=<project>\n\t\tProject subdir in origin (default: ${PROJECT:-none})
+\t-s <submodule-base>, --submodule-base=<submodule-base>\n\t\tBase dir for submodules (default: ${SUBMODULE_BASE:-none})
+\t-S, --submodule\n\t\tOnly mirror submodules (adding any new ones)
 \t-V, --verbose\n\t\tBe verbose"
 
 # Script name
 ME=$(basename $0)
 
 # Parse arguments
-ARGS=`getopt -o hVso:p: --long help,verbose,submodule,origin:,project: -n "${ME}" -- "$@"`
+ARGS=`getopt -o hVs:So:p: --long help,verbose,submodule,submodule-base:,origin:,project: -n "${ME}" -- "$@"`
 
 if [ $? != 0 ] ; then
 	usage
@@ -43,7 +49,8 @@ while true ; do
 		-h|--help) usage; shift ;;
 		-o|--origin) ORIGIN=$2 ; shift 2 ;;
 		-p|--project) PROJECT=$2 ; shift 2 ;;
-		-s|--submodule) export ONLY_SUBMODULES=yes; shift ;;
+		-s|--submodule-base) SUBMODULE_BASE=$2 ; shift 2 ;;
+		-S|--submodule) export ONLY_SUBMODULES=yes; shift ;;
 		-V|--verbose) export GTWS_VERBOSE=yes; shift ;;
 		--) shift ; break ;;
 		* ) usage "Invalid argument $1";;
@@ -52,7 +59,10 @@ done
 
 # Remaining arguments are in $1, $2, etc. as normal
 if [ ! -d "${ORIGIN}" ]; then
-	usage "${ORIGIN} is not a directory"
+	usage "origin ${ORIGIN} is not a directory"
+fi
+if [ -z "${SUBMODULE_BASE}" ]; then
+	usage "Must give a submodule base"
 fi
 is_git_repo "${PWD}" || usage "Must be run from within a git repo"
 
@@ -70,8 +80,8 @@ fi
 if [ ! -d "${ORIGIN}/${PROJECT}/git" ]; then
 	mkdir -p "${ORIGIN}/${PROJECT}/git" || die "failed to make git dir ${ORIGIN}/${PROJECT}/git"
 fi
-if [ ! -d "${ORIGIN}/${PROJECT}/submodule" ]; then
-	mkdir -p "${ORIGIN}/${PROJECT}/submodule" || die "failed to make submodule dir ${ORIGIN}/${PROJECT}/submodule"
+if [ ! -d "${SUBMODULE_BASE}" ]; then
+	mkdir -p "${SUBMODULE_BASE}" || die "failed to make submodule dir ${SUBMODULE_BASE}"
 fi
 
 git_top_dir REPODIR || die "Could not get top git dir for PWD";
@@ -91,13 +101,13 @@ for sub in ${SUBPATHS}; do
 	urlbase=$(basename ${url})
 	debug_print "url: $urlbase"
 
-	if [ -d "${ORIGIN}/${PROJECT}/submodule/${urlbase}" ]; then
+	if [ -d "${SUBMODULE_BASE}/${urlbase}" ]; then
 		# Already exists
 		echo "mirror for submodule ${urlbase} already exists; skipping"
 		continue
 	fi
 
-	cd "${ORIGIN}/${PROJECT}/submodule" || die "failed to cd to submodule dir"
+	cd "${SUBMODULE_BASE}" || die "failed to cd to submodule dir"
 	git clone --mirror "${url}" || die "Failed to clone submodule mirror ${urlbase}"
 	if [ ! -d "${urlbase}" ]; then
 		if [ -d "${urlbase}.git" ]; then

@@ -11,16 +11,6 @@ COMMAND="unset"
 FORK_REMOTENAME="gtws_github_fork"
 UPSTREAM_REMOTENAME="gtws_github_upstream"
 
-# Helper functions
-setcommand() {
-	if [ "${COMMAND}" == "unset" ]; then
-		COMMAND="$1"
-	else
-		usage "Only one command may be given"
-	fi
-	CARG=$2
-}
-
 # Set usage output
 USAGE="[-h |--help] (info | init | push | sync)"
 LONGUSAGE="Common options:
