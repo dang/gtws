@@ -49,11 +49,12 @@ done
 
 info_opts() {
 	local ME="${ME} ${COMMAND}"
-	local USAGE="info [-h |--help]"
+	local USAGE="[-h |--help]"
 	local LONGUSAGE="
 \t-h, --help\n\t\tPrint this help message
 "
-	local SUBARGS=`getopt -o h --long help -n "${ME}" -- "$@"`
+	local SUBARGS=""
+	SUBARGS=`getopt -o h --long help -n "${ME}" -- "$@"`
 	if [ $? != 0 ] ; then
 		usage "invalid arguments"
 	fi
@@ -78,7 +79,8 @@ Initialize syncing repo.  Must be done once.
 \t<fork-repo-uri>\n\t\tURI of repository containing fork
 \t<upstream-repo-uri>\n\t\tURI of upsstream repo fork was made from
 "
-	local SUBARGS=`getopt -o h --long help -n "${ME}" -- "$@"`
+	local SUBARGS=""
+	SUBARGS=`getopt -o h --long help -n "${ME}" -- "$@"`
 	if [ $? != 0 ] ; then
 		usage "invalid arguments"
 	fi
@@ -92,11 +94,11 @@ Initialize syncing repo.  Must be done once.
 		esac
 	done
 	if [ -z "$1" ]; then
-		usage "init requires two parameters - no fork repo give"
+		usage "init requires two parameters - no fork repo given"
 	fi
 	FORK_REPO=$1; shift
 	if [ -z "$1" ]; then
-		usage "init requires two parameters - no upstream repo give"
+		usage "init requires two parameters - no upstream repo given"
 	fi
 	UPSTREAM_REPO=$1; shift
 }
@@ -114,7 +116,8 @@ Sync the local forked repo with it's upstream.  Either --all, or <branch> must b
 \t-S, --stash\n\t\tStash before operation
 \t<branch>\n\t\tBranch to operate on.
 "
-	local SUBARGS=`getopt -o hafst --long help,all,force,stash,tags -n "${ME}" -- "$@"`
+	local SUBARGS=""
+	SUBARGS=`getopt -o hafst --long help,all,force,stash,tags -n "${ME}" -- "$@"`
 	if [ $? != 0 ] ; then
 		usage "invalid arguments"
 	fi
@@ -154,7 +157,8 @@ Push the local forked repo to it's remote.  Either --all, or <branch> must be gi
 \t-f, --force\n\t\tForce operation, even if branches differ
 \t<branch>\n\t\tBranch to operate on.
 "
-	local SUBARGS=`getopt -o haft --long help,all,force,tags -n "${ME}" -- "$@"`
+	local SUBARGS=""
+	SUBARGS=`getopt -o haft --long help,all,force,tags -n "${ME}" -- "$@"`
 	if [ $? != 0 ] ; then
 		usage "invalid arguments"
 	fi
@@ -184,10 +188,10 @@ Push the local forked repo to it's remote.  Either --all, or <branch> must be gi
 # Now get the subcommand.  It will be in $1.
 COMMAND=$1; shift
 case "${COMMAND}" in
-	"info") info_opts $@ ;;
-	"init") init_opts $@ ;;
-	"push") push_opts $@ ;;
-	"sync") sync_opts $@ ;;
+	"info") info_opts "$@" ;;
+	"init") init_opts "$@" ;;
+	"push") push_opts "$@" ;;
+	"sync") sync_opts "$@" ;;
 	"") usage "Must give a command" ;;
 	* ) usage "Unknown command ${COMMAND}";;
 esac
