@@ -9,44 +9,137 @@
 # GTWS_DOCKER_OPTS - Additional options to use to create the container
 #
 
-#function GTWScleanup {
-#}
+# Set usage output
+USAGE="[-h |--help] (run | commit | reset)"
+LONGUSAGE="Common options:
+\t-h, --help\n\t\tPrint this help message
+\t-V, --verbose\n\t\tBe verbose
 
+\t Commands:
+\trun\n\t\tRun a shell in docker.  Starts or joins as appropriate.
+\tcommit\n\t\tFreeze the current image, creating a new base image
+\treset\n\t\tReset the current image back to it's base
+
+\tFor more info about each command, pass --help to that command
+"
 # Standard functions
 GTWS_LOC=$(readlink -f $(dirname "$0"))
 source ${GTWS_LOC}/gtws.sh
 GTWS_DOCKER_IMAGE=${GTWS_DOCKER_IMAGE:-${GTWS_DEFAULT_DOCKER_IMAGE:-none}}
 DOCKER_ENV=".gtwsrc_docker"
 
-# Set usage output
-USAGE="[-h |--help] [-V | --verbose] [-c | --clean] [-i <image-name> | --image=<image-name>] [<extra-mount-dir> [<extra-mount-dir...]]"
-LONGUSAGE="\t-h, --help\n\t\tPrint this help message
-\t-i <image-name>, --image=<image-name>\n\t\tDocker image to start (default: ${GTWS_DOCKER_IMAGE})
-\t-V, --verbose\n\t\tBe verbose
-\t-c, --clean\n\t\tStart clean from the image
-\t<extra-mount-dir>\n\t\tExtra directory to mount, in the format /outside/path:/inside/path"
-
 # Script name
 ME=$(basename $0)
 
-# Parse arguments
-ARGS=`getopt -o hVci: --long help,verbose,clean,image: -n "${ME}" -- "$@"`
+# Parse global arguments
+ARGS=`getopt -o +hV --long help,verbose -n "${ME}" -- "$@"`
 
 if [ $? != 0 ] ; then
-	usage 
+	usage "invalid arguments"
 fi
 eval set -- "$ARGS"
 
 while true ; do
 	case "$1" in
 		-h|--help) usage; shift ;;
-		-i|--image) GTWS_DOCKER_IMAGE=$2 ; shift 2 ;;
 		-V|--verbose) export GTWS_VERBOSE=yes; shift ;;
-		-c|--clean) export CLEAN=yes; shift ;;
 		--) shift ; break ;;
-		* ) usage "Invalid argument $1";;
+		* ) usage "Invalid argument $1" ;;
 	esac
 done
+
+run_opts() {
+	local ME="${ME} ${COMMAND}"
+	local USAGE="[-h |--help] [-i <image-name> | --image=<image-name>] [<extra-mount-dir> [<extra-mount-dir...]]"
+	local LONGUSAGE="\t-h, --help\n\t\tPrint this help message
+\t-i <image-name>, --image=<image-name>\n\t\tDocker image to start (default: ${GTWS_DOCKER_IMAGE})
+\t<extra-mount-dir>\n\t\tExtra directory to mount, in the format /outside/path:/inside/path
+"
+	local SUBARGS=""
+	SUBARGS=`getopt -o hi: --long help,image: -n "${ME}" -- "$@"`
+	if [ $? != 0 ] ; then
+		usage "invalid arguments"
+	fi
+	eval set -- "$SUBARGS"
+
+	while true ; do
+		case "$1" in
+			-h|--help) usage; shift ;;
+			-i|--image) GTWS_DOCKER_IMAGE=$2 ; shift 2 ;;
+			--) shift ; break ;;
+			* ) usage "Invalid argument $1" ;;
+		esac
+	done
+	EXTRA_DIRS="${@}"
+}
+
+commit_opts() {
+	local ME="${ME} ${COMMAND}"
+	local USAGE="[-h |--help] [-f |--force] [-m <commit message> | --message=<commit message>] <new-image-name>"
+	local LONGUSAGE="
+Initialize syncing repo.  Must be done once.
+
+\t-h, --help\n\t\tPrint this help message
+\t-f, --force\n\t\tCommit the image, even if it's running
+\t-m <commit message>, --message=<commit message>\n\t\tCommit message for new image.
+\t<new-image-name>\n\t\tName of new image to create
+"
+
+	local SUBARGS=""
+	SUBARGS=`getopt -o hfm: --long help,force,message: -n "${ME}" -- "$@"`
+	if [ $? != 0 ] ; then
+		usage "invalid arguments"
+	fi
+	eval set -- "$SUBARGS"
+
+	while true ; do
+		case "$1" in
+			-h|--help) usage; shift ;;
+			-f|--force) FORCE="--force"; shift ;;
+			-m|--message) COMMIT_MSG=$2; shift 2 ;;
+			--) shift ; break ;;
+			* ) usage "Invalid argument $1" ;;
+		esac
+	done
+	if [ -z "$1" ]; then
+		usage "commit requires a new image name"
+	fi
+	NEW_IMAGE_NAME=$1; shift
+}
+
+reset_opts() {
+	local ME="${ME} ${COMMAND}"
+	local USAGE="[-h |--help]"
+	local LONGUSAGE="
+\t-h, --help\n\t\tPrint this help message
+"
+	local SUBARGS=""
+	SUBARGS=`getopt -o h --long help -n "${ME}" -- "$@"`
+	if [ $? != 0 ] ; then
+		usage "invalid arguments"
+	fi
+	eval set -- "$SUBARGS"
+
+	while true ; do
+		case "$1" in
+			-h|--help) usage; shift ;;
+			--) shift ; break ;;
+			* ) usage "Invalid argument $1" ;;
+		esac
+	done
+}
+
+# Now get the subcommand.  It will be in $1.
+COMMAND=$1; shift
+case "${COMMAND}" in
+	"run") run_opts "$@" ;;
+	"commit") commit_opts "$@" ;;
+	"reset") reset_opts "$@" ;;
+	"") usage "Must give a command" ;;
+	* ) usage "Unknown command ${COMMAND}" ;;
+esac
+
+# Remaining arguments are in $1, $2, etc. as normal
 
 if [ -z "${GTWS_WS_GUARD}" ]; then
 	usage "Must be run from inside a workspace"
@@ -56,43 +149,82 @@ cmd_exists docker || die "Docker not installed"
 
 is_docker && usage "Must not be run from inside docker"
 
-# Remaining arguments are in $1, $2, etc. as normal
-EXTRA_DIRS="${@}"
-
 if [ -z "${GTWS_DOCKER_IMAGE}" ]; then
 	usage "Must specify a docker image"
 fi
 
-MOUNTS="-v ${GTWS_WSPATH}:${GTWS_WSPATH}" 
-for i in ${GTWS_DOCKER_MOUNTS}; do
-	MOUNTS="${MOUNTS} -v $i"
-done
-for i in ${EXTRA_DIRS}; do
-	MOUNTS="${MOUNTS} -v $i"
-done
-
 SESNAME="${GTWS_PROJECT}_${GTWS_PROJECT_VERSION}_${GTWS_WSNAME}"
 
-if [ -n "${CLEAN}" ]; then
+function cmd_run {
+	local mounts="-v ${GTWS_WSPATH}:${GTWS_WSPATH}"
+	for i in ${GTWS_DOCKER_MOUNTS}; do
+		mounts="${mounts} -v $i"
+	done
+	for i in ${EXTRA_DIRS}; do
+		mounts="${mounts} -v $i"
+	done
+
+	local docker_cmd=""
+
+	if [ ! -f "${GTWS_WSPATH}/${DOCKER_ENV}" ]; then
+		# Set up saved environment
+		save_env "${GTWS_WSPATH}/${DOCKER_ENV}"
+	fi
+
+	if docker ps | grep -q "\<${SESNAME}\>" ; then
+		echo "Attaching to docker session for ${GTWS_WSNAME}"
+		docker_cmd="docker exec -t -i ${SESNAME} \
+			${GTWS_LOC}/startws \
+			--project=${GTWS_PROJECT} \
+			--version=${GTWS_PROJECT_VERSION}"
+	elif docker ps -a | grep -q "\<${SESNAME}\>" ; then
+		echo "Starting docker session for ${GTWS_WSNAME}"
+		docker_cmd="docker start -i -a  ${SESNAME}"
+	else
+		echo "Creating docker session for ${GTWS_WSNAME}"
+		docker_cmd="docker run -t -i -w ${GTWS_WSPATH} \
+			--name ${SESNAME} -u ${USER} ${mounts} \
+			${GTWS_DOCKER_OPTS} ${GTWS_DOCKER_IMAGE} \
+			${GTWS_LOC}/startws \
+			--project=${GTWS_PROJECT} \
+			--version=${GTWS_PROJECT_VERSION}"
+	fi
+
+	${docker_cmd}
+
+}
+
+function cmd_commit {
+	local sesid=$(docker ps -a | grep "\<${SESNAME}\>" | awk '{print $1}')
+
+	if [ -z "${sesid}" ]; then
+		die "No session exists for this workspace" || return 1
+	fi
+	if docker ps | grep -q "\<${SESNAME}\>" ; then
+		if [ -z "${FORCE}" ]; then
+			die "Session is running. Exit or use --force" || return 1
+		fi
+	fi
+
+	if [ -z "${COMMIT_MSG}" ]; then
+		COMMIT_MSG="New image ${NEW_IMAGE_NAME}"
+	fi
+
+	echo "Committing current image to ${USER}/${NEW_IMAGE_NAME}"
+	docker commit -m "${COMMIT_MSG}" "${sesid}" "${USER}/${NEW_IMAGE_NAME}"
+}
+
+function cmd_reset {
+	echo "Resetting current image to default"
 	docker rm -f "${SESNAME}"
 	rm -f "${GTWS_WSPATH}/${DOCKER_ENV}"
-fi
+}
 
-if [ ! -f "${GTWS_WSPATH}/${DOCKER_ENV}" ]; then
-	# Set up saved environment
-	save_env "${GTWS_WSPATH}/${DOCKER_ENV}"
-fi
-
-if docker ps | grep -q "\<${SESNAME}\>" ; then
-	echo "Attaching to docker session for ${GTWS_WSNAME}"
-	DOCKER="docker exec -t -i ${SESNAME} /home/${USER}/.scripts/gtws/startws -i --project=${GTWS_PROJECT} --version=${GTWS_PROJECT_VERSION}"
-elif docker ps -a | grep -q "\<${SESNAME}\>" ; then
-	echo "Starting docker session for ${GTWS_WSNAME}"
-	DOCKER="docker start -i -a  ${SESNAME}"
-else
-	echo "Creating docker session for ${GTWS_WSNAME}"
-	DOCKER="docker run -t -i -w ${GTWS_WSPATH} --name ${SESNAME} -u ${USER} ${MOUNTS} ${GTWS_DOCKER_OPTS} ${GTWS_DOCKER_IMAGE} /home/${USER}/.scripts/gtws/startws -i --project=${GTWS_PROJECT} --version=${GTWS_PROJECT_VERSION}"
-fi
-
-${DOCKER}
+# Run command
+case "${COMMAND}" in
+	"run") cmd_run ;;
+	"commit") cmd_commit ;;
+	"reset") cmd_reset ;;
+	* ) usage "Unknown command ${COMMAND}" ;;
+esac
 
