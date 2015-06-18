@@ -117,7 +117,7 @@ function update_repo {
 
 	if [ -n "${bare}" ]; then
 		echo "Updating bare"
-		git fetch --all || die "update of bare repo failed" || return 1
+		git fetch --all --prune || die "update of bare repo failed" || return 1
 	elif [ -n "${svn}" ]; then
 		echo "Updating svn ${branch}"
 		git svn rebase || die "rebase of ${branch} failed" || return 1
