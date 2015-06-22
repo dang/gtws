@@ -107,8 +107,9 @@ fi
 
 
 if [ -n "${SUBCMD}" ]; then
-	echo "${SUBCMD}" > .gtws_subcmd
-	COMMAND="-i .gtws_subcmd"
+	CMDLOC="${BASE}/${PROJECT}/${VERSION}/${GTWS_WSNAME}";
+	echo "${SUBCMD}" > ${CMDLOC}/.gtws_subcmd
+	COMMAND="-i ${CMDLOC}/.gtws_subcmd"
 fi
 # Clear env to get a clean one in the new workspace
 clear_env
