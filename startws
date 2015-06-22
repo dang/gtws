@@ -35,10 +35,11 @@ else
 fi
 
 # Set usage output
-USAGE="[-h |--help] [-i |--init] [-p <project> | --project=<project>] [-v <version> | --version=<version>] [-V | --verbose] <name>"
+USAGE="[-h |--help] [-i |--init] [-c <command> | --command=<command>] [-p <project> | --project=<project>] [-v <version> | --version=<version>] [-V | --verbose] <name>"
 LONGUSAGE="\t-h, --help\n\t\tPrint this help message
 \t-i, --init\n\t\tInit WS tree
 \t-p <project>, --project=<project>\n\t\tProject (default: ${PROJECT:-none})
+\t-c <command>, --command=<command>\n\t\tRun <command> in the workspace and exit
 \t-v <version>, --version=<version>\n\t\tProject version (default: ${VERSION})
 \t-V, --verbose\n\t\tBe verbose
 \t<name>\n\t\tWorkspace name"
@@ -47,7 +48,7 @@ LONGUSAGE="\t-h, --help\n\t\tPrint this help message
 ME=$(basename $0)
 
 # Parse arguments
-ARGS=`getopt -o hVip:v: --long help,verbose,init,project:,version: -n "${ME}" -- "$@"`
+ARGS=`getopt -o hVic:p:v: --long help,verbose,init,command:,project:,version: -n "${ME}" -- "$@"`
 
 if [ $? != 0 ] ; then
 	usage 
@@ -59,6 +60,7 @@ while true ; do
 		-h|--help) usage; shift ;;
 		-i|--init) INIT=yes; shift ;;
 		-p|--project) PROJECT=$2 ; shift 2 ;;
+		-c|--command) SUBCMD=$2 ; shift 2 ;;
 		-v|--version) VERSION=$2 ; shift 2 ;;
 		-V|--verbose) export GTWS_VERBOSE=yes; shift ;;
 		--) shift ; break ;;
@@ -103,9 +105,14 @@ if [ ! -f "${BASE}/${PROJECT}/${VERSION}/${GTWS_WSNAME}/.gtwsrc" ]; then
 	usage "No .gtwsrc for ${PROJECT}/${VERSION}/${GTWS_WSNAME}"
 fi
 
+
+if [ -n "${SUBCMD}" ]; then
+	echo "${SUBCMD}" > .gtws_subcmd
+	COMMAND="-i .gtws_subcmd"
+fi
 # Clear env to get a clean one in the new workspace
 clear_env
 
 cd "${BASE}/${PROJECT}/${VERSION}/${GTWS_WSNAME}"
-debug_print "exec bash --rcfile ${BASE}/${PROJECT}/${VERSION}/${GTWS_WSNAME}/.gtwsrc"
-exec bash --rcfile ${BASE}/${PROJECT}/${VERSION}/${GTWS_WSNAME}/.gtwsrc
+debug_print "exec bash --rcfile ${BASE}/${PROJECT}/${VERSION}/${GTWS_WSNAME}/.gtwsrc ${COMMAND}"
+exec bash --rcfile ${BASE}/${PROJECT}/${VERSION}/${GTWS_WSNAME}/.gtwsrc ${COMMAND}
