@@ -223,6 +223,46 @@ function gtws_cpdot {
 	fi
 }
 
+# gtws_find_dockerfile dockerfile
+#
+# Result will be in local variable dockerfile  Or:
+#
+# dockerfile = $(gtws_find_dockerfile)
+#
+# Result will be in local variable dockerfile
+#
+# Get the path to the most-specific Dockerfile
+function gtws_find_dockerfile {
+	local  __resultvar=$1
+	local __dir="${GTWS_WSDIR}"
+
+	debug_print "${FUNCNAME} - trying ${__dir}"
+	if [ ! -f "${__dir}/Dockerfile" ]; then
+		# Version dir
+		__dir=$(dirname "${__dir}")
+		debug_print "${FUNCNAME} - trying ${__dir}"
+	fi
+	if [ ! -f "${__dir}/Dockerfile" ]; then
+		# Project dir
+		__dir=$(dirname "${__dir}")
+		debug_print "${FUNCNAME} - trying ${__dir}"
+	fi
+	if [ ! -f "${__dir}/Dockerfile" ]; then
+		__dir="${GTWS_LOC}/examples"
+		debug_print "${FUNCNAME} - trying ${__dir}"
+	fi
+	if [ ! -f "${__dir}/Dockerfile" ]; then
+		die "Could not find a Dockerfile" || return 1
+	fi
+
+	debug_print "${FUNCNAME} - found ${__dir}"
+	if [[ "$__resultvar" ]]; then
+		eval $__resultvar="'${__dir}/Dockerfile'"
+	else
+		echo "$__dir"
+	fi
+}
+
 # gtws_smopvn ${GTWS_SUBMODULE_ORIGIN:-${GTWS_ORIGIN}} ${GTWS_PROJECT} ${GTWS_PROJECT_VERSION} ${GTWS_WSNAME} smopvn
 #
 # Result will be in local variable smopvn.  Or:

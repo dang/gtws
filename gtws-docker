@@ -3,6 +3,8 @@
 # Start a docker on this workspace
 #
 # Config
+# GTWS_DEFAULT_DOCKER_BASE_IMAGE - System-wide default base docker image.
+# GTWS_DOCKER_BASE_IMAGE - Docker base image to specialize
 # GTWS_DEFAULT_DOCKER_IMAGE - System-wide default docker image.
 # GTWS_DOCKER_IMAGE - Docker image to use for this workspace.
 # GTWS_DOCKER_MOUNTS - Extra directories to mount as space-separated "/outside/path:/inside/path"
@@ -25,8 +27,10 @@ LONGUSAGE="Common options:
 # Standard functions
 GTWS_LOC=$(readlink -f $(dirname "$0"))
 source ${GTWS_LOC}/gtws.sh
+GTWS_DOCKER_BASE_IMAGE=${GTWS_DOCKER_BASE_IMAGE:-${GTWS_DEFAULT_DOCKER_BASE_IMAGE:-none}}
 GTWS_DOCKER_IMAGE=${GTWS_DOCKER_IMAGE:-${GTWS_DEFAULT_DOCKER_IMAGE:-none}}
 DOCKER_ENV=".gtwsrc_docker"
+DOCKER_USER="${USER}"
 
 # Script name
 ME=$(basename $0)
@@ -50,13 +54,17 @@ done
 
 run_opts() {
 	local ME="${ME} ${COMMAND}"
-	local USAGE="[-h |--help] [-i <image-name> | --image=<image-name>] [<extra-mount-dir> [<extra-mount-dir...]]"
+	local USAGE="[-h |--help] [-b <base-image-name> | --baseimage=<base-image-name>] [-i <image-name> | --image=<image-name>] [-u <user> | --user=<user>] [<extra-mount-dir> [<extra-mount-dir...]]"
 	local LONGUSAGE="\t-h, --help\n\t\tPrint this help message
+\t-b <base-image-name>, --baseimage=<base-image-name>\n\t\tDocker base image to specialize (default: ${GTWS_BASE_DOCKER_IMAGE})
 \t-i <image-name>, --image=<image-name>\n\t\tDocker image to start (default: ${GTWS_DOCKER_IMAGE})
+\t-u <user>, --user=<user>\n\t\tRun as given user (default: ${DOCKER_USER})
 \t<extra-mount-dir>\n\t\tExtra directory to mount, in the format /outside/path:/inside/path
+
+\tIf an image is given, it will be used to start a container.  If no image is given, but a base-image is given, then that image will be specialized to make an image for this workspace, and that new image will be used to start a container.  That image will continue to be used at long as it exists.
 "
 	local SUBARGS=""
-	SUBARGS=`getopt -o hi: --long help,image: -n "${ME}" -- "$@"`
+	SUBARGS=`getopt -o hb:i:u: --long help,baseimage:,image:,user: -n "${ME}" -- "$@"`
 	if [ $? != 0 ] ; then
 		usage "invalid arguments"
 	fi
@@ -66,6 +74,8 @@ run_opts() {
 		case "$1" in
 			-h|--help) usage; shift ;;
 			-i|--image) GTWS_DOCKER_IMAGE=$2 ; shift 2 ;;
+			-b|--baseimage) GTWS_BASE_DOCKER_IMAGE=$2 ; shift 2 ;;
+			-u|--user) DOCKER_USER=$2 ; shift 2 ;;
 			--) shift ; break ;;
 			* ) usage "Invalid argument $1" ;;
 		esac
@@ -109,12 +119,13 @@ Initialize syncing repo.  Must be done once.
 
 reset_opts() {
 	local ME="${ME} ${COMMAND}"
-	local USAGE="[-h |--help]"
+	local USAGE="[-h |--help] [-b | --baseimage]"
 	local LONGUSAGE="
 \t-h, --help\n\t\tPrint this help message
+\t-b, --baseimage\n\t\tRemove the base image as well as resetting
 "
 	local SUBARGS=""
-	SUBARGS=`getopt -o h --long help -n "${ME}" -- "$@"`
+	SUBARGS=`getopt -o hb --long help,baseimage -n "${ME}" -- "$@"`
 	if [ $? != 0 ] ; then
 		usage "invalid arguments"
 	fi
@@ -123,6 +134,7 @@ reset_opts() {
 	while true ; do
 		case "$1" in
 			-h|--help) usage; shift ;;
+			-b|--baseimage) BASEIMAGE="--baseimage"; shift ;;
 			--) shift ; break ;;
 			* ) usage "Invalid argument $1" ;;
 		esac
@@ -147,15 +159,49 @@ fi
 
 cmd_exists docker || die "Docker not installed"
 
-is_docker && usage "Must not be run from inside docker"
-
-if [ -z "${GTWS_DOCKER_IMAGE}" ]; then
-	usage "Must specify a docker image"
+if [ "${GTWS_DOCKER_IMAGE}" == "none" ]; then
+	if [ "${GTWS_DOCKER_BASE_IMAGE}" == "none" ]; then
+		usage "Must specify a docker image or base image"
+	fi
+	unset GTWS_DOCKER_IMAGE
 fi
 
 SESNAME="${GTWS_PROJECT}_${GTWS_PROJECT_VERSION}_${GTWS_WSNAME}"
+if [ -z "${GTWS_DOCKER_IMAGE}" ]; then
+	# Want a per-ws image
+	GTWS_DOCKER_IMAGE="${USER}/${SESNAME}"
+fi
+
+function create_image {
+	if  docker images | grep -q "\<${GTWS_DOCKER_IMAGE}\>" ; then
+		return 0
+	fi
+
+	echo "Creating image for workspace"
+	local maintainer=$(git config --get user.name)
+	maintainer="${maintainer} <$(git config --get user.email)>"
+	local dockerdir=$(mktemp -d)
+	local dockerfile=$(gtws_find_dockerfile)
+	cp "${GTWS_LOC}/examples/Dockerfile" "${dockerdir}/"
+	cp "${HOME}/.scripts/scripts-setup" "${dockerdir}/"
+
+	local repvars="s#@BASEIMAGE@#${GTWS_DOCKER_BASE_IMAGE}#"
+	repvars="${repvars};s#@PROJECT@#${GTWS_PROJECT}#"
+	repvars="${repvars};s#@VERSION@#${GTWS_PROJECT_VERSION}#"
+	repvars="${repvars};s#@WSNAME@#${GTWS_WSNAME}#"
+	repvars="${repvars};s#@MAINTAINER@#${maintainer}#"
+	repvars="${repvars};s#@USER@#$(id -un)#"
+	repvars="${repvars};s#@GROUP@#$(id -gn)#"
+	repvars="${repvars};s#@UID@#$(id -u)#"
+	repvars="${repvars};s#@GID@#$(id -g)#"
+	sed -i "${repvars}" "${dockerdir}/Dockerfile" || die "sed failed" || return 1
+	docker build -t "${GTWS_DOCKER_IMAGE}" "${dockerdir}" || die "docker build failed" || return 1
+	rm -rf "${dockerdir}"
+}
 
 function cmd_run {
+	is_docker && usage "Must not be run from inside docker"
+
 	local mounts="-v ${GTWS_WSPATH}:${GTWS_WSPATH}"
 	for i in ${GTWS_DOCKER_MOUNTS}; do
 		mounts="${mounts} -v $i"
@@ -181,9 +227,11 @@ function cmd_run {
 		echo "Starting docker session for ${GTWS_WSNAME}"
 		docker_cmd="docker start -i -a  ${SESNAME}"
 	else
+		create_image || return 1
+
 		echo "Creating docker session for ${GTWS_WSNAME}"
 		docker_cmd="docker run -t -i -w ${GTWS_WSPATH} \
-			--name ${SESNAME} -u ${USER} ${mounts} \
+			--name ${SESNAME} -u ${DOCKER_USER} ${mounts} \
 			-h ${GTWS_WSNAME} \
 			${GTWS_DOCKER_OPTS} ${GTWS_DOCKER_IMAGE} \
 			${GTWS_LOC}/startws \
@@ -196,6 +244,8 @@ function cmd_run {
 }
 
 function cmd_commit {
+	is_docker && usage "Must not be run from inside docker"
+
 	local sesid=$(docker ps -a | grep "\<${SESNAME}\>" | awk '{print $1}')
 
 	if [ -z "${sesid}" ]; then
@@ -211,14 +261,22 @@ function cmd_commit {
 		COMMIT_MSG="New image ${NEW_IMAGE_NAME}"
 	fi
 
-	echo "Committing current image to ${USER}/${NEW_IMAGE_NAME}"
-	docker commit -m "${COMMIT_MSG}" "${sesid}" "${USER}/${NEW_IMAGE_NAME}"
+	echo "Committing current image to ${DOCKER_USER}/${NEW_IMAGE_NAME}"
+	docker commit -m "${COMMIT_MSG}" "${sesid}" "${DOCKER_USER}/${NEW_IMAGE_NAME}"
 }
 
 function cmd_reset {
+	is_docker && usage "Must not be run from inside docker"
+
 	echo "Resetting current image to default"
 	docker rm -f "${SESNAME}"
 	rm -f "${GTWS_WSPATH}/${DOCKER_ENV}"
+
+	if [ -n "${BASEIMAGE}" ]; then
+		if ! docker images | grep -q "\<${SESNAME}\>" ; then
+			docker rmi "${SESNAME}"
+		fi
+	fi
 }
 
 # Run command
