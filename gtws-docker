@@ -56,7 +56,7 @@ run_opts() {
 	local ME="${ME} ${COMMAND}"
 	local USAGE="[-h |--help] [-b <base-image-name> | --baseimage=<base-image-name>] [-i <image-name> | --image=<image-name>] [-u <user> | --user=<user>] [<extra-mount-dir> [<extra-mount-dir...]]"
 	local LONGUSAGE="\t-h, --help\n\t\tPrint this help message
-\t-b <base-image-name>, --baseimage=<base-image-name>\n\t\tDocker base image to specialize (default: ${GTWS_BASE_DOCKER_IMAGE})
+\t-b <base-image-name>, --baseimage=<base-image-name>\n\t\tDocker base image to specialize (default: ${GTWS_DOCKER_BASE_IMAGE})
 \t-i <image-name>, --image=<image-name>\n\t\tDocker image to start (default: ${GTWS_DOCKER_IMAGE})
 \t-u <user>, --user=<user>\n\t\tRun as given user (default: ${DOCKER_USER})
 \t<extra-mount-dir>\n\t\tExtra directory to mount, in the format /outside/path:/inside/path
@@ -74,7 +74,7 @@ run_opts() {
 		case "$1" in
 			-h|--help) usage; shift ;;
 			-i|--image) GTWS_DOCKER_IMAGE=$2 ; shift 2 ;;
-			-b|--baseimage) GTWS_BASE_DOCKER_IMAGE=$2 ; shift 2 ;;
+			-b|--baseimage) GTWS_DOCKER_BASE_IMAGE=$2 ; shift 2 ;;
 			-u|--user) DOCKER_USER=$2 ; shift 2 ;;
 			--) shift ; break ;;
 			* ) usage "Invalid argument $1" ;;
@@ -197,6 +197,9 @@ function create_image {
 	sed -i "${repvars}" "${dockerdir}/Dockerfile" || die "sed failed" || return 1
 	docker build -t "${GTWS_DOCKER_IMAGE}" "${dockerdir}" || die "docker build failed" || return 1
 	rm -rf "${dockerdir}"
+
+	# Set SELINUX to allow access to mounted dir
+	sudo chcon -Rt svirt_sandbox_file_t "${GTWS_WSPATH}"
 }
 
 function cmd_run {

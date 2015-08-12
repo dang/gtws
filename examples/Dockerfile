@@ -10,7 +10,7 @@ LABEL Description="This is used for @PROJECT@ development by ${user}" Vendor="Co
 
 RUN groupadd -g ${gid} ${group}
 RUN useradd -u ${uid} -g ${group} -G wheel -s ${shell} -m ${user}
-RUN dnf -y install git vim
+RUN dnf -y install git vim sudo procps cscope
 
 # Homedir and environment
 USER ${user}
