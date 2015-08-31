@@ -242,6 +242,7 @@ function cmd_run {
 			--version=${GTWS_PROJECT_VERSION}"
 	fi
 
+	debug_print ${docker_cmd}
 	${docker_cmd}
 
 }
@@ -265,6 +266,7 @@ function cmd_commit {
 	fi
 
 	echo "Committing current image to ${DOCKER_USER}/${NEW_IMAGE_NAME}"
+	debug_print docker commit -m \"${COMMIT_MSG}\" "${sesid}" "${DOCKER_USER}/${NEW_IMAGE_NAME}"
 	docker commit -m "${COMMIT_MSG}" "${sesid}" "${DOCKER_USER}/${NEW_IMAGE_NAME}"
 }
 
