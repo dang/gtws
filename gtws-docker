@@ -31,6 +31,7 @@ GTWS_DOCKER_BASE_IMAGE=${GTWS_DOCKER_BASE_IMAGE:-${GTWS_DEFAULT_DOCKER_BASE_IMAG
 GTWS_DOCKER_IMAGE=${GTWS_DOCKER_IMAGE:-${GTWS_DEFAULT_DOCKER_IMAGE:-none}}
 DOCKER_ENV=".gtwsrc_docker"
 DOCKER_USER="${USER}"
+SESNAME="${GTWS_PROJECT}_${GTWS_PROJECT_VERSION}_${GTWS_WSNAME}"
 
 # Script name
 ME=$(basename $0)
@@ -85,14 +86,14 @@ run_opts() {
 
 commit_opts() {
 	local ME="${ME} ${COMMAND}"
-	local USAGE="[-h |--help] [-f |--force] [-m <commit message> | --message=<commit message>] <new-image-name>"
+	local USAGE="[-h |--help] [-f |--force] [-m <commit message> | --message=<commit message>] [<new-image-name>]"
 	local LONGUSAGE="
 Initialize syncing repo.  Must be done once.
 
 \t-h, --help\n\t\tPrint this help message
 \t-f, --force\n\t\tCommit the image, even if it's running
 \t-m <commit message>, --message=<commit message>\n\t\tCommit message for new image.
-\t<new-image-name>\n\t\tName of new image to create
+\t<new-image-name>\n\t\tName of new image to create. Default: ${USER}/${SESNAME}
 "
 
 	local SUBARGS=""
@@ -111,21 +112,21 @@ Initialize syncing repo.  Must be done once.
 			* ) usage "Invalid argument $1" ;;
 		esac
 	done
-	if [ -z "$1" ]; then
-		usage "commit requires a new image name"
+	NEW_IMAGE_NAME="${SESNAME}"
+	if [ -n "$1" ]; then
+		NEW_IMAGE_NAME=$1; shift
 	fi
-	NEW_IMAGE_NAME=$1; shift
 }
 
 reset_opts() {
 	local ME="${ME} ${COMMAND}"
-	local USAGE="[-h |--help] [-b | --baseimage]"
+	local USAGE="[-h |--help] [-s | --sessionimage]"
 	local LONGUSAGE="
 \t-h, --help\n\t\tPrint this help message
-\t-b, --baseimage\n\t\tRemove the base image as well as resetting
+\t-s, --sessionimage\n\t\tRemove the session image as well as resetting
 "
 	local SUBARGS=""
-	SUBARGS=`getopt -o hb --long help,baseimage -n "${ME}" -- "$@"`
+	SUBARGS=`getopt -o hb --long help,sessionimage -n "${ME}" -- "$@"`
 	if [ $? != 0 ] ; then
 		usage "invalid arguments"
 	fi
@@ -134,7 +135,7 @@ reset_opts() {
 	while true ; do
 		case "$1" in
 			-h|--help) usage; shift ;;
-			-b|--baseimage) BASEIMAGE="--baseimage"; shift ;;
+			-b|--sessionimage) SESSIONIMAGE="--sessionimage"; shift ;;
 			--) shift ; break ;;
 			* ) usage "Invalid argument $1" ;;
 		esac
@@ -166,7 +167,6 @@ if [ "${GTWS_DOCKER_IMAGE}" == "none" ]; then
 	unset GTWS_DOCKER_IMAGE
 fi
 
-SESNAME="${GTWS_PROJECT}_${GTWS_PROJECT_VERSION}_${GTWS_WSNAME}"
 if [ -z "${GTWS_DOCKER_IMAGE}" ]; then
 	# Want a per-ws image
 	GTWS_DOCKER_IMAGE="${USER}/${SESNAME}"
@@ -235,7 +235,7 @@ function cmd_run {
 		echo "Creating docker session for ${GTWS_WSNAME}"
 		docker_cmd="docker run -t -i -w ${GTWS_WSPATH} \
 			--name ${SESNAME} -u ${DOCKER_USER} ${mounts} \
-			-h ${GTWS_WSNAME} \
+			-h ${GTWS_WSNAME} --privileged \
 			${GTWS_DOCKER_OPTS} ${GTWS_DOCKER_IMAGE} \
 			${GTWS_LOC}/startws \
 			--project=${GTWS_PROJECT} \
@@ -277,7 +277,7 @@ function cmd_reset {
 	docker rm -f "${SESNAME}"
 	rm -f "${GTWS_WSPATH}/${DOCKER_ENV}"
 
-	if [ -n "${BASEIMAGE}" ]; then
+	if [ -n "${SESSIONIMAGE}" ]; then
 		if ! docker images | grep -q "\<${SESNAME}\>" ; then
 			docker rmi "${SESNAME}"
 		fi
