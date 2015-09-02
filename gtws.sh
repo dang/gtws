@@ -334,6 +334,15 @@ function gtws_submodule_url {
 	local  __resultvar=$2
 	local __url=$(git config --list | grep submodule | grep "${sub}" | cut -d = -f 2)
 
+	if [ -z ${__url} ]; then
+		local rpath=${PWD}
+		local subsub=$(basename "${sub}")
+		cd "$(dirname "${sub}")"
+		debug_print "${FUNCNAME} trying ${PWD}"
+		__url=$(git config --list | grep submodule | grep "${subsub}" | cut -d = -f 2)
+		cd "${rpath}"
+	fi
+
 	debug_print "${FUNCNAME} $sub url: $__url"
 	if [[ "$__resultvar" ]]; then
 		eval $__resultvar="'$__url'"
@@ -376,6 +385,18 @@ function gtws_submodule_mirror {
 	fi
 }
 
+# Non-recursive gtws_submodule_paths
+function gtws_nr_submodule_paths {
+	local  __resultvar=$1
+	local __subpaths=$(git submodule status | sed 's/^ *//' | cut -d ' ' -f 2)
+
+	if [[ "$__resultvar" ]]; then
+		eval $__resultvar="'$__subpaths'"
+	else
+		echo "$__subpaths"
+	fi
+}
+
 # gtws_submodule_paths subpaths
 #
 # Result will be in local variable subpaths  Or:
@@ -387,7 +408,20 @@ function gtws_submodule_mirror {
 # Get the paths to submodules in a get repo
 function gtws_submodule_paths {
 	local  __resultvar=$1
-	local __subpaths=$(git submodule status | sed 's/^ *//' | cut -d ' ' -f 2)
+	local __subpaths=$(gtws_nr_submodule_paths)
+	local __subsubpaths=""
+	local rpath="${PWD}"
+
+	for subsub in ${__subpaths}; do
+		cd "${subsub}"
+		local smpath=$(gtws_nr_submodule_paths)
+		if [ -n "${smpath}" ]; then
+			__subsubpaths="${__subsubpaths}"$'\n'"${subsub}/$(gtws_nr_submodule_paths)"
+		fi
+		cd "${rpath}"
+	done
+
+	__subpaths="${__subpaths} ${__subsubpaths}"
 
 	if [[ "$__resultvar" ]]; then
 		eval $__resultvar="'$__subpaths'"

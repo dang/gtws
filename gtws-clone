@@ -11,6 +11,7 @@ GTWS_LOC=$(readlink -f $(dirname "$0"))
 source ${GTWS_LOC}/gtws.sh
 
 BRANCH="master"
+PROJECT=
 
 if [ -n "${GTWS_WS_GUARD}" ]; then
 	REPO_BASE=$(gtws_opvn "${GTWS_ORIGIN}" "${GTWS_PROJECT}" "${GTWS_PROJECT_VERSION}" "${GTWS_WSNAME}")
@@ -19,8 +20,9 @@ if [ -n "${GTWS_WS_GUARD}" ]; then
 fi
 
 # Set usage output
-USAGE="[-h |--help] [-r <repo-base> | --repo-base=<repo-base>] [-s <submodule-base> | --submodule-base=<submodule-base>] [-b <branch> | --branch=<branch>] [-V | --verbose] <repo-name>"
+USAGE="[-h |--help] [[-p <project> | --project=<project>] | [[-r <repo-base> | --repo-base=<repo-base>] [-s <submodule-base> | --submodule-base=<submodule-base>]]] [-b <branch> | --branch=<branch>] [-V | --verbose] <repo-name>"
 LONGUSAGE="\t-h, --help\n\t\tPrint this help message
+\t-p <project>, --project=<project>\n\t\tClone from project; sets repo-base and submodule-base (default: ${GTWS_PROJECT:-none})
 \t-r <repo-base>, --repo-base=<repo-base>\n\t\tBase dir for repo (default: ${REPO_BASE:-none})
 \t-s <submodule-base>, --submodule-base=<submodule-base>\n\t\tBase dir for submodules (default: ${SUBMODULE_BASE:-none})
 \t-b <branch>, --branch=<branch>\n\t\tRepo branch (default: ${BRANCH})
@@ -31,7 +33,7 @@ LONGUSAGE="\t-h, --help\n\t\tPrint this help message
 ME=$(basename $0)
 
 # Parse arguments
-ARGS=`getopt -o hVr:s:b: --long help,verbose,repo-base:,submodule-base:,branch: -n "${ME}" -- "$@"`
+ARGS=`getopt -o hVp:r:s:b: --long help,verbose,project:,repo-base:,submodule-base:,branch: -n "${ME}" -- "$@"`
 
 if [ $? != 0 ] ; then
 	usage 
@@ -41,6 +43,7 @@ eval set -- "$ARGS"
 while true ; do
 	case "$1" in
 		-h|--help) usage; shift ;;
+		-p|--project) PROJECT=$2 ; shift 2 ;;
 		-r|--repo-base) REPO_BASE=$2 ; shift 2 ;;
 		-s|--submodule-base) SUBMODULE_BASE=$2 ; shift 2 ;;
 		-b|--branch) BRANCH=$2 ; shift 2 ;;
@@ -59,6 +62,13 @@ if [ -z "${1}" ]; then
 	usage "Must give a repository name"
 fi
 REPO="${1}"
+
+# If they gave a project, reset REPO_BASE and SUBMODULE_BASE
+if [ -n "${PROJECT}" ]; then
+	REPO_BASE=$(gtws_opvn "${GTWS_ORIGIN}" "${PROJECT}" "${BRANCH}" "${REPO}")
+	SUBMODULE_BASE=$(gtws_smopvn "${GTWS_SUBMODULE_ORIGIN:-${GTWS_ORIGIN}}" "${PROJECT}" "${BRANCH}" "${REPO}")
+fi
+
 find_git_repo "${REPO_BASE}" "${REPO}" repodir || die "No repository for ${REPO} in ${REPO_BASE}"
 
 echo "Cloning ${REPO}:${BRANCH} from ${REPO_BASE} into ${GTWS_WSNAME}"

@@ -116,13 +116,13 @@ function update_repo {
 	fi
 
 	if [ -n "${bare}" ]; then
-		echo "Updating bare"
+		debug_print "Updating bare"
 		git fetch --all --prune || die "update of bare repo failed" || return 1
 	elif [ -n "${svn}" ]; then
-		echo "Updating svn ${branch}"
+		debug_print "Updating svn ${branch}"
 		git svn rebase || die "rebase of ${branch} failed" || return 1
 	else
-		echo "Updating git ${branch}"
+		debug_print "Updating git ${branch}"
 		git pull --rebase || die "rebase of ${branch} failed" || return 1
 		git submodule update --init --recursive ${SUBREMOTE} || \
 			die "submodule update of ${branch} failed" || return 1
@@ -149,11 +149,11 @@ if [ -n "${ORIGIN}" ]; then
 	echo "Updating origin $OREPO"
 	update_repo "${OREPO}"
 
-	OPV="${OPV%/git}"
+	SMOPV=$(gtws_smopvn "${GTWS_ORIGIN}" "${GTWS_PROJECT}" "${GTWS_PROJECT_VERSION}" "${GTWS_WSNAME}")
 	SUBPATHS=$(gtws_submodule_paths)
 	for sub in ${SUBPATHS}; do
-		MIRROR=$(gtws_submodule_mirror ${OPV} ${sub})
-		echo "${sub}: ${MIRROR}"
+		MIRROR=$(gtws_submodule_mirror ${SMOPV} ${sub})
+		debug_print "${sub}: ${MIRROR}"
 		if [ -d "${MIRROR}" ]; then
 			echo ""
 			echo "Updating submodule mirror $MIRROR"
