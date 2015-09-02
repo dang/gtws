@@ -235,7 +235,7 @@ function cmd_run {
 		echo "Creating docker session for ${GTWS_WSNAME}"
 		docker_cmd="docker run -t -i -w ${GTWS_WSPATH} \
 			--name ${SESNAME} -u ${DOCKER_USER} ${mounts} \
-			-h ${GTWS_WSNAME} --privileged \
+			-h ${GTWS_WSNAME} \
 			${GTWS_DOCKER_OPTS} ${GTWS_DOCKER_IMAGE} \
 			${GTWS_LOC}/startws \
 			--project=${GTWS_PROJECT} \
