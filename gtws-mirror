@@ -95,7 +95,11 @@ fi
 function sm_mirror {
 	gtws_submodule_url ${1} url
 	debug_print "url: $url"
-	urlbase=$(basename ${url})
+	if [ -z "${url}" ]; then
+		return
+	fi
+
+	local urlbase=$(basename ${url})
 	debug_print "url: $urlbase"
 
 	if [ -d "${SUBMODULE_BASE}/${urlbase}" ]; then
