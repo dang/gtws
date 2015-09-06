@@ -234,30 +234,39 @@ function gtws_cpdot {
 # Get the path to the most-specific Dockerfile
 function gtws_find_dockerfile {
 	local  __resultvar=$1
-	local __dir="${GTWS_WSDIR}"
+	local __dir="${GTWS_WSPATH}"
+	local __file="Dockerfile"
 
-	debug_print "${FUNCNAME} - trying ${__dir}"
-	if [ ! -f "${__dir}/Dockerfile" ]; then
+	debug_print "${FUNCNAME} - trying ${__dir}/${__file}"
+	if [ ! -f "${__dir}/${__file}" ]; then
 		# Version dir
 		__dir=$(dirname "${__dir}")
-		debug_print "${FUNCNAME} - trying ${__dir}"
+		debug_print "${FUNCNAME} - trying ${__dir}/${__file}"
 	fi
-	if [ ! -f "${__dir}/Dockerfile" ]; then
+	if [ ! -f "${__dir}/${__file}" ]; then
 		# Project dir
 		__dir=$(dirname "${__dir}")
-		debug_print "${FUNCNAME} - trying ${__dir}"
+		debug_print "${FUNCNAME} - trying ${__dir}/${__file}"
 	fi
-	if [ ! -f "${__dir}/Dockerfile" ]; then
+	if [ ! -f "${__dir}/${__file}" ]; then
+		# Top level, flavor
 		__dir="${GTWS_LOC}/examples"
-		debug_print "${FUNCNAME} - trying ${__dir}"
+		__file="Dockerfile-${FLAVOR}"
+		debug_print "${FUNCNAME} - trying ${__dir}/${__file}"
 	fi
-	if [ ! -f "${__dir}/Dockerfile" ]; then
+	if [ ! -f "${__dir}/${__file}" ]; then
+		# Top level, base
+		__dir="${GTWS_LOC}/examples"
+		__file="Dockerfile-base"
+		debug_print "${FUNCNAME} - trying ${__dir}/${__file}"
+	fi
+	if [ ! -f "${__dir}/${__file}" ]; then
 		die "Could not find a Dockerfile" || return 1
 	fi
 
-	debug_print "${FUNCNAME} - found ${__dir}"
+	debug_print "${FUNCNAME} - found ${__dir}/${__file}"
 	if [[ "$__resultvar" ]]; then
-		eval $__resultvar="'${__dir}/Dockerfile'"
+		eval $__resultvar="'${__dir}/${__file}'"
 	else
 		echo "$__dir"
 	fi

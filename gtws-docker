@@ -32,6 +32,8 @@ GTWS_DOCKER_IMAGE=${GTWS_DOCKER_IMAGE:-${GTWS_DEFAULT_DOCKER_IMAGE:-none}}
 DOCKER_ENV=".gtwsrc_docker"
 DOCKER_USER="${USER}"
 SESNAME="${GTWS_PROJECT}_${GTWS_PROJECT_VERSION}_${GTWS_WSNAME}"
+FLAVOR="fedora"
+EXRTA_PKGS=
 
 # Script name
 ME=$(basename $0)
@@ -55,17 +57,19 @@ done
 
 run_opts() {
 	local ME="${ME} ${COMMAND}"
-	local USAGE="[-h |--help] [-b <base-image-name> | --baseimage=<base-image-name>] [-i <image-name> | --image=<image-name>] [-u <user> | --user=<user>] [<extra-mount-dir> [<extra-mount-dir...]]"
+	local USAGE="[-h |--help] [-b <base-image-name> | --baseimage=<base-image-name>] [-i <image-name> | --image=<image-name>] [-f <image-flavor> | --flavor <image-flavor>] [-p <extra-pkgs> | --packages=<extra-pkgs>] [-u <user> | --user=<user>] [<extra-mount-dir> [<extra-mount-dir...]]"
 	local LONGUSAGE="\t-h, --help\n\t\tPrint this help message
 \t-b <base-image-name>, --baseimage=<base-image-name>\n\t\tDocker base image to specialize (default: ${GTWS_DOCKER_BASE_IMAGE})
 \t-i <image-name>, --image=<image-name>\n\t\tDocker image to start (default: ${GTWS_DOCKER_IMAGE})
+\t-f <image-flavor>, --flavor=<image-flavor>\n\t\tFlavor of image (default $FLAVOR)
+\t-p <extra-pkgs>, --packages=<extra-pkgs>\n\t\tExtra packages to install on initial creation
 \t-u <user>, --user=<user>\n\t\tRun as given user (default: ${DOCKER_USER})
 \t<extra-mount-dir>\n\t\tExtra directory to mount, in the format /outside/path:/inside/path
 
 \tIf an image is given, it will be used to start a container.  If no image is given, but a base-image is given, then that image will be specialized to make an image for this workspace, and that new image will be used to start a container.  That image will continue to be used at long as it exists.
 "
 	local SUBARGS=""
-	SUBARGS=`getopt -o hb:i:u: --long help,baseimage:,image:,user: -n "${ME}" -- "$@"`
+	SUBARGS=`getopt -o hb:i:f:u: --long help,baseimage:,image:,flavor:,user: -n "${ME}" -- "$@"`
 	if [ $? != 0 ] ; then
 		usage "invalid arguments"
 	fi
@@ -76,6 +80,7 @@ run_opts() {
 			-h|--help) usage; shift ;;
 			-i|--image) GTWS_DOCKER_IMAGE=$2 ; shift 2 ;;
 			-b|--baseimage) GTWS_DOCKER_BASE_IMAGE=$2 ; shift 2 ;;
+			-f|--flavor) FLAVOR=$2 ; shift 2 ;;
 			-u|--user) DOCKER_USER=$2 ; shift 2 ;;
 			--) shift ; break ;;
 			* ) usage "Invalid argument $1" ;;
@@ -126,7 +131,7 @@ reset_opts() {
 \t-s, --sessionimage\n\t\tRemove the session image as well as resetting
 "
 	local SUBARGS=""
-	SUBARGS=`getopt -o hb --long help,sessionimage -n "${ME}" -- "$@"`
+	SUBARGS=`getopt -o hs --long help,sessionimage -n "${ME}" -- "$@"`
 	if [ $? != 0 ] ; then
 		usage "invalid arguments"
 	fi
@@ -135,7 +140,7 @@ reset_opts() {
 	while true ; do
 		case "$1" in
 			-h|--help) usage; shift ;;
-			-b|--sessionimage) SESSIONIMAGE="--sessionimage"; shift ;;
+			-s|--sessionimage) SESSIONIMAGE="--sessionimage"; shift ;;
 			--) shift ; break ;;
 			* ) usage "Invalid argument $1" ;;
 		esac
@@ -181,8 +186,9 @@ function create_image {
 	local maintainer=$(git config --get user.name)
 	maintainer="${maintainer} <$(git config --get user.email)>"
 	local dockerdir=$(mktemp -d)
-	local dockerfile=$(gtws_find_dockerfile)
-	cp "${GTWS_LOC}/examples/Dockerfile" "${dockerdir}/"
+	local dockerfile=
+	gtws_find_dockerfile dockerfile || return 1
+	cp "${dockerfile}" "${dockerdir}/Dockerfile"
 	cp "${HOME}/.scripts/scripts-setup" "${dockerdir}/"
 
 	local repvars="s#@BASEIMAGE@#${GTWS_DOCKER_BASE_IMAGE}#"
@@ -190,6 +196,7 @@ function create_image {
 	repvars="${repvars};s#@VERSION@#${GTWS_PROJECT_VERSION}#"
 	repvars="${repvars};s#@WSNAME@#${GTWS_WSNAME}#"
 	repvars="${repvars};s#@MAINTAINER@#${maintainer}#"
+	repvars="${repvars};s#@EXTRA_PKGS@#${EXTRA_PKGS}#";
 	repvars="${repvars};s#@USER@#$(id -un)#"
 	repvars="${repvars};s#@GROUP@#$(id -gn)#"
 	repvars="${repvars};s#@UID@#$(id -u)#"

@@ -6,11 +6,11 @@ MAINTAINER @MAINTAINER@
 
 ENV user=@USER@ uid=@UID@ group=@GROUP@ gid=@GID@ shell=/bin/bash
 
-LABEL Description="This is used for @PROJECT@ development by ${user}" Vendor="CohortFS LLC" Version="1.0"
+LABEL Description="This is used for @PROJECT@ development by ${user}" Vendor="Fprintf Networks" Version="1.0"
 
 RUN groupadd -g ${gid} ${group}
 RUN useradd -u ${uid} -g ${group} -G wheel -s ${shell} -m ${user}
-RUN dnf -y install git vim sudo procps cscope
+# Base cannot install things, so image must be complete
 
 # Homedir and environment
 USER ${user}
