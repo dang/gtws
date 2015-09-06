@@ -250,13 +250,13 @@ function gtws_find_dockerfile {
 	fi
 	if [ ! -f "${__dir}/${__file}" ]; then
 		# Top level, flavor
-		__dir="${GTWS_LOC}/examples"
+		__dir="${GTWS_LOC}/dockerfiles"
 		__file="Dockerfile-${FLAVOR}"
 		debug_print "${FUNCNAME} - trying ${__dir}/${__file}"
 	fi
 	if [ ! -f "${__dir}/${__file}" ]; then
 		# Top level, base
-		__dir="${GTWS_LOC}/examples"
+		__dir="${GTWS_LOC}/dockerfiles"
 		__file="Dockerfile-base"
 		debug_print "${FUNCNAME} - trying ${__dir}/${__file}"
 	fi
