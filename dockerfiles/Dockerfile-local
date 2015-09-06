@@ -15,8 +15,8 @@ LABEL Description="This is used for @PROJECT@ development by ${user}" Vendor="Fp
 
 # Local has homedir and environment already
 ## Homedir and environment
-#USER ${user}
-#WORKDIR /home/${user}
+USER ${user}
+WORKDIR /home/${user}
 #ADD scripts-setup ./
 #RUN rm -f .bash*
 #RUN ./scripts-setup .scripts

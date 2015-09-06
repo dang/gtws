@@ -285,8 +285,9 @@ function cmd_reset {
 	rm -f "${GTWS_WSPATH}/${DOCKER_ENV}"
 
 	if [ -n "${SESSIONIMAGE}" ]; then
-		if ! docker images | grep -q "\<${SESNAME}\>" ; then
-			docker rmi "${SESNAME}"
+		if docker images | grep -q "\<${SESNAME}\>" ; then
+			debug_print docker rmi "${USER}/${SESNAME}"
+			docker rmi "${USER}/${SESNAME}"
 		fi
 	fi
 }
