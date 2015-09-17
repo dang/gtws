@@ -5,6 +5,7 @@
 # Do the equivalent of svn info
 
 # Set usage output
+DESCRIPTION="Brief information about a git repo"
 USAGE="[-h |--help]"
 LONGUSAGE="Get info about a git repository
 \t-h, --help\n\t\tPrint this help message"

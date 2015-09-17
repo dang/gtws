@@ -100,6 +100,10 @@ usage() {
 		echo "$@"
 	fi
 	echo ""
+	if [ -n "${DESCRIPTION}" ]; then
+		echo -e "${me}: ${DESCRIPTION}"
+		echo ""
+	fi
 	echo "Usage:"
 	echo "${me} ${myusage}"
 	if [ -n "${LONGUSAGE}" ]; then

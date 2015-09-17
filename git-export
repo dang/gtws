@@ -5,6 +5,7 @@
 
 TREEISH="HEAD"
 # Set usage output
+DESCRIPTION="Export a git repo to a clean directory"
 USAGE="[-h |--help] [-b <branch> | --branch=<branch>] [-f | --force] [-t | --tgz] <destination>"
 LONGUSAGE="Common options:
 \t-h, --help\n\t\tPrint this help message

@@ -12,6 +12,7 @@ FORK_REMOTENAME="gtws_github_fork"
 UPSTREAM_REMOTENAME="gtws_github_upstream"
 
 # Set usage output
+DESCRIPTION="Sync a github fork with upstream"
 USAGE="[-h |--help] (info | init | push | sync)"
 LONGUSAGE="Common options:
 \t-h, --help\n\t\tPrint this help message

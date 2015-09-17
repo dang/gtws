@@ -5,6 +5,7 @@
 # Clean up a git checkout to match it's repo
 
 # Set usage output
+DESCRIPTION="Clean up a git checkout to match it's head"
 USAGE="[-h |--help]"
 LONGUSAGE="Clean up a git checkout to match it's repo
 \t-h, --help\n\t\tPrint this help message"

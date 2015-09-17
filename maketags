@@ -18,6 +18,7 @@ GTWS_LOC=$(readlink -f $(dirname "$0"))
 source ${GTWS_LOC}/gtws.sh
 
 # Set usage output
+DESCRIPTION="Make ctags/cscope for a source tree"
 USAGE="[-h |--help] [-r | --repeat] [-e | --empty] [-k | --kernel] [-c | --cpp] [-p | --perl | --python] [-j | --java] [<directory> [<directory>...]]"
 LONGUSAGE="\t-h, --help\n\t\tPrint this help message
 \t-r, --repeat\n\t\tBuild the same tags as last time

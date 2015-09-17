@@ -5,6 +5,7 @@
 # Clean up crutf left over from patching a git repo
 
 # Set usage output
+DESCRIPTION="Clean up cruft left over from patching a git repo"
 USAGE="[-h |--help]"
 LONGUSAGE="\t-h, --help\n\t\tPrint this help message"
 

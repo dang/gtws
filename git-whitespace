@@ -8,6 +8,7 @@
 # git apply --whitespace=fix tmp.patch
 
 # Set usage output
+DESCRIPTION="Remove whitespace errors from uncommitted code"
 USAGE="[-h |--help] [-f | --force]"
 LONGUSAGE="\t-h, --help\n\t\tPrint this help message
 \t-f, --force\n\t\tFix whitespace even if there is staged changes"

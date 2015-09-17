@@ -25,6 +25,7 @@ if is_gtws; then
 fi
 
 # Set usage output
+DESCRIPTION="Mirror a repo's upstream into origin"
 USAGE="[-h |--help] [-o <origin> | --origin=<origin>] [-p <project> | --project=<project>] [-s <submodule-base> | --submodule-base=<submodule-base>] [-S | --submodule] [-V | --verbose]"
 LONGUSAGE="\t-h, --help\n\t\tPrint this help message
 \t-o <origin>, --origin=<origin>\n\t\tOrigin location (default: ${ORIGIN})

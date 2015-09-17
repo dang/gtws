@@ -12,6 +12,7 @@
 #
 
 # Set usage output
+DESCRIPTION="Use docker in a workspace"
 USAGE="[-h |--help] (run | commit | reset)"
 LONGUSAGE="Common options:
 \t-h, --help\n\t\tPrint this help message

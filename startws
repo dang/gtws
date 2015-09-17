@@ -35,6 +35,7 @@ else
 fi
 
 # Set usage output
+DESCRIPTION="Start a session in a workspace"
 USAGE="[-h |--help] [-i |--init] [-c <command> | --command=<command>] [-p <project> | --project=<project>] [-v <version> | --version=<version>] [-V | --verbose] <name>"
 LONGUSAGE="\t-h, --help\n\t\tPrint this help message
 \t-i, --init\n\t\tInit WS tree

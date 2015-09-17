@@ -20,6 +20,7 @@ if is_gtws; then
 fi
 
 # Set usage output
+DESCRIPTION="Clone a new repo into a workspace"
 USAGE="[-h |--help] [[-p <project> | --project=<project>] | [[-r <repo-base> | --repo-base=<repo-base>] [-s <submodule-base> | --submodule-base=<submodule-base>]]] [-b <branch> | --branch=<branch>] [-V | --verbose] <repo-name>"
 LONGUSAGE="\t-h, --help\n\t\tPrint this help message
 \t-p <project>, --project=<project>\n\t\tClone from project; sets repo-base and submodule-base (default: ${GTWS_PROJECT:-none})

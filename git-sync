@@ -13,6 +13,7 @@
 SUBREMOTE=""
 
 # Set usage output
+DESCRIPTION="Sync a git repo with it's tracking branch and remote repo"
 USAGE="[-h |--help] [-V | --verbose] [-f | --force] [-s | --stash] [-o | --origin] [-r | --remote]"
 LONGUSAGE="\t-h, --help\n\t\tPrint this help message
 \t-V, --verbose\n\t\tPrint verbose debugging info

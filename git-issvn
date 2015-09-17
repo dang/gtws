@@ -4,6 +4,7 @@
 #
 
 # Set usage output
+DESCRIPTION="Determine if a git repo is git-svn"
 USAGE="[-h |--help]"
 LONGUSAGE="\t-h, --help\n\t\tPrint this help message"
 

@@ -7,6 +7,7 @@ VERSION=$(basename "${PWD}")
 PROJECT=$(basename $(dirname "$PWD"));
 
 # Set usage output
+DESCRIPTION="Delete a development workspace"
 USAGE="[-h |--help] <name>"
 LONGUSAGE="\t-h, --help\n\t\tPrint this help message
 \t<name>\n\t\tWorkspace name"

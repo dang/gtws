@@ -30,6 +30,7 @@ else
 fi
 
 # Set usage output
+DESCRIPTION="Start or attache to a tmux session in a workspace"
 USAGE="[-h |--help] [-p <project> | --project=<project>] [-v <version> | --version=<version>] [-V | --verbose] <name>"
 LONGUSAGE="\t-h, --help\n\t\tPrint this help message
 \t-p <project>, --project=<project>\n\t\tProject (default: ${PROJECT:-none})
