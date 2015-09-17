@@ -1,0 +1,105 @@
+#!/bin/bash
+#
+# Sync a workspace with another computer
+#
+
+# Standard functions
+GTWS_LOC=$(readlink -f $(dirname "$0"))
+source ${GTWS_LOC}/gtws.sh
+
+# Set usage output
+DESCRIPTION="Sync a workspace to another computer.
+\tBy default, sync only git repos.  Flags allow syncing other directories."
+USAGE="[-h |--help] [-a | --all ] [-n | --none ] [-b | --build ] [-i | --install ] [-V | --verbose] <remote-machine>"
+LONGUSAGE="\t-h, --help\n\t\tPrint this help message
+\t-a, --all\n\t\tSync all directories (default: git repos)
+\t-n, --none\n\t\tSync no directories except explicit ones (default: git repos)
+\t-b, --build\n\t\tSync build directories (default: git repos)
+\t-i, --install\n\t\tSync install directory (default: git repos)
+\t-V, --verbose\n\t\tBe verbose
+\t<remote-machine>\n\t\tMachine to sync to"
+
+# Script name
+ME=$(basename $0)
+
+# Parse arguments
+ARGS=`getopt -o habinV --long help,all,none,build,install,verbose -n "${ME}" -- "$@"`
+
+if [ $? != 0 ] ; then
+	usage
+fi
+eval set -- "$ARGS"
+
+while true ; do
+	case "$1" in
+		-h|--help) usage; shift ;;
+		-a|--all) export ALL=yes; shift ;;
+		-n|--none) export NONE=yes; shift ;;
+		-b|--build) export BUILD=yes; shift ;;
+		-i|--install) export INSTALL=yes; shift ;;
+		-V|--verbose) export GTWS_VERBOSE=yes; shift ;;
+		--) shift ; break ;;
+		* ) usage "Invalid argument $1";;
+	esac
+done
+
+# Remaining arguments are in $1, $2, etc. as normal
+is_gtws || usage "Must be run inside a workspace"
+REMOTE=$1
+if [ -z "${REMOTE}" ]; then
+	usage "Must give a remote machine"
+fi
+if [ -n "${ALL}" -a -n "${NONE}" ]; then
+	usage "Cannot give both --all and --none"
+fi
+
+declare -a GIT_REPOS
+
+get_git_repos() {
+	local wd=$PWD
+
+	cd "${GTWS_WSPATH}"
+	for i in *; do
+		if is_git_repo "${i}"; then
+			GIT_REPOS+=("${i}")
+		fi
+	done
+	cd "${wd}"
+}
+
+remote_cmd "${REMOTE}" "source ${HOME}/.gtwsrc; echo \${GTWS_BASE_SRCDIR}" R_SRC
+
+echo "R_SRC: ${R_SRC}"
+
+sync_dir() {
+	local dir=${1%/}
+	local target="${R_SRC}/${GTWS_PROJECT}/${GTWS_PROJECT_VERSION}/${GTWS_WSNAME}/"
+
+	gtws_rcp --delete --rsync-path="mkdir -p \"${target}\" && rsync" "${dir}" "${REMOTE}:${target}"
+}
+
+if [ -n "${ALL}" ]; then
+	TARGET="${R_SRC}/${GTWS_PROJECT}/${GTWS_PROJECT_VERSION}/"
+	cd "${GTWS_WSPATH}/.."
+	gtws_rcp --delete --rsync-path="mkdir -p \"${TARGET}\" && rsync" "${GTWS_WSNAME}" "${REMOTE}:${TARGET}"
+	exit $?
+fi
+
+cd "${GTWS_WSDIR}"
+get_git_repos
+
+if [ -z "${NONE}" ]; then
+	sync_dir ".gtwsrc"
+	for d in "${GIT_REPOS[@]}"; do
+		sync_dir "${d}"
+	done
+fi
+
+if [ -n "${BUILD}" ]; then
+	sync_dir "build"
+fi
+if [ -n "${INSTALL}" ]; then
+	sync_dir "install"
+fi
+
+echo "Done"

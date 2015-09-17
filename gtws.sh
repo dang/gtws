@@ -922,3 +922,35 @@ function gtws_debug {
 
 	cgdb ${cmd} ${pid}
 }
+
+# remote_cmd "${target}" "${command}" output
+#
+# Result will be in local variable output  Or:
+#
+# output = $(remote_cmd "${target}" "${command}")
+#
+# Result will be in local variable output
+#
+# Run a command remotely and capture sdtout.  Make sure to quote the command
+# appropriately.
+remote_cmd() {
+	local target=$1
+	local cmd=$2
+	local  __resultvar=$3
+	local output=
+
+
+	if [ -z "${GTWS_VERBOSE}" ]; then
+		output=$(ssh "${target}" "${cmd}" 2>/dev/null)
+	else
+		output=$(ssh "${target}" "${cmd}")
+	fi
+	local ret=$?
+
+	if [[ "$__resultvar" ]]; then
+		eval $__resultvar="'$output'"
+	else
+		echo "${output}"
+	fi
+	return ${ret}
+}
