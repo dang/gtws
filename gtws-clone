@@ -13,7 +13,7 @@ source ${GTWS_LOC}/gtws.sh
 BRANCH="master"
 PROJECT=
 
-if [ -n "${GTWS_WS_GUARD}" ]; then
+if is_gtws; then
 	REPO_BASE=$(gtws_opvn "${GTWS_ORIGIN}" "${GTWS_PROJECT}" "${GTWS_PROJECT_VERSION}" "${GTWS_WSNAME}")
 	SUBMODULE_BASE=$(gtws_smopvn "${GTWS_SUBMODULE_ORIGIN:-${GTWS_ORIGIN}}" "${GTWS_PROJECT}" "${GTWS_PROJECT_VERSION}" "${GTWS_WSNAME}")
 	BRANCH="${GTWS_PROJECT_VERSION}"
@@ -53,9 +53,7 @@ while true ; do
 	esac
 done
 
-if [ -z "${GTWS_WS_GUARD}" ]; then
-	usage "Must be run from inside a workspace"
-fi
+is_gtws || usage "Must be run from inside a workspace"
 
 # Remaining arguments are in $1, $2, etc. as normal
 if [ -z "${1}" ]; then

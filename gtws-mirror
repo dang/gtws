@@ -14,7 +14,7 @@ ORIGIN="none"
 PROJECT=""
 SUBMODULE_BASE=
 
-if [ -n "${GTWS_WS_GUARD}" ]; then
+if is_gtws; then
 	REPO_BASE=$(gtws_opvn "${GTWS_ORIGIN}" "${GTWS_PROJECT}" "${GTWS_PROJECT_VERSION}" "${GTWS_WSNAME}")
 	ORIGIN="${GTWS_ORIGIN}"
 	PROJECT="${GTWS_PROJECT}"

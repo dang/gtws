@@ -136,9 +136,7 @@ function update_repo {
 }
 
 if [ -n "${ORIGIN}" ]; then
-	if [ -z "${GTWS_WS_GUARD}" ]; then
-		usage "--origin may only be given inside a workspace"
-	fi
+	is_gtws || usage "--origin may only be given inside a workspace"
 
 	OPV=$(gtws_opvn "${GTWS_ORIGIN}" "${GTWS_PROJECT}" "${GTWS_PROJECT_VERSION}" "${GTWS_WSNAME}")
 	# First update upstream

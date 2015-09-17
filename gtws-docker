@@ -159,9 +159,7 @@ esac
 
 # Remaining arguments are in $1, $2, etc. as normal
 
-if [ -z "${GTWS_WS_GUARD}" ]; then
-	usage "Must be run from inside a workspace"
-fi
+is_gtws || usage "Must be run from inside a workspace"
 
 cmd_exists docker || die "Docker not installed"
 

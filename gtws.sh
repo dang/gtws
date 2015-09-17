@@ -207,6 +207,16 @@ is_docker() {
 	return $?
 }
 
+# is_gtws
+#
+# return success if process is running inside a workspace
+is_gtws() {
+	if [ -n "${GTWS_WS_GUARD}" ]; then
+		return 0
+	fi
+	return 1
+}
+
 function gtws_rcp {
 	rsync --rsh=ssh -avzS --progress "$@"
 }
