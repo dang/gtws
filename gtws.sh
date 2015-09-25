@@ -117,7 +117,7 @@ usage() {
 # Print debug information based on GTWS_VERBOSE
 debug_print() {
 	if [ -n "${GTWS_VERBOSE}" ]; then
-		echo -e "$@" >&2
+		echo -e "${GTWS_INDENT}$@" >&2
 	fi
 }
 
@@ -222,7 +222,7 @@ is_gtws() {
 }
 
 function gtws_rcp {
-	rsync --rsh=ssh -avzS --progress "$@"
+	rsync --rsh=ssh -avzS --progress --ignore-missing-args --quiet "$@"
 }
 
 function gtws_cpdot {
@@ -408,18 +408,6 @@ function gtws_submodule_mirror {
 	fi
 }
 
-# Non-recursive gtws_submodule_paths
-function gtws_nr_submodule_paths {
-	local  __resultvar=$1
-	local __subpaths=$(git submodule status | sed 's/^ *//' | cut -d ' ' -f 2)
-
-	if [[ "$__resultvar" ]]; then
-		eval $__resultvar="'$__subpaths'"
-	else
-		echo "$__subpaths"
-	fi
-}
-
 # gtws_submodule_paths subpaths
 #
 # Result will be in local variable subpaths  Or:
@@ -428,23 +416,10 @@ function gtws_nr_submodule_paths {
 #
 # Result will be in local variable subpaths
 #
-# Get the paths to submodules in a get repo
+# Get the paths to submodules in a get repo.  Does not recurse
 function gtws_submodule_paths {
 	local  __resultvar=$1
-	local __subpaths=$(gtws_nr_submodule_paths)
-	local __subsubpaths=""
-	local rpath="${PWD}"
-
-	for subsub in ${__subpaths}; do
-		cd "${subsub}"
-		local smpath=$(gtws_nr_submodule_paths)
-		if [ -n "${smpath}" ]; then
-			__subsubpaths="${__subsubpaths}"$'\n'"${subsub}/$(gtws_nr_submodule_paths)"
-		fi
-		cd "${rpath}"
-	done
-
-	__subpaths="${__subpaths} ${__subsubpaths}"
+	local __subpaths=$(git submodule status | sed 's/^ *//' | cut -d ' ' -f 2)
 
 	if [[ "$__resultvar" ]]; then
 		eval $__resultvar="'$__subpaths'"
@@ -460,6 +435,7 @@ function gtws_submodule_paths {
 function gtws_submodule_clone {
 	local opv=$1
 	local sub_paths=$(gtws_submodule_paths)
+	local rpath="${PWD}"
 
 	if [ -z "${opv}" ]; then
 		opv=$(gtws_smopvn "${GTWS_SUBMODULE_ORIGIN:-${GTWS_ORIGIN}}" "${GTWS_PROJECT}" "${GTWS_PROJECT_VERSION}" "${GTWS_WSNAME}")
@@ -473,6 +449,10 @@ function gtws_submodule_clone {
 			refopt="--reference ${mirror}"
 		fi
 		git submodule update ${refopt} "${sub}"
+		# Now see if there are recursive submodules
+		cd "${sub}"
+		gtws_submodule_clone "${opv}" || return 1
+		cd "${rpath}"
 	done
 }
 
