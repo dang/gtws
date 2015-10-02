@@ -11,7 +11,7 @@ LABEL Description="This is used for @PROJECT@ development by ${user}" Vendor="Fp
 RUN groupadd -g ${gid} ${group}
 RUN useradd -u ${uid} -g ${group} -G wheel -s ${shell} -m ${user}
 RUN pacman --noconfirm -Syu
-RUN pacman --noconfirm -S git vim sudo cscope ctags python @EXTRA_PKGS@
+RUN pacman --noconfirm -S lsb-release git vim sudo cscope ctags python @EXTRA_PKGS@
 
 # Homedir and environment
 USER ${user}

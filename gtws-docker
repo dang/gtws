@@ -228,29 +228,44 @@ function cmd_run {
 
 	if docker ps | grep -q "\<${SESNAME}\>" ; then
 		echo "Attaching to docker session for ${GTWS_WSNAME}"
-		docker_cmd="docker exec -t -i ${SESNAME} \
+		debug_trace_start
+		docker exec -t -i ${SESNAME} \
 			${GTWS_LOC}/startws \
 			--project=${GTWS_PROJECT} \
-			--version=${GTWS_PROJECT_VERSION}"
+			--version=${GTWS_PROJECT_VERSION}
+		debug_trace_stop
 	elif docker ps -a | grep -q "\<${SESNAME}\>" ; then
 		echo "Starting docker session for ${GTWS_WSNAME}"
-		docker_cmd="docker start -i -a  ${SESNAME}"
+		debug_trace_start
+		docker start -i -a  ${SESNAME}
+		debug_trace_stop
 	else
 		create_image || return 1
 
 		echo "Creating docker session for ${GTWS_WSNAME}"
-		docker_cmd="docker run -t -i -w ${GTWS_WSPATH} \
+		local docopts=$(declare -F | grep '\<gtws_docker_opts\>')
+		if [ -n "${docopts}" ]; then
+			debug_print "Setting docker opts from function"
+			eval $(gtws_docker_opts)
+		fi
+		local docopts=$(declare -F | grep '\<gtws_docker_net\>')
+		if [ -n "${docopts}" ]; then
+			debug_print "Setting docker networking from function"
+			eval $(gtws_docker_net)
+		else
+			local GTWS_DOCKER_NET=(-h "${GTWS_WSNAME}")
+		fi
+		debug_trace_start
+		docker run -t -i -w ${GTWS_WSPATH} \
 			--name ${SESNAME} -u ${DOCKER_USER} ${mounts} \
-			-h ${GTWS_WSNAME} \
-			${GTWS_DOCKER_OPTS} ${GTWS_DOCKER_IMAGE} \
+			"${GTWS_DOCKER_NET[@]}" \
+			"${GTWS_DOCKER_OPTS[@]}" \
+			${GTWS_DOCKER_IMAGE} \
 			${GTWS_LOC}/startws \
 			--project=${GTWS_PROJECT} \
-			--version=${GTWS_PROJECT_VERSION}"
+			--version=${GTWS_PROJECT_VERSION}
+		debug_trace_stop
 	fi
-
-	debug_print ${docker_cmd}
-	${docker_cmd}
-
 }
 
 function cmd_commit {

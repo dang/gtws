@@ -121,6 +121,22 @@ debug_print() {
 	fi
 }
 
+# debug_trace_start
+#
+# Start tracing all commands
+debug_trace_start() {
+	if [ -n "${GTWS_VERBOSE}" ]; then
+		set -x
+	fi
+}
+
+# debug_trace_stop
+#
+# Stop tracing all commands
+debug_trace_stop() {
+	set +x
+}
+
 # cmd_exists ${cmd}
 #
 # Determine if a command exists on the system

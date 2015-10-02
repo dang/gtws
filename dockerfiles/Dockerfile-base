@@ -10,6 +10,8 @@ LABEL Description="This is used for @PROJECT@ development by ${user}" Vendor="Fp
 
 RUN groupadd -g ${gid} ${group}
 RUN useradd -u ${uid} -g ${group} -G wheel -s ${shell} -m ${user}
+#RUN useradd -u ${uid} -g ${group} -G sudo -s ${shell} -m ${user}
+RUN echo "${user}:${user}" | chpasswd
 # Base cannot install things, so image must be complete
 
 # Homedir and environment
