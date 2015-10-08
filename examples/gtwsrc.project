@@ -146,7 +146,7 @@ function ccmake {
 	cmake ${GTWS_CMAKE_SETTINGS} $@
 }
 export CFLAGS=${CFLAGS-"-O0 -g -gdwarf-2 -Werror"}
-export CPPFLAGS=${CPPFLAGS-"${CFLAGS}"}
+export CXXFLAGS=${CXXFLAGS-"${CFLAGS}"}
 
 function gtws_cmake {
 (
