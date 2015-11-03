@@ -888,7 +888,9 @@ function cd {
 function gtws_interdiff {
 	local targets=$@
 	local target=
-	local repo=$(basename ${PWD})
+	local savedir=${PWD}
+	local topdir=$(git_top_dir)
+	local repo=$(basename ${topdir})
 	local mainpatch="${GTWS_WSPATH}/patches/${repo}-full.patch"
 	local interpatch="${GTWS_WSPATH}/patches/${repo}-incremental.patch"
 
@@ -896,6 +898,7 @@ function gtws_interdiff {
 		echo "Usage: ${FUNCNAME} <targethost>"
 		die "Must give targethost" || return 1
 	fi
+	cd "${topdir}"
 	if [ -f "${mainpatch}" ]; then
 		git diff | interdiff "${mainpatch}" - > "${interpatch}"
 	fi
@@ -904,6 +907,7 @@ function gtws_interdiff {
 		gtws_rcp "${mainpatch}" "${interpatch}" \
 			"${target}:${GTWS_WSPATH}/patches"
 	done
+	cd "${savedir}"
 }
 
 function gtws_debug {
