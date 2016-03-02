@@ -145,7 +145,7 @@ export GTWS_CMAKE_SETTINGS=${GTWS_CMAKE_SETTINGS-"-DCMAKE_BUILD_TYPE:STRING=Main
 function ccmake {
 	cmake ${GTWS_CMAKE_SETTINGS} $@
 }
-export CFLAGS=${CFLAGS-"-O0 -g -gdwarf-2 -Werror"}
+export CFLAGS=${CFLAGS-"-O0 -g -gdwarf-2"}
 export CXXFLAGS=${CXXFLAGS-"${CFLAGS}"}
 
 function gtws_cmake {
