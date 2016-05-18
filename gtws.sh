@@ -472,15 +472,15 @@ function gtws_submodule_clone {
 	done
 }
 
-# gtws_repo_clone <base-repo-path> <repo> <branch> [<base-submodule-path>]
+# gtws_repo_clone <base-repo-path> <repo> <branch> [<base-submodule-path>] [<target-directory>]
 function gtws_repo_clone {
 	local baserpath=${1%/}
 	local repo=$2
 	local branch=$3
 	local basesmpath=$4
+	local rname=${5:-${repo%.git}}
 	local rpath="${baserpath}/${repo}"
 	local origpath=${PWD}
-	local rname=${repo%.git}
 
 	if [[ ${rpath} != *:* ]]; then
 		if [ ! -d "${rpath}" ]; then
@@ -490,11 +490,11 @@ function gtws_repo_clone {
 	if [ -z "${basesmpath}" ]; then
 		basesmpath="${baserpath}"
 	fi
-	debug_print "${FUNCNAME}: cloning ${baserpath} - ${repo} : ${branch} into ${GTWS_WSNAME} submodules: ${basesmpath}"
+	debug_print "${FUNCNAME}: cloning ${baserpath} - ${repo} : ${branch} into ${GTWS_WSNAME}/${rname} submodules: ${basesmpath}"
 
 	# Main repo
 	#git clone --recurse-submodules -b "${branch}" "${rpath}" || die "failed to clone ${rpath}:${branch}" || return 1
-	git clone -b "${branch}" "${rpath}" || die "${FUNCNAME}: failed to clone ${rpath}:${branch}" || return 1
+	git clone -b "${branch}" "${rpath}" ${rname} || die "${FUNCNAME}: failed to clone ${rpath}:${branch}" || return 1
 
 	# Update submodules
 	cd "${rname}" || die "${FUNCNAME}: failed to cd to ${rpath}" || return 1
