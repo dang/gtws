@@ -86,7 +86,7 @@ if [ -n "$TMUX" ]; then
 	usage "Do not run from within tmux"
 fi
 
-SESNAME="${PROJECT}/${VERSION}/${WSNAME}"
+gtws_tmux_session_name ${PROJECT} ${VERSION} ${WSNAME} SESNAME
 
 cd "${BASE}/${PROJECT}/${VERSION}/${WSNAME}"
 

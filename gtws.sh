@@ -725,6 +725,29 @@ function save_env {
 	done
 }
 
+# gtws_tmux_session_name ${PROJECT} ${VERSION} ${WSNAME} sesname
+#
+# Result will be in local variable sesname  Or:
+#
+# sesname = $(gtws_tmux_session_name ${PROJECT} ${VERSION} ${WSNAME})
+#
+# Result will be in local variable sesname
+#
+# Get the tmux session name for a given workspace
+function gtws_tmux_session_name {
+	local project=$1
+	local version=$2
+	local wsname=$3
+	local  __resultvar=$4
+	local sesname="${project//./_}/${version//./_}/${wsname//./_}"
+
+	if [[ "$__resultvar" ]]; then
+		eval $__resultvar="'$sesname'"
+	else
+		echo "$sesname"
+	fi
+}
+
 # gtws_tmux_session_info ${SESSION_NAME} running attached
 #
 # Determine if a session is running, and if it is attached
