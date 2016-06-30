@@ -189,6 +189,7 @@ function create_image {
 	gtws_find_dockerfile dockerfile || return 1
 	cp "${dockerfile}" "${dockerdir}/Dockerfile"
 	cp "${HOME}/.scripts/scripts-setup" "${dockerdir}/"
+	cp "${GTWS_LOC}/dockerfiles/entrypoint.sh" "${dockerdir}/"
 
 	local repvars="s#@BASEIMAGE@#${GTWS_DOCKER_BASE_IMAGE}#"
 	repvars="${repvars};s#@PROJECT@#${GTWS_PROJECT}#"
@@ -201,7 +202,7 @@ function create_image {
 	repvars="${repvars};s#@UID@#$(id -u)#"
 	repvars="${repvars};s#@GID@#$(id -g)#"
 	sed -i "${repvars}" "${dockerdir}/Dockerfile" || die "sed failed" || return 1
-	docker build -t "${GTWS_DOCKER_IMAGE}" "${dockerdir}" || die "docker build failed" || return 1
+	sudo docker build -t "${GTWS_DOCKER_IMAGE}" "${dockerdir}" || die "docker build failed" || return 1
 	rm -rf "${dockerdir}"
 
 	# Set SELINUX to allow access to mounted dir
