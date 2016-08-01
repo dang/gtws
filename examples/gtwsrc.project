@@ -130,9 +130,9 @@ export GTWS_DOCKER_IMAGE=${GTWS_DOCKER_IMAGE-${GTWS_DEFAULT_DOCKER_IMAGE}}
 #}
 
 # Allow WS to make things installed locally be runnable
-export GTWS_LD_LIBRARY_PATH=${GTWS_LD_LIBRARY_PATH-"${GTWS_WSPATH}/install/lib:${GTWS_WSPATH}/install/lib64"}
+export GTWS_LD_LIBRARY_PATH=${GTWS_LD_LIBRARY_PATH-"${GTWS_PREFIX}/lib:${GTWS_PREFIX}/lib64"}
 PYVERSION=$(basename $(dirname $(python -m site --user-site)))
-export GTWS_PYTHONPATH=${GTWS_PYTHONPATH-"${GTWS_WSPATH}/install/lib/${PYVERSION}/site-packages"}
+export GTWS_PYTHONPATH=${GTWS_PYTHONPATH-"${GTWS_PREFIX}/lib/${PYVERSION}/site-packages"}
 
 # Stuff specific to this project.  It can be assumed that the following are set:
 #	GTWS_WSPATH - Path to the workspace
@@ -141,7 +141,7 @@ export GTWS_PYTHONPATH=${GTWS_PYTHONPATH-"${GTWS_WSPATH}/install/lib/${PYVERSION
 #export ENKIVE_HOME=${ENKIVE_HOME-"${GTWS_WSPATH}/enkive"}
 #export GTWS_PATH_EXTRA=${GTWS_PATH_EXTRA-"${ENKIVE_HOME}/scripts"}
 #export ENKIVE_USER=${ENKIVE_USER-${USER:-dang}}
-export GTWS_CMAKE_SETTINGS=${GTWS_CMAKE_SETTINGS-"-DCMAKE_BUILD_TYPE:STRING=Maintainer -DCMAKE_INSTALL_PREFIX=${GTWS_WSPATH}/install"}
+export GTWS_CMAKE_SETTINGS=${GTWS_CMAKE_SETTINGS-"-DCMAKE_BUILD_TYPE:STRING=Maintainer -DCMAKE_INSTALL_PREFIX=${GTWS_PREFIX}"}
 function ccmake {
 	cmake ${GTWS_CMAKE_SETTINGS} $@
 }

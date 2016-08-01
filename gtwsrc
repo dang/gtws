@@ -21,6 +21,7 @@ export GTWS_WS_GUARD="yes"
 
 export GTWS_WSPATH=$(readlink -f ${BASH_ARGV[0]%/*})
 export GTWS_WSNAME=$(basename "${GTWS_WSPATH}")
+export GTWS_PREFIX="${GTWS_WSPATH}/install"
 
 source ${GTWS_LOC}/gtws.sh
 debug_print "Loading WS"
@@ -50,7 +51,7 @@ fi
 if [ -z "${GTWS_SAVEPATH}" ]; then
 	export GTWS_SAVEPATH="${PATH}"
 fi
-PATH="${GTWS_SAVEPATH}:${GTWS_WSPATH}/install/bin:${GTWS_WSPATH}/install/sbin"
+PATH="${GTWS_SAVEPATH}:${GTWS_PREFIX}/bin:${GTWS_PREFIX}/sbin"
 if [ -n "${GTWS_PATH_EXTRA}" ]; then
 	PATH=${PATH}:"${GTWS_PATH_EXTRA}"
 fi
