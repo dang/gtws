@@ -17,4 +17,4 @@ export GTWS_PROJECT_VERSION=$(basename $(dirname $(readlink -f ${BASH_SOURCE})))
 #	GTWS_WSPATH - Path to the workspace
 #	GTWS_WSNAME - Name of the workspace
 
-#export GTWS_JAVA_PATH=${GTWS_JAVA_PATH-"/opt/java6"}
+#export GTWS_JAVA_PATH=${GTWS_JAVA_PATH:-"/opt/java6"}

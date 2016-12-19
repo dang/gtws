@@ -10,17 +10,17 @@ debug_print "Loading Project"
 
 # Stuff for GTWS
 export GTWS_PROJECT=$(basename $(dirname $(readlink -f ${BASH_SOURCE})))
-export GTWS_MAKETAGS_OPTS=${GTWS_MAKETAGS_OPTS-""}
-export GTWS_DOCKER_BASE_IMAGE=${GTWS_DOCKER_BASE_IMAGE-${GTWS_DEFAULT_DOCKER_BASE_IMAGE}}
-export GTWS_DOCKER_IMAGE=${GTWS_DOCKER_IMAGE-${GTWS_DEFAULT_DOCKER_IMAGE}}
+export GTWS_MAKETAGS_OPTS=${GTWS_MAKETAGS_OPTS:-""}
+export GTWS_DOCKER_BASE_IMAGE=${GTWS_DOCKER_BASE_IMAGE:-${GTWS_DEFAULT_DOCKER_BASE_IMAGE}}
+export GTWS_DOCKER_IMAGE=${GTWS_DOCKER_IMAGE:-${GTWS_DEFAULT_DOCKER_IMAGE}}
 
 # Optionally specify repos and branches to clone. Defaults to all repos in
 # origin with GTWS_PROJECT_VERSION as the branch.
-#export GTWS_PROJECT_REPOS=${GTWS_PROJECT_REPOS-"foo bar:barbranch baz"}
+#export GTWS_PROJECT_REPOS=${GTWS_PROJECT_REPOS:-"foo bar:barbranch baz"}
 # If cloning an entire remote workspace, set this
-#export GTWS_REMOTE_IS_WS=${GTWS_REMOTE_IS_WS-"yes"}
+#export GTWS_REMOTE_IS_WS=${GTWS_REMOTE_IS_WS:-"yes"}
 # Modules for gtws_kmod_install
-#export GTWS_KMOD_LIST=${GTWS_KMOD_LIST-"fs/nfs/placelayout/nfs_layout_nfsv41_placement.ko fs/nfs/nfsv4.ko"}
+#export GTWS_KMOD_LIST=${GTWS_KMOD_LIST:-"fs/nfs/placelayout/nfs_layout_nfsv41_placement.ko fs/nfs/nfsv4.ko"}
 
 # If non-standard orgin layout is used, define these two functions
 
@@ -130,23 +130,23 @@ export GTWS_DOCKER_IMAGE=${GTWS_DOCKER_IMAGE-${GTWS_DEFAULT_DOCKER_IMAGE}}
 #}
 
 # Allow WS to make things installed locally be runnable
-export GTWS_LD_LIBRARY_PATH=${GTWS_LD_LIBRARY_PATH-"${GTWS_PREFIX}/lib:${GTWS_PREFIX}/lib64"}
+export GTWS_LD_LIBRARY_PATH=${GTWS_LD_LIBRARY_PATH:-"${GTWS_PREFIX}/lib:${GTWS_PREFIX}/lib64"}
 PYVERSION=$(basename $(dirname $(python -m site --user-site)))
-export GTWS_PYTHONPATH=${GTWS_PYTHONPATH-"${GTWS_PREFIX}/lib/${PYVERSION}/site-packages"}
+export GTWS_PYTHONPATH=${GTWS_PYTHONPATH:-"${GTWS_PREFIX}/lib/${PYVERSION}/site-packages"}
 
 # Stuff specific to this project.  It can be assumed that the following are set:
 #	GTWS_WSPATH - Path to the workspace
 #	GTWS_WSNAME - Name of the workspace
-#export GTWS_FILES_EXTRA=${GTWS_FILES_EXTRA-"${GTWS_FILES_EXTRA} extra/.project.vim:src"}
-#export ENKIVE_HOME=${ENKIVE_HOME-"${GTWS_WSPATH}/enkive"}
-#export GTWS_PATH_EXTRA=${GTWS_PATH_EXTRA-"${ENKIVE_HOME}/scripts"}
-#export ENKIVE_USER=${ENKIVE_USER-${USER:-dang}}
-export GTWS_CMAKE_SETTINGS=${GTWS_CMAKE_SETTINGS-"-DCMAKE_BUILD_TYPE:STRING=Maintainer -DCMAKE_INSTALL_PREFIX=${GTWS_PREFIX}"}
+#export GTWS_FILES_EXTRA=${GTWS_FILES_EXTRA:-"${GTWS_FILES_EXTRA} extra/.project.vim:src"}
+#export ENKIVE_HOME=${ENKIVE_HOME:-"${GTWS_WSPATH}/enkive"}
+#export GTWS_PATH_EXTRA=${GTWS_PATH_EXTRA:-"${ENKIVE_HOME}/scripts"}
+#export ENKIVE_USER=${ENKIVE_USER:-${USER:-dang}}
+export GTWS_CMAKE_SETTINGS=${GTWS_CMAKE_SETTINGS:-"-DCMAKE_BUILD_TYPE:STRING=Maintainer -DCMAKE_INSTALL_PREFIX=${GTWS_PREFIX}"}
 function ccmake {
 	cmake ${GTWS_CMAKE_SETTINGS} $@
 }
-export CFLAGS=${CFLAGS-"-O0 -g -gdwarf-2"}
-export CXXFLAGS=${CXXFLAGS-"${CFLAGS}"}
+export CFLAGS=${CFLAGS:-"-O0 -g -gdwarf-2"}
+export CXXFLAGS=${CXXFLAGS:-"${CFLAGS}"}
 
 function gtws_cmake {
 (
