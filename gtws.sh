@@ -943,7 +943,7 @@ function gtws_debug {
 	local cmdbase=$(basename $cmd)
 	local pid=$(pgrep "${cmdbase}")
 
-	cgdb ${cmd} ${pid}
+	ASAN_OPTIONS="abort_on_error=1" cgdb ${cmd} ${pid}
 }
 
 # remote_cmd "${target}" "${command}" output

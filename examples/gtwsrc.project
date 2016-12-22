@@ -147,7 +147,6 @@ function ccmake {
 }
 export CFLAGS=${CFLAGS:-"-O0 -g -gdwarf-2"}
 export CXXFLAGS=${CXXFLAGS:-"${CFLAGS}"}
-export ASAN_OPTIONS="abort_on_error=1"
 
 function gtws_cmake {
 (
