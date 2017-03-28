@@ -141,6 +141,9 @@ export GTWS_PYTHONPATH=${GTWS_PYTHONPATH:-"${GTWS_PREFIX}/lib/${PYVERSION}/site-
 #export ENKIVE_HOME=${ENKIVE_HOME:-"${GTWS_WSPATH}/enkive"}
 #export GTWS_PATH_EXTRA=${GTWS_PATH_EXTRA:-"${ENKIVE_HOME}/scripts"}
 #export ENKIVE_USER=${ENKIVE_USER:-${USER:-dang}}
+# Uncomment to use clang instead of gcc
+#export CC=clang
+#export CXX=clang++
 export GTWS_CMAKE_SETTINGS=${GTWS_CMAKE_SETTINGS:-"-DCMAKE_BUILD_TYPE:STRING=Maintainer -DCMAKE_INSTALL_PREFIX=${GTWS_PREFIX}"}
 function ccmake {
 	cmake ${GTWS_CMAKE_SETTINGS} $@
