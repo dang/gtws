@@ -1,0 +1,51 @@
+#!/bin/bash
+#
+# Run a program under ASAN
+#
+
+# Standard functions
+GTWS_LOC=$(readlink -f $(dirname "$0"))
+source ${GTWS_LOC}/gtws.sh
+
+# Set usage output
+DESCRIPTION="Run a workspace program under ASAN"
+USAGE="[-h |--help] [-p <preload> | --preload=<preload>] <program> [arguments]"
+LONGUSAGE="\t-h, --help\n\t\tPrint this help message
+\t-p <preload>, --preload=<preload>\n\t\tLibrary to preload. Default: none
+\t-V, --verbose\n\t\tBe verbose
+\t<program>\n\t\tProgram to run
+\t[arguments]\n\t\tArguments to program"
+
+# Script name
+ME=$(basename $0)
+
+# Parse arguments
+ARGS=`getopt -o hp:V --long help,preload:,verbose -n "${ME}" -- "$@"`
+
+if [ $? != 0 ] ; then
+	usage 
+fi
+eval set -- "$ARGS"
+
+while true ; do
+	case "$1" in
+		-h|--help) usage; shift ;;
+		-p|--preload) PRELOAD=$2 ; shift 2 ;;
+		-V|--verbose) export GTWS_VERBOSE=yes; shift ;;
+		--) shift ; break ;;
+		* ) usage "Invalid argument $1";;
+	esac
+done
+
+is_gtws || usage "Must be run inside a workspace"
+
+# Remaining arguments are in $1, $2, etc. as normal
+if [ -z "${1}" ]; then
+	usage "Must give a program"
+fi
+PROG="${1}"
+shift
+
+LD_PRELOAD="libasan.so.3:${PRELOAD}" ${PROG} "${@}"
+
+echo "Done"
