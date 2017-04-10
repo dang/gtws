@@ -19,9 +19,10 @@ source ${GTWS_LOC}/gtws.sh
 
 # Set usage output
 DESCRIPTION="Make ctags/cscope for a source tree"
-USAGE="[-h |--help] [-r | --repeat] [-e | --empty] [-k | --kernel] [-c | --cpp] [-p | --perl | --python] [-j | --java] [<directory> [<directory>...]]"
+USAGE="[-h |--help] [-r | --repeat] [-n | --no-repeat] [-e | --empty] [-k | --kernel] [-c | --cpp] [-p | --perl | --python] [-j | --java] [<directory> [<directory>...]]"
 LONGUSAGE="\t-h, --help\n\t\tPrint this help message
-\t-r, --repeat\n\t\tBuild the same tags as last time
+\t-r, --repeat\n\t\tBuild the same tags as last time (defalut)
+\t-n, --no-repeat\n\t\tIgnore saved tag set and only use command line
 \t-e, --empty\n\t\tIgnore .maketagsrc and .gtwsrc files
 \t-k, --kernel\n\t\tBuild kernel tags (no system includes)
 \t-c, --cpp\n\t\tBuild C/C++ tags
@@ -33,7 +34,7 @@ LONGUSAGE="\t-h, --help\n\t\tPrint this help message
 ME=$(basename $0)
 
 # Parse arguments
-ARGS=`getopt -o hrekcpj --long help,repeat,empty,kernel,cpp,perl,python,java -n "${ME}" -- "$@"`
+ARGS=`getopt -o hrnekcpj --long help,repeat,no-repeat,empty,kernel,cpp,perl,python,java -n "${ME}" -- "$@"`
 
 if [ $? != 0 ] ; then
 	usage
@@ -43,7 +44,8 @@ eval set -- "$ARGS"
 while true ; do
 	case "$1" in
 		-h|--help) usage; shift ;;
-		-r|--repeat) REPEAT="yes" ; shift ;;
+		-r|--repeat) shift ;;
+		-n|--no-repeat) NOREPEAT="yes" ; shift ;;
 		-e|--empty) EMPTY="yes" ; shift ;;
 		-k|--kernel) KERNEL="-k" ; shift ;;
 		-c|--cpp) CPP="yes" ; shift ;;
@@ -72,7 +74,7 @@ fi
 #   - ~/.gtwsrc
 #   - ./.maketagsrc
 #   - ./.gtwsrc  (this loads the full GTWS environment)
-if [ -z "${CLEAN}" ]; then
+if [ -z "${EMPTY}" ]; then
 	if [ -f "${HOME}/.maketagsrc" ]; then
 		source ${HOME}/.maketagsrc
 	fi
@@ -86,7 +88,8 @@ if [ -z "${CLEAN}" ]; then
 	fi
 fi
 
-if [ -n "${REPEAT}" ]; then
+if [ -z "${NOREPEAT}" ]; then
+	echo "repeat"
 	# Override command line options with saved versions
 	if [ -f "${SAVEFILE}" ]; then
 		source "${SAVEFILE}"
