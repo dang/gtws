@@ -168,6 +168,6 @@ echo ""
 echo "Updating checkout";
 update_repo "." ${STASH} || die
 
-if [ -n "${TAGS}" && -f ".maketagssave" ]; then
+if [ -n "${TAGS}" -a -f ".maketagssave" ]; then
 	maketags -r
 fi
