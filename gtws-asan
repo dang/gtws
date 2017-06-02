@@ -9,9 +9,10 @@ source ${GTWS_LOC}/gtws.sh
 
 # Set usage output
 DESCRIPTION="Run a workspace program under ASAN"
-USAGE="[-h |--help] [-v | --valgrind] [-m | --massif] [-p <preload> | --preload=<preload>] <program> [arguments]"
+USAGE="[-h |--help] [-d | --debug] [-v | --valgrind] [-m | --massif] [-p <preload> | --preload=<preload>] <program> [arguments]"
 LONGUSAGE="\t-h, --help\n\t\tPrint this help message
 \t-p <preload>, --preload=<preload>\n\t\tLibrary to preload. Default: none
+\t-d, --debug\n\t\tRun under debugger
 \t-v, --valgrind\n\t\tUse valgrind rather than ASAN
 \t-m, --massif\n\t\tUse massif rather than ASAN
 \t-V, --verbose\n\t\tBe verbose
@@ -22,7 +23,7 @@ LONGUSAGE="\t-h, --help\n\t\tPrint this help message
 ME=$(basename $0)
 
 # Parse arguments
-ARGS=`getopt -o hmp:vV --long help,massif,preload:,valgrind,verbose -n "${ME}" -- "$@"`
+ARGS=`getopt -o dhmp:vV --long help,debug,massif,preload:,valgrind,verbose -n "${ME}" -- "$@"`
 
 if [ $? != 0 ] ; then
 	usage 
@@ -32,6 +33,7 @@ eval set -- "$ARGS"
 while true ; do
 	case "$1" in
 		-h|--help) usage; shift ;;
+		-d|--debug) export DEBUG=yes; shift ;;
 		-m|--massif) export MASSIF=yes; shift ;;
 		-p|--preload) PRELOAD=$2 ; shift 2 ;;
 		-v|--valgrind) export VALGRIND=yes; shift ;;
@@ -58,6 +60,10 @@ if [ -n "${VALGRIND}" ]; then
 	LD_PRELOAD="${PRELOAD}" valgrind --leak-check=full --max-stackframe=3280592 ${PROG} "${@}"
 elif [ -n "${MASSIF}" ]; then
 	LD_PRELOAD="${PRELOAD}" valgrind --tool=massif --max-stackframe=3280592 ${PROG} "${@}"
+elif [ -n "${DEBUG}" ]; then
+	cmdbase=$(basename ${PROG});
+	pid=$(pgrep "${cmdbase}");
+	ASAN_OPTIONS="abort_on_error=1" cgdb -ex "set environment LD_PRELOAD=libasan.so.3:${PRELOAD}" ${PROG} ${pid}
 else
 	LD_PRELOAD="libasan.so.3:${PRELOAD}" ${PROG} "${@}"
 fi

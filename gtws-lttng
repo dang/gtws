@@ -22,9 +22,10 @@ ASAN=
 
 # Set usage output
 DESCRIPTION="Run a workspace program under LTTng"
-USAGE="[-h |--help] [-a |--asan] [-e <event> | --event=<event>] [-p <preload> | --preload=<preload>] [-s <session> | --session=<session>] <program> [arguments]"
+USAGE="[-h |--help] [-a |--asan] [-d | --debug ] [-e <event> | --event=<event>] [-p <preload> | --preload=<preload>] [-s <session> | --session=<session>] <program> [arguments]"
 LONGUSAGE="\t-h, --help\n\t\tPrint this help message
 \t-a, --asan\n\t\tRun under address sanatizer
+\t-d, --debug\n\t\tRun under debugger
 \t-e <event>, --event=<event>\n\t\tEvents to enable. May be given multiple times. Default: *
 \t-p <preload>, --preload=<preload>\n\t\tLibrary to preload. Default: none
 \t-s <session>, --session=<session>\n\t\tSet name of LTTng session.  Default: <program>
@@ -36,7 +37,7 @@ LONGUSAGE="\t-h, --help\n\t\tPrint this help message
 ME=$(basename $0)
 
 # Parse arguments
-ARGS=`getopt -o hVae:p:s: --long help,verbose,asan,event:,preload:,session: -n "${ME}" -- "$@"`
+ARGS=`getopt -o hVade:p:s: --long help,verbose,asan,debug,event:,preload:,session: -n "${ME}" -- "$@"`
 
 if [ $? != 0 ] ; then
 	usage 
@@ -47,6 +48,7 @@ while true ; do
 	case "$1" in
 		-h|--help) usage; shift ;;
 		-a|--asan) ASAN="gtws-asan"; shift ;;
+		-d|--debug) DEBUG="--debug"; shift ;;
 		-e|--event) EVENTS+=("$2") ; shift 2 ;;
 		-p|--preload) PRELOAD=$2 ; shift 2 ;;
 		-s|--session) SESSION=$2 ; shift 2 ;;
@@ -81,9 +83,13 @@ done
 lttng start
 
 if [ -n "${ASAN}" ]; then
-	${ASAN} -p "${PRELOAD}" ${PROG} -- "${@}"
+	${ASAN} ${DEBUG} -p "${PRELOAD}" ${PROG} -- "${@}"
+elif [ -n "${DEBUG}" ]; then
+	cmdbase=$(basename ${PROG});
+	pid=$(pgrep "${cmdbase}");
+	LD_PRELOAD=${PRELOAD} cgdb ${PROG} ${pid}
 else
-	LD_PRELOAD=${PRELOAD} ${PROG} ${GUARD} "${@}"
+	LD_PRELOAD=${PRELOAD} ${PROG} "${@}"
 	echo "Done"
 fi
 
