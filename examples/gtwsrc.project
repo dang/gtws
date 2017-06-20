@@ -134,11 +134,11 @@ export GTWS_LD_LIBRARY_PATH=${GTWS_LD_LIBRARY_PATH:-"${GTWS_PREFIX}/lib:${GTWS_P
 PYVERSION=$(basename $(dirname $(python -m site --user-site)))
 export GTWS_PYTHONPATH=${GTWS_PYTHONPATH:-"${GTWS_PREFIX}/lib/${PYVERSION}/site-packages"}
 
-if [ "${USER}" == "root" ]; then
-	# Things to set if your root
-	#ulimit -Hn 999999
-	#ulimit -Sn 999999
-fi
+#if [ "${USER}" == "root" ]; then
+	## Things to set if your root
+	##ulimit -Hn 999999
+	##ulimit -Sn 999999
+#fi
 
 # Stuff specific to this project.  It can be assumed that the following are set:
 #	GTWS_WSPATH - Path to the workspace
