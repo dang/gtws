@@ -52,7 +52,7 @@ fi
 PROG="${1}"
 shift
 
-if [ -n "${VALGRIND}" ] && [ -n ${MASSIF} ]; then
+if [ -n "${VALGRIND}" ] && [ -n "${MASSIF}" ]; then
 	usage "Cannot give both --valgrind and --massif"
 fi
 
