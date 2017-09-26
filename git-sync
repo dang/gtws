@@ -138,6 +138,11 @@ function update_repo {
 	cd "${savedir}"
 }
 
+branch=$(git branch | grep "\*" | sed 's/\* //' | grep detached)
+if [ -n "${branch}" ]; then
+	die "Checkout is on detached HEAD.  Please pick a branch"
+fi
+
 if [ -n "${ORIGIN}" ]; then
 	is_gtws || usage "--origin may only be given inside a workspace"
 
