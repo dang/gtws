@@ -371,14 +371,14 @@ function gtws_opvn {
 function gtws_submodule_url {
 	local sub=$1
 	local  __resultvar=$2
-	local __url=$(git config --list | grep submodule | grep "${sub}" | cut -d = -f 2)
+	local __url=$(git config --list | grep submodule | grep "\<${sub}\>" | cut -d = -f 2)
 
 	if [ -z ${__url} ]; then
 		local rpath=${PWD}
 		local subsub=$(basename "${sub}")
 		cd "$(dirname "${sub}")"
 		debug_print "${FUNCNAME} trying ${PWD}"
-		__url=$(git config --list | grep submodule | grep "${subsub}" | cut -d = -f 2)
+		__url=$(git config --list | grep submodule | grep "\<${subsub}\>" | cut -d = -f 2)
 		cd "${rpath}"
 	fi
 
