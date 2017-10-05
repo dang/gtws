@@ -41,5 +41,11 @@ LONG_USAGE="${LONGUSAGE}"
 # Source the git environment
 source "$(git --exec-path)/git-sh-setup"
 
+SAVEDIR=${PWD}
+cd "$(git_top_dir)"
+
 git checkout .
-git status --porcelain | grep '^??' | sed 's/?? //' | xargs rm -r
+git submodule update
+git status --porcelain | grep '^??' | sed 's/?? //' | xargs -r rm -r
+
+cd "${SAVEDIR}"
