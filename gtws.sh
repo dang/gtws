@@ -306,7 +306,7 @@ function gtws_find_dockerfile {
 #
 # Result will be in local variable smopvn.  Or:
 #
-# smopvn = $(gtws_smopvn ${GTWS_ORIGIN} ${GTWS_PROJECT} ${GTWS_PROJECT_VERSION} ${GTWS_WSNAME})
+# smopvn = $(gtws_smopvn ${GTWS_SUBMODULE_ORIGIN:-${GTWS_ORIGIN}} ${GTWS_PROJECT} ${GTWS_PROJECT_VERSION} ${GTWS_WSNAME})
 #
 # Result will be in local variable smovpn
 #
@@ -373,7 +373,7 @@ function gtws_submodule_url {
 	local  __resultvar=$2
 	local __url=$(git config --list | grep submodule | grep "\<${sub}\>" | cut -d = -f 2)
 
-	if [ -z ${__url} ]; then
+	if [ -z "${__url}" ]; then
 		local rpath=${PWD}
 		local subsub=$(basename "${sub}")
 		cd "$(dirname "${sub}")"
@@ -390,30 +390,30 @@ function gtws_submodule_url {
 	fi
 }
 
-# gtws_submodule_mirror ${opv} ${submodule} mloc
+# gtws_submodule_mirror ${smopv} ${submodule} ${sub_sub_basename} mloc
 #
 # Result will be in local variable mloc  Or:
 #
-# mloc = $(gtws_submodule_mirror ${opv} ${submodule})
+# mloc = $(gtws_submodule_mirror ${smopv} ${submodule} ${sub_sub_basename})
 #
 # Result will be in local variable mloc
 #
 # Get the path to a local mirror of the submodule, if it exists
 function gtws_submodule_mirror {
-	local opv=$1
+	local smopv=$1
 	local sub=$2
-	local  __resultvar=$3
+	local sub_sub=$3
+	local  __resultvar=$4
 	local __mloc=""
-	local url
-	gtws_submodule_url ${sub} url
+	local url=$(gtws_submodule_url ${sub})
 	if [ -n "${url}" ]; then
 		local urlbase=$(basename ${url})
 		# XXX TODO - handle remote repositories
-		#if [[ ${opv} == *:* ]]; then
-		## Remote OPV means clone from that checkout; I don't cm
-		#refopt="--reference ${opv}/${name}/${sub}"
-		if [ -d "${opv}/${urlbase}" ]; then
-			__mloc="${opv}/${urlbase}"
+		#if [[ ${smopv} == *:* ]]; then
+		## Remote SMOPV means clone from that checkout; I don't cm
+		#refopt="--reference ${smopv}/${name}/${sub}"
+		if [ -d "${smopv}/${urlbase}" ]; then
+			__mloc="${smopv}/${urlbase}"
 		fi
 	fi
 
@@ -444,22 +444,23 @@ function gtws_submodule_paths {
 	fi
 }
 
-# gtws_submodule_clone [<base-repo-path>]
+# gtws_submodule_clone [<base-submodule-path>] [<sub-sub-basename>]
 #
 # This will set up all the submodules in a repo.  Should be called from inside
 # the parent repo
 function gtws_submodule_clone {
-	local opv=$1
+	local smopv=$1
+	local sub_sub=$2
 	local sub_paths=$(gtws_submodule_paths)
 	local rpath="${PWD}"
 
-	if [ -z "${opv}" ]; then
-		opv=$(gtws_smopvn "${GTWS_SUBMODULE_ORIGIN:-${GTWS_ORIGIN}}" "${GTWS_PROJECT}" "${GTWS_PROJECT_VERSION}" "${GTWS_WSNAME}")
+	if [ -z "${smopv}" ]; then
+		smopv=$(gtws_smopvn "${GTWS_SUBMODULE_ORIGIN:-${GTWS_ORIGIN}}" "${GTWS_PROJECT}" "${GTWS_PROJECT_VERSION}" "${GTWS_WSNAME}")
 	fi
 	git submodule init || die "${FUNCNAME}: Failed to init submodules" || return 1
 	for sub in ${sub_paths}; do
 		local refopt=""
-		local mirror=$(gtws_submodule_mirror ${opv} ${sub})
+		local mirror=$(gtws_submodule_mirror "${smopv}" "${sub}" "${sub_sub}")
 		debug_print "${FUNCNAME} mirror: ${mirror}"
 		if [ -n "${mirror}" ]; then
 			refopt="--reference ${mirror}"
@@ -467,7 +468,7 @@ function gtws_submodule_clone {
 		git submodule update ${refopt} "${sub}"
 		# Now see if there are recursive submodules
 		cd "${sub}"
-		gtws_submodule_clone "${opv}" || return 1
+		gtws_submodule_clone "${smopv}/${sub}_submodule" "${sub}" || return 1
 		cd "${rpath}"
 	done
 }

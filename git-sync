@@ -143,6 +143,26 @@ if [ -n "${branch}" ]; then
 	die "Checkout is on detached HEAD.  Please pick a branch"
 fi
 
+function sm_update {
+	local smopv="${1}"
+	local subpaths=$(gtws_submodule_paths)
+
+	debug_print "${FUNCNAME} updating ${smopv}"
+	for sub in ${subpaths}; do
+		MIRROR=$(gtws_submodule_mirror ${smopv} ${sub})
+		debug_print "${sub}: ${MIRROR}"
+		if [ -d "${MIRROR}" ]; then
+			echo ""
+			echo "Updating submodule mirror $MIRROR"
+			update_repo "${MIRROR}" || die
+			local sub_base==${sub%.git}
+			if [ -d "${smopv}/${sub_base}_submodule" ]; then
+				sm_update "${smopv}/${sub_base}_submodule"
+			fi
+		fi
+	done
+}
+
 if [ -n "${ORIGIN}" ]; then
 	is_gtws || usage "--origin may only be given inside a workspace"
 
@@ -156,16 +176,7 @@ if [ -n "${ORIGIN}" ]; then
 	update_repo "${OREPO}"
 
 	SMOPV=$(gtws_smopvn "${GTWS_ORIGIN}" "${GTWS_PROJECT}" "${GTWS_PROJECT_VERSION}" "${GTWS_WSNAME}")
-	SUBPATHS=$(gtws_submodule_paths)
-	for sub in ${SUBPATHS}; do
-		MIRROR=$(gtws_submodule_mirror ${SMOPV} ${sub})
-		debug_print "${sub}: ${MIRROR}"
-		if [ -d "${MIRROR}" ]; then
-			echo ""
-			echo "Updating submodule mirror $MIRROR"
-			update_repo "${MIRROR}" || die
-		fi
-	done
+	sm_update ${SMOPV}
 fi
 
 # Update local repo
