@@ -7,6 +7,29 @@
 GTWS_LOC=$(readlink -f $(dirname "$0"))
 source ${GTWS_LOC}/gtws.sh
 
+# asan_version asanver || die "no asan"
+#
+# Find out which version of libasan is installed
+#
+# Result will be in the local variable asanver
+function asan_version {
+	local __resultvar=$1
+	local libasan=$(/bin/ls /usr/lib64/libasan.so.?)
+
+	if [ ! -f "${libasan}" ]; then
+		die "No libasan" || return 1
+	fi
+
+	local __base=$(basename "${libasan}")
+	local __ver="${__base##*.}"
+
+	if [[ "$__resultvar" ]]; then
+		eval $__resultvar="'$__ver'"
+	else
+		echo ${__ver}
+	fi
+}
+
 # Set usage output
 DESCRIPTION="Run a workspace program under ASAN"
 USAGE="[-h |--help] [-d | --debug] [-v | --valgrind] [-m | --massif] [-p <preload> | --preload=<preload>] <program> [arguments]"
@@ -56,6 +79,8 @@ if [ -n "${VALGRIND}" ] && [ -n "${MASSIF}" ]; then
 	usage "Cannot give both --valgrind and --massif"
 fi
 
+asan_version ASANVER || die "No libasan"
+
 if [ -n "${VALGRIND}" ]; then
 	LD_PRELOAD="${PRELOAD}" valgrind --leak-check=full --max-stackframe=3280592 ${PROG} "${@}"
 elif [ -n "${MASSIF}" ]; then
@@ -63,9 +88,9 @@ elif [ -n "${MASSIF}" ]; then
 elif [ -n "${DEBUG}" ]; then
 	cmdbase=$(basename ${PROG});
 	pid=$(pgrep "${cmdbase}");
-	ASAN_OPTIONS="abort_on_error=1" cgdb -ex "set environment LD_PRELOAD=libasan.so.3:${PRELOAD}" ${PROG} ${pid}
+	ASAN_OPTIONS="abort_on_error=1" cgdb -ex "set environment LD_PRELOAD=libasan.so.${ASANVER}:${PRELOAD}" ${PROG} ${pid}
 else
-	LD_PRELOAD="libasan.so.3:${PRELOAD}" ${PROG} "${@}"
+	LD_PRELOAD="libasan.so.${ASANVER}:${PRELOAD}" ${PROG} "${@}"
 fi
 
 
