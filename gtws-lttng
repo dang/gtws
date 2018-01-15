@@ -27,6 +27,7 @@ LONGUSAGE="\t-h, --help\n\t\tPrint this help message
 \t-a, --asan\n\t\tRun under address sanatizer
 \t-d, --debug\n\t\tRun under debugger
 \t-e <event>, --event=<event>\n\t\tEvents to enable. May be given multiple times. Default: *
+\t-n, --no-events\n\t\tDo not enable any events
 \t-p <preload>, --preload=<preload>\n\t\tLibrary to preload. Default: none
 \t-s <session>, --session=<session>\n\t\tSet name of LTTng session.  Default: <program>
 \t-V, --verbose\n\t\tBe verbose
@@ -37,7 +38,7 @@ LONGUSAGE="\t-h, --help\n\t\tPrint this help message
 ME=$(basename $0)
 
 # Parse arguments
-ARGS=`getopt -o hVade:p:s: --long help,verbose,asan,debug,event:,preload:,session: -n "${ME}" -- "$@"`
+ARGS=`getopt -o hVadne:p:s: --long help,verbose,asan,debug,no-events,event:,preload:,session: -n "${ME}" -- "$@"`
 
 if [ $? != 0 ] ; then
 	usage 
@@ -50,6 +51,7 @@ while true ; do
 		-a|--asan) ASAN="gtws-asan"; shift ;;
 		-d|--debug) DEBUG="--debug"; shift ;;
 		-e|--event) EVENTS+=("$2") ; shift 2 ;;
+		-n|--no-events) NOEVENTS="yes"; shift ;;
 		-p|--preload) PRELOAD=$2 ; shift 2 ;;
 		-s|--session) SESSION=$2 ; shift 2 ;;
 		-V|--verbose) export GTWS_VERBOSE=yes; shift ;;
@@ -71,8 +73,10 @@ if [ -z "${SESSION}" ]; then
 	SESSION="${PROG}"
 fi
 
-if [ -z "${EVENTS}" ]; then
-	EVENTS="*"
+if [ -z "${NOEVENTS}" ]; then
+	if [ -z "${EVENTS}" ]; then
+		EVENTS="*"
+	fi
 fi
 
 lttng create "${SESSION}"
