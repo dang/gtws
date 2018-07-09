@@ -41,7 +41,7 @@ LONGUSAGE="\t-h, --help\n\t\tPrint this help message
 ME=$(basename $0)
 
 # Parse arguments
-ARGS=`getopt -o hVadne:p:s: --long help,verbose,asan,debug,no-events,event:,preload:,session: -n "${ME}" -- "$@"`
+ARGS=`getopt -o hVabdne:p:s: --long help,verbose,asan,buffsize,debug,no-events,event:,preload:,session: -n "${ME}" -- "$@"`
 
 if [ $? != 0 ] ; then
 	usage 
