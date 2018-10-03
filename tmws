@@ -98,10 +98,10 @@ gtws_tmux_session_info "${SESNAME}" RUNNING ATTACHED
 echo "RUNNING=$RUNNING ATTACHED=$ATTACHED"
 if ! ${RUNNING} ; then
 	echo "Launching tmux base session ${SESNAME} ..."
-	tmux new-session -s ${SESNAME} -n "Edit" "startws -p ${PROJECT} -v ${VERSION} ${WSNAME}" \; \
-		new-window -n "Build" "startws -p ${PROJECT} -v ${VERSION} ${WSNAME}" \; \
-		split-window -v  "startws -p ${PROJECT} -v ${VERSION} ${WSNAME}" \; \
-		split-window -v  "startws -p ${PROJECT} -v ${VERSION} ${WSNAME}" \; \
+	tmux new-session -s ${SESNAME} -n "Edit" "startws -p ${PROJECT} -v ${VERSION} -t Edit ${WSNAME}" \; \
+		new-window -n "Build" "startws -p ${PROJECT} -v ${VERSION} -t Test ${WSNAME}" \; \
+		split-window -v  "startws -p ${PROJECT} -v ${VERSION} -t Util ${WSNAME}" \; \
+		split-window -v  "startws -p ${PROJECT} -v ${VERSION} -t Build ${WSNAME}" \; \
 		select-layout even-horizontal \; \
 		select-window -t :0 \; \
 		set-option -g status-left "${HOSTNAME}:#S"

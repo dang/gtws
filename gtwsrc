@@ -87,5 +87,9 @@ fi
 
 # Give each workspace it's own bash history file
 export HISTFILE=${GTWS_WSPATH}/.bash_history
+# If there's a tag, use the tag in the history file name
+if [ -n "${GTWS_TAG}" ]; then
+	export HISTFILE=${GTWS_WSPATH}/.bash_history-${GTWS_TAG}
+fi
 
 # Local settings go here
