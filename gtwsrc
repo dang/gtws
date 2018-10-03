@@ -85,4 +85,7 @@ if [ -n "${GTWS_PYTHONPATH}" ] ; then
 	export PYTHONPATH="${PYTHONPATH}:${GTWS_PYTHONPATH}"
 fi
 
+# Give each workspace it's own bash history file
+export HISTFILE=${GTWS_WSPATH}/.bash_history
+
 # Local settings go here
