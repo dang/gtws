@@ -48,9 +48,9 @@ while true ; do
 		-n|--no-repeat) NOREPEAT="yes" ; shift ;;
 		-e|--empty) EMPTY="yes" ; shift ;;
 		-k|--kernel) KERNEL="-k" ; shift ;;
-		-c|--cpp) CPP="yes" ; NOREPEAT="yes";  shift ;;
-		-p|--perl|--python) PERL="yes" ; s NOREPEAT="yes"; hift ;;
-		-j|--java) JAVA="yes" ; s NOREPEAT="yes"; hift ;;
+		-c|--cpp) CPP="yes" ; NOREPEAT="yes"; shift ;;
+		-p|--perl|--python) PERL="yes" ; NOREPEAT="yes"; shift ;;
+		-j|--java) JAVA="yes" ; NOREPEAT="yes"; shift ;;
 		--) shift ; break ;;
 		* ) usage "Invalid argument $1";;
 	esac
