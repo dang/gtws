@@ -6,6 +6,7 @@
 # Standard functions
 GTWS_LOC=$(readlink -f $(dirname "$0"))
 source ${GTWS_LOC}/gtws.sh
+GDB="cgdb"
 
 # asan_version asanver || die "no asan"
 #
@@ -32,10 +33,11 @@ function asan_version {
 
 # Set usage output
 DESCRIPTION="Run a workspace program under ASAN"
-USAGE="[-h |--help] [-d | --debug] [-v | --valgrind] [-m | --massif] [-p <preload> | --preload=<preload>] <program> [arguments]"
+USAGE="[-h |--help] [-d | --debug] [-v | --valgrind] [-m | --massif] [-p <preload> | --preload=<preload>] [-g | --gdb] <program> [arguments]"
 LONGUSAGE="\t-h, --help\n\t\tPrint this help message
 \t-p <preload>, --preload=<preload>\n\t\tLibrary to preload. Default: none
 \t-d, --debug\n\t\tRun under debugger
+\t-g, --gdb\n\t\tUse gdb instead of cgdb
 \t-v, --valgrind\n\t\tUse valgrind rather than ASAN
 \t-m, --massif\n\t\tUse massif rather than ASAN
 \t-V, --verbose\n\t\tBe verbose
@@ -46,7 +48,7 @@ LONGUSAGE="\t-h, --help\n\t\tPrint this help message
 ME=$(basename $0)
 
 # Parse arguments
-ARGS=`getopt -o dhmp:vV --long help,debug,massif,preload:,valgrind,verbose -n "${ME}" -- "$@"`
+ARGS=`getopt -o dghmp:vV --long help,debug,gdb,massif,preload:,valgrind,verbose -n "${ME}" -- "$@"`
 
 if [ $? != 0 ] ; then
 	usage 
@@ -57,6 +59,7 @@ while true ; do
 	case "$1" in
 		-h|--help) usage; shift ;;
 		-d|--debug) export DEBUG=yes; shift ;;
+		-g|--gdb) GDB=gdb; shift ;;
 		-m|--massif) export MASSIF=yes; shift ;;
 		-p|--preload) PRELOAD=$2 ; shift 2 ;;
 		-v|--valgrind) export VALGRIND=yes; shift ;;
@@ -88,7 +91,7 @@ elif [ -n "${MASSIF}" ]; then
 elif [ -n "${DEBUG}" ]; then
 	cmdbase=$(basename ${PROG});
 	pid=$(pgrep "${cmdbase}");
-	ASAN_OPTIONS="abort_on_error=1" cgdb -ex "set environment LD_PRELOAD=libasan.so.${ASANVER}:${PRELOAD}" ${PROG} ${pid}
+	ASAN_OPTIONS="abort_on_error=1" ${GDB} -ex "set environment LD_PRELOAD=libasan.so.${ASANVER}:${PRELOAD}" ${PROG} ${pid}
 else
 	LD_PRELOAD="libasan.so.${ASANVER}:${PRELOAD}" ${PROG} "${@}"
 fi
