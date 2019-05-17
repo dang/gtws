@@ -92,4 +92,7 @@ if [ -n "${GTWS_TAG}" ]; then
 	export HISTFILE=${GTWS_WSPATH}/.bash_history-${GTWS_TAG}
 fi
 
+# Edit all the gtwsrc files for a WS
+alias vimgtwsrc="vim -O ${HOME}/.gtwsrc ${GTWS_WSPATH}/.gtwsrc $(dirname $GTWS_WSPATH})/.gtwsrc $(dirname $(dirname ${GTWS_WSPATH}))/.gtwsrc"
+
 # Local settings go here
