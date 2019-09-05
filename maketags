@@ -7,7 +7,7 @@ SAVEFILE="./.maketagssave"
 # Things to always skip
 BASESKIPRE=".svn|\<tags\>|.git|cscope|.swp\>|.maketag"
 # Default args for ctags
-CTAGS_ARGS="--extra=q"
+CTAGS_ARGS="--extras=q"
 
 function GTWScleanup {
 	rm -rf "${GTWS_WSPATH}"
