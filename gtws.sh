@@ -371,7 +371,7 @@ function gtws_opvn {
 function gtws_submodule_url {
 	local sub=$1
 	local  __resultvar=$2
-	local __url=$(git config --list | grep submodule | grep "\<${sub}\>" | cut -d = -f 2)
+	local __url=$(git config --list | grep "submodule.*url" | grep "\<${sub}\>" | cut -d = -f 2)
 
 	if [ -z "${__url}" ]; then
 		local rpath=${PWD}
