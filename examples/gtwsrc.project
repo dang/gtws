@@ -160,16 +160,21 @@ export CXXFLAGS=${CXXFLAGS:-"${CFLAGS}"}
 function gtws_cmake {
 (
 	local src=$(basename ${PWD})
+	local idir=""
 	local dir=$(basename $(dirname ${PWD}))
+	if [  "${dir}" != "build" ]; then
+		idir="${dir}/"
+		dir=$(basename $(dirname $(dirname ${PWD})))
+	fi
 	if [  "${dir}" != "build" ]; then
 		die "Not in a build directory"
 	fi
-	local cmkdir="../../${src}"
+	local cmkdir="${GTWS_WSPATH}/${idir}${src}"
 	if [ ! -f "${cmkdir}"/CMakeLists.txt ]; then
-		cmkdir="../../${src}/src"
+		cmkdir="${GTWS_WSPATH}/${idir}${src}/src"
 	fi
 	if [ ! -f "${cmkdir}"/CMakeLists.txt ]; then
-		die "Could not find CMakeLists.txt in \"../../${src}\" or \"../../${src}/src\""
+		die "Could not find CMakeLists.txt in \"${GTWS_WSPATH}/${idir}${src}\" or \"${GTWS_WSPATH}/${idir}${src}/src\""
 	fi
 	echo "Building for ${src}"
 	cd .. && rm -rf "${src}" && mkdir "${src}" && cd "${src}" && ccmake $@ "${cmkdir}"
