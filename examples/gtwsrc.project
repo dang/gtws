@@ -197,7 +197,7 @@ function wspush() {
 
 # Override grepall to skip the build directories
 function grepall {
-	ack --ignore-dir=build "$@"
+	ack --follow --ignore-dir=build "$@"
 }
 
 
