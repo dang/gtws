@@ -218,6 +218,18 @@ function git_top_dir {
 	fi
 }
 
+# is_git_rebase
+#
+# return success if git repo is in a rebase
+is_git_rebase() {
+	debug_print "is_git_rebase $1"
+	(test -d "$(git rev-parse --git-path rebase-merge)" || \
+		test -d "$(git rev-parse --git-path rebase-apply)" )
+	local ret=$?
+	debug_print "    retval: $ret"
+	return $ret
+}
+
 # is_docker
 #
 # return success if process is running inside docker

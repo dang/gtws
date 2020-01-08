@@ -71,6 +71,9 @@ function update_repo {
 	local upstream=
 
 	GIT_DIR="$(git rev-parse --git-dir 2>/dev/null)"
+
+	is_git_rebase && die "Rebase in progress"
+
 	if git-issvn > /dev/null 2>&1; then
 		local svn="yes"
 	fi
