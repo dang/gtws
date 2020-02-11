@@ -16,7 +16,7 @@ more specific level overrides higher levels.
 
 - Setup Overview
 	- Checkout gtws
-		git clone ssh://git@buildbot.aa.ghs.com/home/git/gtws.git
+		git clone https://github.com/dang/gtws.git
 		- The location of gtws is called GTWS_LOC
 	- Set up your ${HOME}/.gtwsrc
 		- Should include GTWS_ORIGIN, optionally GTWS_SETPROMPT
