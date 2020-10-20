@@ -177,6 +177,7 @@ function gtws_cmake {
 		die "Could not find CMakeLists.txt in \"${GTWS_WSPATH}/${idir}${src}\" or \"${GTWS_WSPATH}/${idir}${src}/src\""
 	fi
 	echo "Building for ${src}"
+	read -p "Delete? "
 	cd .. && rm -rf "${src}" && mkdir "${src}" && cd "${src}" && ccmake $@ "${cmkdir}"
 	echo "Done"
 )
