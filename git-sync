@@ -14,14 +14,13 @@ SUBREMOTE=""
 
 # Set usage output
 DESCRIPTION="Sync a git repo with it's tracking branch and remote repo"
-USAGE="[-h |--help] [-V | --verbose] [-f | --force] [-s | --stash] [-o | --origin] [-r | --remote] [-t | --tags]"
+USAGE="[-h |--help] [-V | --verbose] [-f | --force] [-s | --stash] [-o | --origin] [-r | --remote]"
 LONGUSAGE="\t-h, --help\n\t\tPrint this help message
 \t-V, --verbose\n\t\tPrint verbose debugging info
 \t-f, --force\n\t\tSync even if the local branch is not up-to-date
 \t-s, --stash\n\t\tStash before syncing, and pop after
 \t-o, --origin\n\t\tIf in a workspace, update origin insted of local
-\t-r, --remote\n\t\tUpdate submodules to the most recent version
-\t-t, --tags\n\t\tUpdate the tags after syncing"
+\t-r, --remote\n\t\tUpdate submodules to the most recent version"
 
 # Standard functions
 GTWS_LOC=$(readlink -f $(dirname "$0"))
@@ -187,6 +186,7 @@ echo ""
 echo "Updating checkout";
 update_repo "." ${STASH} || die
 
-if [ -n "${TAGS}" -a -f ".maketagssave" ]; then
-	maketags -r
-fi
+# Neovim doesn't use cscope anymore, so don't make tags
+#if [ -n "${TAGS}" -a -f ".maketagssave" ]; then
+	#maketags -r
+#fi
