@@ -57,7 +57,7 @@ if [ -n "${GTWS_PATH_EXTRA}" ]; then
 fi
 export PATH
 
-export CDPATH=":$GTWS_WSPATH"
+export CDPATH="$GTWS_WSPATH"
 
 title "${GTWS_PROJECT}:${GTWS_PROJECT_VERSION}:${GTWS_WSNAME}"
 
